@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>申请手续费发票 - H5 移动端交互原型</title>
+<style>
+/* ========== 全局(沿用 PC 端品牌色) ========== */
+* {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html { font-size: 16px; }
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-light: #E6F4FF;
+  --color-primary-hover: #4096FF;
+  --color-primary-active: #0E7FD0;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #595959;
+  --color-text-3: #8C8C8C;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F5F6F7;
+  --color-bg-card: #FFFFFF;
+  --color-border: #E5E6EB;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #ECEFF3;
+  color: var(--color-text-1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px;
+}
+
+/* ========== 手机外壳 375 x 700 (适配电脑屏幕) ========== */
+.phone-frame {
+  width: 375px;
+  height: 700px;
+  background: #fff;
+  border-radius: 36px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 26px;
+  background: #000;
+  border-radius: 0 0 14px 14px;
+  z-index: 100;
+}
+.phone-label {
+  font-size: 12px;
+  color: #595959;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* 状态栏 */
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+  color: #000;
+}
+.status-bar .right-icons { display: flex; gap: 6px; align-items: center; }
+
+/* 页面主体 */
+.page {
+  height: calc(700px - 44px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.page.hidden { display: none; }
+
+/* 顶部导航 44px */
+.nav-bar {
+  height: 44px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--color-border);
+}
+.nav-bar .back {
+  position: absolute;
+  left: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  color: var(--color-text-1);
+  cursor: pointer;
+}
+.nav-bar .title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+/* 滚动区 */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-bg-page);
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* 提示框 */
+.tip-box {
+  margin: 12px;
+  background: #FFFBE6;
+  border-radius: var(--radius-4);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--color-text-1);
+  line-height: 18px;
+}
+.tip-box .tip-title { font-weight: 600; margin-bottom: 4px; color: var(--color-text-1); }
+.tip-box p { margin: 2px 0; }
+
+/* ========== 表单卡片 ========== */
+.form-card {
+  background: #fff;
+  margin: 12px;
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  position: relative;
+}
+.form-row:last-child { border-bottom: none; }
+.form-row .label {
+  color: var(--color-text-1);
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 88px;
+}
+.form-row .label .required { color: var(--color-error); margin-right: 4px; }
+.form-row .control {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  text-align: right;
+  min-width: 0;
+}
+.form-row .control input,
+.form-row .control select {
+  flex: 1;
+  height: 32px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--color-text-1);
+  text-align: right;
+  font-family: inherit;
+  min-width: 0;
+}
+.form-row .control .placeholder { color: var(--color-text-3); }
+.form-row .control .arrow { color: var(--color-text-3); font-size: 12px; }
+.form-row .control a {
+  color: var(--color-primary);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* 开票金额行特殊布局 */
+.invoice-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.invoice-amount-left {
+  display: flex;
+  align-items: center;
+}
+.invoice-amount-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 角标提示 */
+.info-badge-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+  position: relative;
+}
+.info-badge-hint:hover { background: var(--color-primary); color: #fff; }
+.info-popover-hint {
+  position: absolute;
+  top: 22px;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: 12px 16px;
+  width: 220px;
+  z-index: 20;
+  display: none;
+  font-size: 13px;
+  color: var(--color-text-1);
+  line-height: 20px;
+}
+.info-badge-hint:hover .info-popover-hint { display: block; }
+.info-popover-hint::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  transform: rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ========== 手续费项 ========== */
+.fee-card {
+  background: #fff;
+  margin: 12px;
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+.fee-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  gap: 10px;
+}
+.fee-item:last-child { border-bottom: none; }
+.fee-item .fee-main {
+  flex: 1;
+  min-width: 0;
+}
+.fee-item .fee-name {
+  font-size: 14px;
+  color: var(--color-text-1);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.fee-item .fee-amount-row {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-2);
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.fee-item .fee-amount-row .z-amount { color: var(--color-text-2); }
+
+/* 右侧金额输入框 */
+.fee-item .fee-amount-input {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.fee-item .fee-amount-input input {
+  width: 92px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-4);
+  padding: 0 8px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  background: #fff;
+  text-align: right;
+  outline: none;
+  font-family: inherit;
+}
+.fee-item .fee-amount-input input:focus { border-color: var(--color-primary); }
+
+/* 合计 */
+.fee-total {
+  background: #fff;
+  margin: 12px;
+  border-radius: var(--radius-8);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fee-total .label { font-size: 14px; color: var(--color-text-1); }
+.fee-total .value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-error);
+}
+.fee-total .value .unit { font-size: 13px; color: var(--color-text-2); font-weight: 400; margin-left: 2px; }
+
+/* 验证码 */
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+}
+.captcha-input {
+  flex: 0 0 100px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-4);
+  padding: 0 10px;
+  font-size: 14px;
+  outline: none;
+  text-align: center;
+}
+.captcha-input:focus { border-color: var(--color-primary); }
+.captcha-img {
+  width: 80px; height: 32px;
+  border-radius: var(--radius-4);
+  background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  font-family: "Courier New", monospace;
+  flex-shrink: 0;
+}
+
+/* 底部主按钮 */
+.bottom-btn {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+.btn {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-8);
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-primary:active { background: var(--color-primary-active); }
+.btn-primary:disabled { background: var(--color-text-disable); color: #fff; opacity: 1; }
+.btn-secondary {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-1);
+}
+.btn-secondary:active { background: #F5F7FA; }
+
+/* ========== 可开票明细页面 ========== */
+/* 时间范围选择器（无背景，直接放在页面背景上） */
+.time-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 12px 16px;
+}
+.time-range-picker:hover {
+  background: var(--row-hover);
+}
+.time-range-picker .picker-text {
+  font-size: 14px;
+  color: var(--color-text-1);
+}
+.time-range-picker .picker-arrow {
+  color: var(--color-text-3);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+.time-range-picker.active .picker-arrow {
+  transform: rotate(180deg);
+}
+
+/* 月份卡片 */
+.month-card-list {
+  padding: 12px;
+}
+.month-card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-8);
+  margin-bottom: 12px;
+  padding: 16px;
+}
+.month-card:last-child { margin-bottom: 0; }
+.month-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.month-card-header .month-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.month-card-fees {
+  font-size: 13px;
+  color: var(--color-text-2);
+  line-height: 22px;
+  padding-left: 32px;
+}
+.month-card-fees .fee-item-text {
+  display: flex;
+  align-items: center;
+}
+.month-card-fees .fee-item-text .fee-name { color: var(--color-text-3); width: 80px; }
+.month-card-fees .fee-item-text .fee-amount { color: var(--color-text-1); font-weight: 500; }
+
+/* 合计区域（固定在底部按钮上方） */
+.detail-total-card {
+  background: #fff;
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.detail-total-card .total-main {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-error);
+  margin-bottom: 8px;
+}
+.detail-total-card .total-detail {
+  font-size: 13px;
+  color: var(--color-text-2);
+  line-height: 20px;
+}
+
+/* 底部按钮 */
+.detail-bottom-btn {
+  padding: 12px 16px;
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.detail-bottom-btn .btn-back {
+  flex: 0 0 80px;
+  height: 44px;
+  border-radius: var(--radius-8);
+  font-size: 16px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+  color: var(--color-text-1);
+  font-family: inherit;
+}
+.detail-bottom-btn .btn-back:active { background: #F5F7FA; }
+.detail-bottom-btn .btn-confirm {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-8);
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+}
+.detail-bottom-btn .btn-confirm:active { background: var(--color-primary-active); }
+
+/* ========== 底部弹出月份选择器（微信账单风格） ========== */
+.month-picker-mask {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+}
+.month-picker-mask.show { display: flex; }
+.month-picker-sheet {
+  background: #fff;
+  width: 100%;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  overflow: hidden;
+}
+.month-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 0;
+  height: 50px;
+}
+.month-picker-header .cancel-btn {
+  color: var(--color-text-2);
+  font-size: 16px;
+  cursor: pointer;
+}
+.month-picker-header .confirm-btn {
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* 滚动选择器容器 */
+.picker-container {
+  display: flex;
+  height: 260px;
+  position: relative;
+  padding: 0 20px;
+}
+
+/* 单列选择器 */
+.picker-column {
+  flex: 1;
+  height: 260px;
+  overflow: hidden;
+  position: relative;
+}
+.picker-column:first-child { margin-right: 2px; }
+
+/* 选择器指示线 */
+.picker-indicator {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 44px;
+  transform: translateY(-50%);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--row-hover);
+  z-index: 0;
+}
+
+/* 选择器内容 */
+.picker-content {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+  transition: transform 0.3s ease-out;
+}
+.picker-item {
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-text-3);
+}
+.picker-item.active {
+  color: var(--color-text-1);
+  font-weight: 500;
+}
+
+/* 选择器类型标签 */
+.picker-label-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+}
+.picker-label-container .picker-label-separator {
+  font-size: 16px;
+  color: var(--color-text-1);
+  font-weight: 500;
+}
+</style>
+</head>
+<body>
+
+<!-- ========== 手机外壳 ========== -->
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right-icons">
+      <span>📶</span>
+      <span>📡</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- ========== 页面1：申请手续费发票表单 ========== -->
+  <div class="page" id="page-form">
+    <div class="nav-bar">
+      <div class="back">‹</div>
+      <div class="title">申请手续费发票</div>
+    </div>
+
+    <div class="scroll">
+      <div class="tip-box">
+        <div class="tip-title">请注意：</div>
+        <p>· 每月 3 号更新上月可开票金额，每月一次提交上的发票申请项次请在同一个工作日完成；</p>
+        <p>· 税控票和专票均为电子发票，不支持邮寄，请在邮件内或发票查询-发票信息页面查看发票下载信息</p>
+      </div>
+
+      <!-- 收票方 / 发票类型 -->
+      <div class="form-card">
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>收票方</div>
+          <div class="control">
+            <span>随行付支付有限公司</span>
+            <span class="arrow">›</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>发票类型</div>
+          <div class="control">
+            <span>电子发票（普通发票）</span>
+            <span class="arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 开票金额：全部填入在前，查看可开票明细在后 + 角标 -->
+      <div class="form-card">
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>开票金额</div>
+          <div class="control">
+            <div class="invoice-amount-row">
+              <div class="invoice-amount-left">
+                <a onclick="fillAllMobile()">全部填入</a>
+              </div>
+              <div class="invoice-amount-right">
+                <a onclick="goToDetailPage()">查看可开票明细</a>
+                <span class="info-badge-hint">ⓘ
+                  <div class="info-popover-hint">支持查看每月可开票金额明细，并帮助您快速填开票金额</div>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 手续费项 -->
+      <div class="fee-card">
+        <div class="fee-item">
+          <div class="fee-main">
+            <div class="fee-name">交易手续费</div>
+            <div class="fee-amount-row">
+              <span class="z-amount">最大可开 19.74 元</span>
+            </div>
+          </div>
+          <div class="fee-amount-input">
+            <input type="text" id="trans-m1" placeholder="请输入" oninput="updateTotalMobile()" />
+          </div>
+        </div>
+        <div class="fee-item">
+          <div class="fee-main">
+            <div class="fee-name">结算手续费</div>
+            <div class="fee-amount-row">
+              <span class="z-amount">最大可开 19.19 元</span>
+            </div>
+          </div>
+          <div class="fee-amount-input">
+            <input type="text" id="settle-m1" placeholder="请输入" oninput="updateTotalMobile()" />
+          </div>
+        </div>
+        <div class="fee-item">
+          <div class="fee-main">
+            <div class="fee-name">增值服务费</div>
+            <div class="fee-amount-row">
+              <span class="z-amount">最大可开 3.71 元</span>
+            </div>
+          </div>
+          <div class="fee-amount-input">
+            <input type="text" id="value-m1" placeholder="请输入" oninput="updateTotalMobile()" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 合计 -->
+      <div class="fee-total">
+        <div class="label">合计</div>
+        <div class="value" id="total-m1">0.00 <span class="unit">元</span></div>
+      </div>
+
+      <!-- 验证码 -->
+      <div class="form-card">
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>验证码</div>
+          <div class="captcha-row">
+            <input class="captcha-input" type="text" placeholder="验证码" />
+            <div class="captcha-img">5F9V</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+
+    <div class="bottom-btn">
+      <button class="btn btn-primary">提交申请</button>
+    </div>
+  </div>
+
+  <!-- ========== 页面2：可开票明细 ========== -->
+  <div class="page hidden" id="page-detail">
+    <div class="nav-bar">
+      <div class="back" onclick="goBackToForm()">‹</div>
+      <div class="title">可开票明细</div>
+    </div>
+
+    <div class="scroll">
+      <!-- 筛选条件（无背景卡片，直接放在页面背景上） -->
+      <div class="time-range-picker" onclick="showMonthPicker()">
+        <span class="picker-text" id="timeRangeDisplay">2026年1月 - 2026年1月</span>
+        <span class="picker-arrow">▼</span>
+      </div>
+
+      <!-- 月份卡片列表 -->
+      <div class="month-card-list">
+        <div class="month-card" data-month="2025-01">
+          <div class="month-card-header">
+            <span class="month-text">2025-01</span>
+          </div>
+          <div class="month-card-fees">
+            <div class="fee-item-text"><span class="fee-name">交易手续费</span><span class="fee-amount">3.50 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">结算手续费</span><span class="fee-amount">2.00 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">增值服务费</span><span class="fee-amount">1.20 元</span></div>
+          </div>
+        </div>
+        <div class="month-card" data-month="2025-02">
+          <div class="month-card-header">
+            <span class="month-text">2025-02</span>
+          </div>
+          <div class="month-card-fees">
+            <div class="fee-item-text"><span class="fee-name">交易手续费</span><span class="fee-amount">4.50 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">结算手续费</span><span class="fee-amount">3.00 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">增值服务费</span><span class="fee-amount">1.30 元</span></div>
+          </div>
+        </div>
+        <div class="month-card" data-month="2025-03">
+          <div class="month-card-header">
+            <span class="month-text">2025-03</span>
+          </div>
+          <div class="month-card-fees">
+            <div class="fee-item-text"><span class="fee-name">交易手续费</span><span class="fee-amount">4.50 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">结算手续费</span><span class="fee-amount">3.00 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">增值服务费</span><span class="fee-amount">1.21 元</span></div>
+          </div>
+        </div>
+        <div class="month-card" data-month="2025-04">
+          <div class="month-card-header">
+            <span class="month-text">2025-04</span>
+          </div>
+          <div class="month-card-fees">
+            <div class="fee-item-text"><span class="fee-name">交易手续费</span><span class="fee-amount">5.00 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">结算手续费</span><span class="fee-amount">4.00 元</span></div>
+            <div class="fee-item-text"><span class="fee-name">增值服务费</span><span class="fee-amount">1.50 元</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:80px;"></div>
+    </div>
+
+    <!-- 合计（固定在底部按钮上方） -->
+    <div class="detail-total-card">
+      <div class="total-main">合计 <span id="h5TotalAmount">0.00</span> 元</div>
+      <div class="total-detail">其中交易手续费：<span id="h5TransFee">0.00</span> 元，结算手续费：<span id="h5SettleFee">0.00</span> 元，增值服务费：<span id="h5ValueFee">0.00</span> 元</div>
+    </div>
+
+    <div class="detail-bottom-btn">
+      <button class="btn-back" onclick="goBackToForm()">返回</button>
+      <button class="btn-confirm" onclick="confirmH5QuickFill()">快速填入</button>
+    </div>
+
+    <!-- ========== 底部弹出月份选择器（微信账单风格） ========== -->
+    <div class="month-picker-mask" id="monthPickerMask" onclick="cancelMonthPicker()">
+      <div class="month-picker-sheet" onclick="event.stopPropagation()">
+        <div class="month-picker-header">
+          <span class="cancel-btn" onclick="cancelMonthPicker()">取消</span>
+          <span class="confirm-btn" onclick="confirmMonthPicker()">确定</span>
+        </div>
+
+        <!-- 滚动选择器 -->
+        <div class="picker-container">
+          <!-- 选择器指示线 -->
+          <div class="picker-indicator"></div>
+
+          <!-- 起始月份选择器 -->
+          <div class="picker-column" id="startPickerColumn">
+            <div class="picker-content" id="startPickerContent">
+              <!-- 年份和月份会动态生成 -->
+            </div>
+          </div>
+
+          <!-- 中间分隔符 -->
+          <div class="picker-label-container">
+            <span class="picker-label-separator">至</span>
+          </div>
+
+          <!-- 结束月份选择器 -->
+          <div class="picker-column" id="endPickerColumn">
+            <div class="picker-content" id="endPickerContent">
+              <!-- 年份和月份会动态生成 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="phone-label">申请手续费发票 - H5交互原型</div>
+
+<script>
+// ========== 页面切换 ==========
+function goToDetailPage() {
+  document.getElementById('page-form').classList.add('hidden');
+  document.getElementById('page-detail').classList.remove('hidden');
+  updateH5Summary();
+}
+
+function goBackToForm() {
+  document.getElementById('page-detail').classList.add('hidden');
+  document.getElementById('page-form').classList.remove('hidden');
+}
+
+// ========== 表单页面功能 ==========
+function fillAllMobile() {
+  document.getElementById('trans-m1').value = '19.74';
+  document.getElementById('settle-m1').value = '19.19';
+  document.getElementById('value-m1').value = '3.71';
+  updateTotalMobile();
+  alert('已填入最大可开金额，仍可手动编辑微调');
+}
+
+function updateTotalMobile() {
+  const t = parseFloat(document.getElementById('trans-m1').value) || 0;
+  const s = parseFloat(document.getElementById('settle-m1').value) || 0;
+  const v = parseFloat(document.getElementById('value-m1').value) || 0;
+  document.getElementById('total-m1').innerHTML = (t + s + v).toFixed(2) + ' <span class="unit">元</span>';
+}
+
+// ========== 可开票明细页面功能 ==========
+function updateH5Summary() {
+  const cards = document.querySelectorAll('.month-card');
+  let totalTrans = 0, totalSettle = 0, totalValue = 0;
+
+  // 统计所有月份的数据（没有checkbox，默认全部）
+  cards.forEach(card => {
+    const feeItems = card.querySelectorAll('.fee-item-text');
+    feeItems.forEach(item => {
+      const name = item.querySelector('.fee-name').textContent;
+      const amount = parseFloat(item.querySelector('.fee-amount').textContent.replace(' 元', '')) || 0;
+      if (name.includes('交易手续费')) totalTrans += amount;
+      if (name.includes('结算手续费')) totalSettle += amount;
+      if (name.includes('增值服务费')) totalValue += amount;
+    });
+  });
+
+  const totalAmount = totalTrans + totalSettle + totalValue;
+  document.getElementById('h5TotalAmount').textContent = totalAmount.toFixed(2);
+  document.getElementById('h5TransFee').textContent = totalTrans.toFixed(2);
+  document.getElementById('h5SettleFee').textContent = totalSettle.toFixed(2);
+  document.getElementById('h5ValueFee').textContent = totalValue.toFixed(2);
+}
+
+function confirmH5QuickFill() {
+  const cards = document.querySelectorAll('.month-card');
+  let totalTrans = 0, totalSettle = 0, totalValue = 0;
+  let months = [];
+
+  // 统计所有月份的数据（没有checkbox，默认全部）
+  cards.forEach(card => {
+    months.push(card.getAttribute('data-month'));
+    const feeItems = card.querySelectorAll('.fee-item-text');
+    feeItems.forEach(item => {
+      const name = item.querySelector('.fee-name').textContent;
+      const amount = parseFloat(item.querySelector('.fee-amount').textContent.replace(' 元', '')) || 0;
+      if (name.includes('交易手续费')) totalTrans += amount;
+      if (name.includes('结算手续费')) totalSettle += amount;
+      if (name.includes('增值服务费')) totalValue += amount;
+    });
+  });
+
+  document.getElementById('trans-m1').value = totalTrans.toFixed(2);
+  document.getElementById('settle-m1').value = totalSettle.toFixed(2);
+  document.getElementById('value-m1').value = totalValue.toFixed(2);
+  updateTotalMobile();
+
+  goBackToForm();
+  alert('已填入所有月份金额（' + months.join(', ') + '），合计 ' + (totalTrans + totalSettle + totalValue).toFixed(2) + ' 元，仍可手动编辑微调');
+}
+
+// ========== 月份选择器功能（微信账单风格） ==========
+const pickerData = {
+  years: ['2023', '2024', '2025', '2026'],
+  months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+};
+
+let currentStartYear = '2026';
+let currentStartMonth = '1月';
+let currentEndYear = '2026';
+let currentEndMonth = '1月';
+
+let tempStartYear = '2026';
+let tempStartMonth = '1月';
+let tempEndYear = '2026';
+let tempEndMonth = '1月';
+
+let startYOffset = 0;
+let endYOffset = 0;
+
+const itemHeight = 44;
+
+function showMonthPicker() {
+  // 初始化选择器数据
+  initPickerData();
+
+  // 设置当前选中值到临时变量
+  tempStartYear = currentStartYear;
+  tempStartMonth = currentStartMonth;
+  tempEndYear = currentEndYear;
+  tempEndMonth = currentEndMonth;
+
+  // 计算初始偏移量
+  const startYearIndex = pickerData.years.indexOf(tempStartYear);
+  const startMonthIndex = pickerData.months.indexOf(tempStartMonth);
+  const endYearIndex = pickerData.years.indexOf(tempEndYear);
+  const endMonthIndex = pickerData.months.indexOf(tempEndMonth);
+
+  startYOffset = -(startYearIndex * itemHeight + startMonthIndex * itemHeight);
+  endYOffset = -(endYearIndex * itemHeight + endMonthIndex * itemHeight);
+
+  document.getElementById('startPickerContent').style.transform = `translateY(${startYOffset}px)`;
+  document.getElementById('endPickerContent').style.transform = `translateY(${endYOffset}px)`;
+
+  updatePickerActiveState();
+
+  document.getElementById('monthPickerMask').classList.add('show');
+}
+
+function initPickerData() {
+  // 生成起始月份选择器内容（年份 + 月份）
+  let startHTML = '';
+  pickerData.years.forEach(year => {
+    pickerData.months.forEach(month => {
+      startHTML += `<div class="picker-item" data-year="${year}" data-month="${month}">${year}年${month}</div>`;
+    });
+  });
+  document.getElementById('startPickerContent').innerHTML = startHTML;
+
+  // 生成结束月份选择器内容
+  let endHTML = '';
+  pickerData.years.forEach(year => {
+    pickerData.months.forEach(month => {
+      endHTML += `<div class="picker-item" data-year="${year}" data-month="${month}">${year}年${month}</div>`;
+    });
+  });
+  document.getElementById('endPickerContent').innerHTML = endHTML;
+}
+
+function updatePickerActiveState() {
+  // 更新起始选择器active状态
+  const startItems = document.querySelectorAll('#startPickerContent .picker-item');
+  startItems.forEach(item => {
+    if (item.dataset.year === tempStartYear && item.dataset.month === tempStartMonth) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // 更新结束选择器active状态
+  const endItems = document.querySelectorAll('#endPickerContent .picker-item');
+  endItems.forEach(item => {
+    if (item.dataset.year === tempEndYear && item.dataset.month === tempEndMonth) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+function cancelMonthPicker() {
+  // 取消不变更，直接关闭
+  document.getElementById('monthPickerMask').classList.remove('show');
+}
+
+function confirmMonthPicker() {
+  // 确定时将临时值写入显示区域
+  currentStartYear = tempStartYear;
+  currentStartMonth = tempStartMonth;
+  currentEndYear = tempEndYear;
+  currentEndMonth = tempEndMonth;
+
+  const startText = currentStartYear + '年' + currentStartMonth;
+  const endText = currentEndYear + '年' + currentEndMonth;
+  document.getElementById('timeRangeDisplay').textContent = startText + ' - ' + endText;
+
+  document.getElementById('monthPickerMask').classList.remove('show');
+}
+
+// 滚动交互（简化版演示）
+let startY = 0;
+let endY = 0;
+
+document.getElementById('startPickerColumn').addEventListener('touchstart', function(e) {
+  startY = e.touches[0].clientY;
+});
+
+document.getElementById('startPickerColumn').addEventListener('touchmove', function(e) {
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - startY;
+  startYOffset += deltaY;
+  document.getElementById('startPickerContent').style.transform = `translateY(${startYOffset}px)`;
+  startY = currentY;
+
+  // 计算当前选中的项
+  const selectedIndex = Math.round(-startYOffset / itemHeight);
+  const totalItems = pickerData.years.length * pickerData.months.length;
+  const clampedIndex = Math.max(0, Math.min(totalItems - 1, selectedIndex));
+
+  const yearIndex = Math.floor(clampedIndex / pickerData.months.length);
+  const monthIndex = clampedIndex % pickerData.months.length;
+
+  tempStartYear = pickerData.years[yearIndex];
+  tempStartMonth = pickerData.months[monthIndex];
+
+  // 自动调整结束月份
+  const startValue = tempStartYear + '-' + tempStartMonth.replace('月', '');
+  const endValue = tempEndYear + '-' + tempEndMonth.replace('月', '');
+  if (startValue > endValue) {
+    tempEndYear = tempStartYear;
+    tempEndMonth = tempStartMonth;
+    const endYearIndex = pickerData.years.indexOf(tempEndYear);
+    const endMonthIndex = pickerData.months.indexOf(tempEndMonth);
+    endYOffset = -(endYearIndex * itemHeight + endMonthIndex * itemHeight);
+    document.getElementById('endPickerContent').style.transform = `translateY(${endYOffset}px)`;
+  }
+
+  updatePickerActiveState();
+});
+
+document.getElementById('endPickerColumn').addEventListener('touchstart', function(e) {
+  endY = e.touches[0].clientY;
+});
+
+document.getElementById('endPickerColumn').addEventListener('touchmove', function(e) {
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - endY;
+  endYOffset += deltaY;
+  document.getElementById('endPickerContent').style.transform = `translateY(${endYOffset}px)`;
+  endY = currentY;
+
+  // 计算当前选中的项
+  const selectedIndex = Math.round(-endYOffset / itemHeight);
+  const totalItems = pickerData.years.length * pickerData.months.length;
+  const clampedIndex = Math.max(0, Math.min(totalItems - 1, selectedIndex));
+
+  const yearIndex = Math.floor(clampedIndex / pickerData.months.length);
+  const monthIndex = clampedIndex % pickerData.months.length;
+
+  tempEndYear = pickerData.years[yearIndex];
+  tempEndMonth = pickerData.months[monthIndex];
+
+  // 自动调整起始月份
+  const startValue = tempStartYear + '-' + tempStartMonth.replace('月', '');
+  const endValue = tempEndYear + '-' + tempEndMonth.replace('月', '');
+  if (startValue > endValue) {
+    tempStartYear = tempEndYear;
+    tempStartMonth = tempEndMonth;
+    const startYearIndex = pickerData.years.indexOf(tempStartYear);
+    const startMonthIndex = pickerData.months.indexOf(tempStartMonth);
+    startYOffset = -(startYearIndex * itemHeight + startMonthIndex * itemHeight);
+    document.getElementById('startPickerContent').style.transform = `translateY(${startYOffset}px)`;
+  }
+
+  updatePickerActiveState();
+});
+
+// 鼠标交互（用于桌面端测试）
+document.getElementById('startPickerColumn').addEventListener('mousedown', function(e) {
+  startY = e.clientY;
+  function onMouseMove(e) {
+    const currentY = e.clientY;
+    const deltaY = currentY - startY;
+    startYOffset += deltaY;
+    document.getElementById('startPickerContent').style.transform = `translateY(${startYOffset}px)`;
+    startY = currentY;
+
+    const selectedIndex = Math.round(-startYOffset / itemHeight);
+    const totalItems = pickerData.years.length * pickerData.months.length;
+    const clampedIndex = Math.max(0, Math.min(totalItems - 1, selectedIndex));
+
+    const yearIndex = Math.floor(clampedIndex / pickerData.months.length);
+    const monthIndex = clampedIndex % pickerData.months.length;
+
+    tempStartYear = pickerData.years[yearIndex];
+    tempStartMonth = pickerData.months[monthIndex];
+
+    const startValue = tempStartYear + '-' + tempStartMonth.replace('月', '');
+    const endValue = tempEndYear + '-' + tempEndMonth.replace('月', '');
+    if (startValue > endValue) {
+      tempEndYear = tempStartYear;
+      tempEndMonth = tempStartMonth;
+      const endYearIndex = pickerData.years.indexOf(tempEndYear);
+      const endMonthIndex = pickerData.months.indexOf(tempEndMonth);
+      endYOffset = -(endYearIndex * itemHeight + endMonthIndex * itemHeight);
+      document.getElementById('endPickerContent').style.transform = `translateY(${endYOffset}px)`;
+    }
+
+    updatePickerActiveState();
+  }
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+document.getElementById('endPickerColumn').addEventListener('mousedown', function(e) {
+  endY = e.clientY;
+  function onMouseMove(e) {
+    const currentY = e.clientY;
+    const deltaY = currentY - endY;
+    endYOffset += deltaY;
+    document.getElementById('endPickerContent').style.transform = `translateY(${endYOffset}px)`;
+    endY = currentY;
+
+    const selectedIndex = Math.round(-endYOffset / itemHeight);
+    const totalItems = pickerData.years.length * pickerData.months.length;
+    const clampedIndex = Math.max(0, Math.min(totalItems - 1, selectedIndex));
+
+    const yearIndex = Math.floor(clampedIndex / pickerData.months.length);
+    const monthIndex = clampedIndex % pickerData.months.length;
+
+    tempEndYear = pickerData.years[yearIndex];
+    tempEndMonth = pickerData.months[monthIndex];
+
+    const startValue = tempStartYear + '-' + tempStartMonth.replace('月', '');
+    const endValue = tempEndYear + '-' + tempEndMonth.replace('月', '');
+    if (startValue > endValue) {
+      tempStartYear = tempEndYear;
+      tempStartMonth = tempEndMonth;
+      const startYearIndex = pickerData.years.indexOf(tempStartYear);
+      const startMonthIndex = pickerData.months.indexOf(tempStartMonth);
+      startYOffset = -(startYearIndex * itemHeight + startMonthIndex * itemHeight);
+      document.getElementById('startPickerContent').style.transform = `translateY(${startYOffset}px)`;
+    }
+
+    updatePickerActiveState();
+  }
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+</script>
+
+</body>
+</html>
