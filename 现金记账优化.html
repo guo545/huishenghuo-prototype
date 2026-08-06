@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>现金记账优化 - 交互原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .status-bar {
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .header {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid #eee;
+        }
+        .back-btn {
+            position: absolute;
+            left: 16px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .amount-display {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .amount {
+            font-size: 48px;
+            font-weight: 500;
+            color: #333;
+        }
+        .amount::before {
+            content: '¥';
+            font-size: 36px;
+        }
+        .remark-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            margin-top: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .remark-link {
+            color: #f7b500;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .cash-checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #999;
+            border-radius: 4px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .checkbox.checked {
+            background: #f7b500;
+            border-color: #f7b500;
+        }
+        .checkbox.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .cash-label {
+            font-size: 16px;
+            color: #333;
+        }
+        .cash-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+            display: none;
+        }
+        .cash-hint.show {
+            display: block;
+        }
+        .keypad {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+        }
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+        }
+        .numbers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .key {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #333;
+            cursor: pointer;
+            border-top: 1px solid #eee;
+            border-right: 1px solid #eee;
+            transition: background 0.1s;
+        }
+        .key:active {
+            background: #f5f5f5;
+        }
+        .action-key {
+            background: #f7b500;
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .action-key.record-mode {
+            background: #999;
+        }
+        .action-key span {
+            display: block;
+        }
+        .small-amount {
+            position: absolute;
+            bottom: 290px;
+            right: 20px;
+            font-size: 20px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .clear-amount {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #999;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal {
+            width: 300px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+        .modal-header {
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-amount {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .modal-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.6;
+        }
+        .modal-footer {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background: #fff;
+        }
+        .modal-btn:first-child {
+            border-right: 1px solid #eee;
+            color: #666;
+        }
+        .modal-btn:last-child {
+            color: #f7b500;
+            font-weight: 500;
+        }
+        .success-page {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #52c41a;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #fff;
+        }
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .cash-tag {
+            display: inline-block;
+            background: #f7b500;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .success-hint {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .back-home {
+            margin-top: 40px;
+            padding: 12px 32px;
+            background: #f7b500;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .page-main {
+            display: block;
+        }
+        .compare-hint {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 280px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .compare-hint h3 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .compare-hint .old {
+            color: #999;
+            text-decoration: line-through;
+        }
+        .compare-hint .new {
+            color: #f7b500;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="compare-hint">
+        <h3>📱 交互演示说明</h3>
+        <p><span class="old">原：现金记账</span> → <span class="new">新：仅记账（现金/线下收款）</span></p>
+        <p><span class="old">原：按钮始终显示"去收款"</span> → <span class="new">新：勾选后按钮变为"记录账目"并变灰</span></p>
+        <p><span class="new">✓ 勾选时显示Toast提示</span></p>
+        <p><span class="new">✓ 点击按钮弹出二次确认</span></p>
+        <p><span class="new">✓ 成功页显示差异化提示</span></p>
+    </div>
+    <div class="phone-frame">
+        <div class="page-main" id="mainPage">
+            <div class="status-bar">
+                <span>14:45</span>
+                <span>📶 🔋</span>
+            </div>
+            <div class="header">
+                <span class="back-btn">‹</span>
+                <span class="header-title">阿男的大饭店</span>
+            </div>
+            <div class="amount-display">
+                <div class="amount" id="amountDisplay">0.01</div>
+            </div>
+            <div class="remark-row">
+                <span class="remark-link">设置备注</span>
+                <div class="cash-checkbox-container" id="cashCheckbox">
+                    <div class="checkbox" id="checkbox"></div>
+                    <div>
+                        <div class="cash-label">仅记账（现金/微信/支付宝线下收款）</div>
+                        <div class="cash-hint" id="cashHint">此操作仅记录账目，不会通过系统实际收款</div>
+                    </div>
+                </div>
+            </div>
+            <div class="small-amount">
+                <span id="smallAmount">0.01</span>
+                <span class="clear-amount">×</span>
+            </div>
+            <div class="keypad">
+                <div class="keypad-grid">
+                    <div class="numbers">
+                        <div class="key">1</div>
+                        <div class="key">2</div>
+                        <div class="key">3</div>
+                        <div class="key">4</div>
+                        <div class="key">5</div>
+                        <div class="key">6</div>
+                        <div class="key">7</div>
+                        <div class="key">8</div>
+                        <div class="key">9</div>
+                        <div class="key">00</div>
+                        <div class="key">0</div>
+                        <div class="key">.</div>
+                    </div>
+                    <div class="key action-key" id="actionBtn">
+                        <span>去</span>
+                        <span>收</span>
+                        <span>款</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="success-page" id="successPage">
+            <div class="status-bar">
+                <span>14:45</span>
+                <span>📶 🔋</span>
+            </div>
+            <div class="success-icon">✓</div>
+            <div class="success-title">记账成功</div>
+            <div class="cash-tag">现金记账</div>
+            <div class="success-hint">
+                您已成功记录一笔 ¥0.01 的现金收入<br>
+                请确认已收到客户付款
+            </div>
+            <button class="back-home" id="backHome">返回首页</button>
+        </div>
+    </div>
+    <div class="toast" id="toast">
+        温馨提示：现金记账仅用于记录您已线下收到的款项，不会通过系统实际收款
+    </div>
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-header">确认记录现金账目</div>
+            <div class="modal-body">
+                <div class="modal-amount">¥0.01</div>
+                <div class="modal-warning">
+                    ⚠️ 重要提示：<br>
+                    此操作仅记录账目，不会实际收款
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="cancelBtn">取消</button>
+                <button class="modal-btn" id="confirmBtn">确认记录</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let isCashMode = false;
+        const checkbox = document.getElementById('checkbox');
+        const cashHint = document.getElementById('cashHint');
+        const actionBtn = document.getElementById('actionBtn');
+        const toast = document.getElementById('toast');
+        const modal = document.getElementById('modal');
+        const mainPage = document.getElementById('mainPage');
+        const successPage = document.getElementById('successPage');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const backHome = document.getElementById('backHome');
+        document.getElementById('cashCheckbox').addEventListener('click', function() {
+            isCashMode = !isCashMode;
+            if (isCashMode) {
+                checkbox.classList.add('checked');
+                cashHint.classList.add('show');
+                actionBtn.innerHTML = '<span>记</span><span>录</span><span>账</span><span>目</span>';
+                actionBtn.classList.add('record-mode');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            } else {
+                checkbox.classList.remove('checked');
+                cashHint.classList.remove('show');
+                actionBtn.innerHTML = '<span>去</span><span>收</span><span>款</span>';
+                actionBtn.classList.remove('record-mode');
+            }
+        });
+        actionBtn.addEventListener('click', function() {
+            if (isCashMode) {
+                modal.classList.add('show');
+            }
+        });
+        cancelBtn.addEventListener('click', function() {
+            modal.classList.remove('show');
+        });
+        confirmBtn.addEventListener('click', function() {
+            modal.classList.remove('show');
+            mainPage.style.display = 'none';
+            successPage.style.display = 'block';
+        });
+        backHome.addEventListener('click', function() {
+            mainPage.style.display = 'block';
+            successPage.style.display = 'none';
+            isCashMode = false;
+            checkbox.classList.remove('checked');
+            cashHint.classList.remove('show');
+            actionBtn.innerHTML = '<span>去</span><span>收</span><span>款</span>';
+            actionBtn.classList.remove('record-mode');
+        });
+    </script>
+</body>
+</html>
