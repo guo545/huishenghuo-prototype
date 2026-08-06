@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>申请手续费发票 - PC端交互原型（简化版）</title>
+<style>
+/* ========== 全局变量（遵循会生活PC设计规范） ========== */
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-1);
+  font-size: 14px;
+  line-height: 22px;
+  min-width: 1200px;
+}
+
+/* ========== 顶部导航 ========== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-20);
+  z-index: 100;
+  color: var(--color-text-white);
+}
+.top-nav .logo-area { display: flex; align-items: center; gap: 12px; }
+.top-nav .logo {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.top-nav .sys-name { font-size: 16px; font-weight: 500; }
+.top-nav .merchant-name {
+  margin-left: 24px;
+  font-size: 14px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-4);
+}
+.top-nav .right-area { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+.top-nav .right-area span { cursor: pointer; }
+.top-nav .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+
+/* ========== 左侧导航 ========== */
+.layout { padding-top: 64px; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  padding: var(--spacing-12) 0;
+  position: fixed;
+  top: 64px; bottom: 0; left: 0;
+  overflow-y: auto;
+}
+.sidebar .menu-item {
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-20);
+  cursor: pointer;
+  color: var(--color-text-1);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover { background: var(--row-hover); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 500;
+}
+.sidebar .menu-item .icon { margin-right: 8px; }
+.sidebar .menu-group {
+  padding: 4px var(--spacing-20);
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-top: var(--spacing-12);
+  margin-bottom: 4px;
+}
+
+/* ========== 主内容区 ========== */
+.main-content {
+  margin-left: 200px;
+  flex: 1;
+  padding: var(--spacing-20);
+  min-height: calc(100vh - 64px);
+}
+
+/* ========== 演示态切换器（仅评审用） ========== */
+.demo-switcher {
+  position: fixed;
+  top: 80px; right: 20px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-6);
+  padding: 12px;
+  z-index: 50;
+  width: 240px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.demo-switcher .demo-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-error);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-base);
+}
+.demo-switcher .demo-item {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  border-radius: var(--radius-4);
+  margin-bottom: 4px;
+}
+.demo-switcher .demo-item:hover { background: var(--row-hover); }
+.demo-switcher .demo-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ========== 页面头部 ========== */
+.page-header {
+  background: var(--color-bg-card);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  border-radius: var(--radius-6);
+}
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.page-header .breadcrumb {
+  font-size: 13px;
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+}
+
+/* ========== 提示框 ========== */
+.tip-box {
+  background: #FFFBE6;
+  border: 1px solid #FFE58F;
+  border-radius: var(--radius-4);
+  padding: var(--spacing-12) var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+  font-size: 13px;
+  color: var(--color-text-1);
+  display: flex;
+  gap: 8px;
+}
+.tip-box .tip-icon {
+  color: var(--color-warning);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.tip-box .tip-content p { margin-bottom: 4px; }
+.tip-box .tip-content p:last-child { margin-bottom: 0; }
+
+/* ========== 卡片 ========== */
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+}
+
+/* ========== 表单 ========== */
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-16);
+}
+.form-row:last-child { margin-bottom: 0; }
+.form-row .label {
+  width: 120px;
+  text-align: right;
+  padding-right: 12px;
+  padding-top: 9px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.form-row .label .required { color: var(--color-error); margin-right: 4px; }
+.form-row .control { flex: 1; max-width: 480px; position: relative; }
+.form-row .control input,
+.form-row .control select {
+  width: 100%; height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+.form-row .control input:focus,
+.form-row .control select:focus { border-color: var(--color-primary); }
+.form-row .control input.error,
+.form-row .control select.error { border-color: var(--color-error); }
+.form-row .control .err-tip {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: 4px;
+  display: none;
+}
+.form-row .control .err-tip.show { display: block; }
+.form-row .control .helper {
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-top: 4px;
+}
+
+/* ========== 填入按钮区域 ========== */
+.fill-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+.fill-buttons .btn-fill {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: var(--radius-4);
+  border: 1px solid var(--border-base);
+  background: #fff;
+  color: var(--color-text-1);
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.fill-buttons .btn-fill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.fill-buttons .btn-fill.primary-hover:hover {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+
+/* ========== 手续费行 ========== */
+.fee-list {
+  border-top: 1px dashed var(--border-base);
+  padding-top: var(--spacing-16);
+  margin-top: var(--spacing-8);
+}
+.fee-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-12);
+  gap: 12px;
+}
+.fee-row:last-child { margin-bottom: 0; }
+.fee-row .fee-label {
+  width: 100px;
+  text-align: right;
+  padding-right: 12px;
+  padding-top: 9px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.fee-row .fee-input-wrap {
+  flex: 0 0 200px;
+  position: relative;
+}
+.fee-row .fee-input-wrap input {
+  width: 100%; height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+.fee-row .fee-input-wrap input:focus { border-color: var(--color-primary); }
+.fee-row .fee-info {
+  flex: 1;
+  padding-top: 9px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-2);
+}
+.fee-row .fee-info .amount-value { color: var(--color-text-1); margin-right: 4px; font-weight: 500; }
+.fee-row .fee-info .disabled-text { color: var(--color-text-disable); }
+.fee-row .fee-info .empty-tip {
+  font-size: 12px;
+  color: var(--color-text-disable);
+  background: var(--row-hover);
+  padding: 2px 8px;
+  border-radius: var(--radius-4);
+  margin-left: 8px;
+}
+
+/* ⓘ 角标提示（按月填入后显示） */
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+  margin-left: 4px;
+  user-select: none;
+  position: relative;
+}
+.info-badge:hover { background: var(--color-primary); color: #fff; }
+.info-popover {
+  position: absolute;
+  top: 22px; left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: var(--spacing-12) var(--spacing-16);
+  min-width: 200px;
+  z-index: 20;
+  display: none;
+}
+.info-badge:hover .info-popover,
+.info-popover:hover { display: block; }
+.info-popover .pop-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  line-height: 24px;
+  color: var(--color-text-1);
+  gap: 24px;
+}
+.info-popover .pop-row .month-label { color: var(--color-text-2); }
+.info-popover::before {
+  content: '';
+  position: absolute;
+  top: -6px; left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px; height: 10px;
+  background: #fff;
+  border-left: 1px solid var(--border-base);
+  border-top: 1px solid var(--border-base);
+}
+.info-popover .pop-title {
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--border-base);
+}
+
+/* 合计 */
+.fee-total {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-16);
+  padding-top: var(--spacing-16);
+  border-top: 1px dashed var(--border-base);
+}
+.fee-total .total-label {
+  width: 112px;
+  text-align: right;
+  padding-right: 12px;
+  color: var(--color-text-1);
+  font-size: 14px;
+}
+.fee-total .total-value {
+  flex: 0 0 200px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-error);
+}
+.fee-total .total-unit {
+  font-size: 14px;
+  color: var(--color-text-2);
+  margin-left: 4px;
+}
+
+/* 验证码 */
+.captcha-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.captcha-row input { flex: 0 0 200px; }
+.captcha-img {
+  width: 100px; height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  user-select: none;
+  font-family: "Courier New", monospace;
+}
+
+/* ========== 按钮 ========== */
+.btn {
+  height: 32px; padding: 0 16px;
+  border-radius: var(--radius-4);
+  border: 1px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px;
+  background: #fff;
+  color: var(--color-text-1);
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-default {
+  background: #fff;
+  color: var(--color-text-1);
+  border-color: var(--border-base);
+}
+.btn-default:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-large { height: 40px; padding: 0 20px; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.form-actions {
+  margin-top: var(--spacing-20);
+  padding-top: var(--spacing-20);
+  border-top: 1px solid var(--border-base);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  padding-left: 132px;
+}
+
+/* ========== 月份选择弹窗 ========== */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-mask.hidden { display: none; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius-4);
+  width: 480px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.modal-header {
+  height: 48px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; }
+.modal-header .close {
+  cursor: pointer; color: var(--color-text-2);
+  font-size: 18px; line-height: 1;
+}
+.modal-body {
+  padding: var(--spacing-20);
+  flex: 1;
+}
+.modal-footer {
+  height: 56px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+/* 弹窗内月份选择器 */
+.month-picker-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-16);
+}
+.month-picker-row:last-child { margin-bottom: 0; }
+.month-picker-row .picker-label {
+  width: 60px;
+  font-size: 14px;
+  color: var(--color-text-1);
+}
+.month-picker-row .picker-select {
+  flex: 1;
+}
+.month-picker-row .picker-select select {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+.month-picker-row .picker-select select:focus { border-color: var(--color-primary); }
+
+.modal-helper {
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-top: var(--spacing-12);
+  padding-top: var(--spacing-12);
+  border-top: 1px dashed var(--border-base);
+}
+
+.modal-error-tip {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: var(--spacing-12);
+  padding: 8px 12px;
+  background: #FFF2F0;
+  border: 1px solid #FFCCC7;
+  border-radius: var(--radius-4);
+  display: none;
+}
+.modal-error-tip.show { display: block; }
+
+/* 时间范围选择器（单行布局） */
+.time-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.time-range-picker .picker-label-inline {
+  font-size: 14px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+}
+.time-range-picker .picker-select-wrapper {
+  flex: 1;
+}
+.time-range-picker .picker-select-wrapper select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+/* 表格样式 */
+.table-container {
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  overflow: hidden;
+}
+.table-header {
+  display: flex;
+  background: var(--color-bg-table-header);
+  font-size: 13px;
+  color: var(--color-text-1);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-base);
+}
+.table-header .th { padding: 12px; }
+.table-header .th-month { width: 120px; }
+.table-header .th-fee { flex: 1; text-align: right; }
+
+.table-body {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.table-row {
+  display: flex;
+  border-bottom: 1px solid var(--border-base);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: var(--row-hover); }
+.table-row .td { padding: 12px; }
+.table-row .td-month { width: 120px; color: var(--color-text-1); }
+.table-row .td-fee { flex: 1; text-align: right; color: var(--color-text-1); font-weight: 500; }
+
+/* 弹窗底部合计 */
+.modal-total-summary {
+  padding: 12px 16px;
+  border-top: 1px dashed var(--border-base);
+  background: #FAFAFA;
+  font-size: 13px;
+  color: var(--color-text-1);
+}
+.modal-total-summary .summary-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-error);
+}
+.modal-total-summary .summary-detail {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+
+/* 演示态容器 */
+.scene { display: none; }
+.scene.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="top-nav">
+  <div class="logo-area">
+    <div class="logo">R</div>
+    <span class="sys-name">会生活 PC</span>
+    <span class="merchant-name">北京市东山区会生活大厦餐饮连锁店1</span>
+  </div>
+  <div class="right-area">
+    <span>下载</span>
+    <span>手机客户端</span>
+    <span>消息通知</span>
+    <span>帮助中心</span>
+    <div class="avatar">商</div>
+  </div>
+</div>
+
+<!-- ========== 左侧导航 ========== -->
+<div class="layout">
+  <div class="sidebar">
+    <div class="menu-item"><span class="icon">▦</span>商户管理</div>
+    <div class="menu-item"><span class="icon">▤</span>交易数据</div>
+    <div class="menu-item"><span class="icon">▥</span>分账管理</div>
+    <div class="menu-item active" style="background:var(--color-bg-select-active); color:var(--color-primary); border-left-color:var(--color-primary); font-weight:500;">
+      <span class="icon">▦</span>财务结算
+    </div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">发票查询</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px; color:var(--color-primary); background:var(--color-bg-select-active);">申请手续费发票</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">开票金额明细</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">账单明细</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">结算记录</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">手工业务</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">历史数据管理</div>
+    <div class="menu-item"><span class="icon">▣</span>对账管理</div>
+    <div class="menu-item"><span class="icon">▢</span>账户资产</div>
+    <div class="menu-item"><span class="icon">▤</span>风控管理</div>
+    <div class="menu-item"><span class="icon">★</span>应用中心</div>
+  </div>
+
+  <!-- ========== 演示态切换器（仅评审用） ========== -->
+  <div class="demo-switcher">
+    <div class="demo-title">⚠ 演示态切换（评审用）</div>
+    <div class="demo-item active" data-scene="scene-1">① 默认态（查看明细+全部填入）</div>
+    <div class="demo-item" data-scene="scene-2">② 按月填入后（含明细角标）</div>
+    <div class="demo-item" data-scene="scene-3">③ 可开票明细弹窗</div>
+  </div>
+
+  <!-- ========== 主内容区 ========== -->
+  <div class="main-content">
+
+    <!-- ========== 场景 1：默认态 ========== -->
+    <div class="scene active" id="scene-1">
+      <div class="page-header">
+        <div class="breadcrumb">财务结算 / 发票查询 / 申请手续费发票</div>
+        <h1>申请手续费发票</h1>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">!</span>
+        <div class="tip-content">
+          <p>请注意：</p>
+          <p>· 每月 3 号更新上月可开票金额，每月一次提交上的发票申请项次请在同一个工作日完成；</p>
+          <p>· 注意：税控票和专票均为电子发票，不支持邮寄，请在邮件内或发票查询-发票信息页面查看发票下载信息</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>收票方：</div>
+          <div class="control">
+            <select>
+              <option>随行付支付有限公司</option>
+            </select>
+            <div class="helper">手续费发票将会负向向收单的第三方支付机构反向开具</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>发票类型：</div>
+          <div class="control">
+            <select>
+              <option>电子发票（普通发票）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 开票金额：全部填入在前 + 查看可开票明细在后（带角标） -->
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>开票金额：</div>
+          <div class="control" style="max-width:560px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <a href="javascript:void(0)" style="color:var(--color-primary); font-size:14px; cursor:pointer;" onclick="fillAll()">全部填入</a>
+              <a href="javascript:void(0)" style="color:var(--color-primary); font-size:14px; cursor:pointer;" onclick="showInvoiceDetailModal()">查看可开票明细</a>
+              <span class="info-badge">ⓘ
+                <div class="info-popover">
+                  <div class="pop-title">提示</div>
+                  <div style="font-size:13px; color:var(--color-text-1); line-height:20px;">支持查看每月可开票金额明细，并帮助您快速填开票金额</div>
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fee-list" id="feeList1">
+          <div class="fee-row">
+            <div class="fee-label">交易手续费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="trans1" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">19.74</span> 元
+            </div>
+          </div>
+
+          <div class="fee-row">
+            <div class="fee-label">结算手续费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="settle1" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">19.19</span> 元
+            </div>
+          </div>
+
+          <div class="fee-row">
+            <div class="fee-label">增值服务费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="value1" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">3.71</span> 元
+            </div>
+          </div>
+
+          <div class="fee-total">
+            <div class="total-label">合计：</div>
+            <div class="total-value" id="total1">0.00 <span class="total-unit">元</span></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:24px;">
+          <div class="label"><span class="required">*</span>验证码：</div>
+          <div class="control captcha-row">
+            <input type="text" placeholder="请输入图形验证码" />
+            <div class="captcha-img" title="点击换一张">5F9V</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary btn-large">提交申请</button>
+          <button class="btn btn-default btn-large">取 消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 场景 2：按月填入后（含明细角标） ========== -->
+    <div class="scene" id="scene-2">
+      <div class="page-header">
+        <div class="breadcrumb">财务结算 / 发票查询 / 申请手续费发票</div>
+        <h1>申请手续费发票</h1>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">!</span>
+        <div class="tip-content">
+          <p>请注意：</p>
+          <p>· 每月 3 号更新上月可开票金额；按月填入后金额仍可手动编辑微调；</p>
+          <p>· 注意：税控票和专票均为电子发票，不支持邮寄，请在邮件内或发票查询-发票信息页面查看发票下载信息</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>收票方：</div>
+          <div class="control">
+            <select>
+              <option>随行付支付有限公司</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>发票类型：</div>
+          <div class="control">
+            <select>
+              <option>电子发票（普通发票）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 开票金额：全部填入在前 + 查看可开票明细在后（带角标） -->
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>开票金额：</div>
+          <div class="control" style="max-width:560px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <a href="javascript:void(0)" style="color:var(--color-primary); font-size:14px; cursor:pointer;" onclick="fillAll()">全部填入</a>
+              <a href="javascript:void(0)" style="color:var(--color-primary); font-size:14px; cursor:pointer;" onclick="showInvoiceDetailModal()">查看可开票明细</a>
+              <span class="info-badge">ⓘ
+                <div class="info-popover">
+                  <div class="pop-title">提示</div>
+                  <div style="font-size:13px; color:var(--color-text-1); line-height:20px;">支持查看每月可开票金额明细，并帮助您快速填开票金额</div>
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fee-list" id="feeList2">
+          <!-- 交易手续费 -->
+          <div class="fee-row">
+            <div class="fee-label">交易手续费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="trans2" value="12.50" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">19.74</span> 元
+            </div>
+          </div>
+
+          <!-- 结算手续费 -->
+          <div class="fee-row">
+            <div class="fee-label">结算手续费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="settle2" value="8.00" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">19.19</span> 元
+            </div>
+          </div>
+
+          <!-- 增值服务费 -->
+          <div class="fee-row">
+            <div class="fee-label">增值服务费：</div>
+            <div class="fee-input-wrap">
+              <input type="text" id="value2" value="3.71" placeholder="请输入开票金额" />
+            </div>
+            <div class="fee-info">
+              最大可开金额 <span class="amount-value">3.71</span> 元
+            </div>
+          </div>
+
+          <div class="fee-total">
+            <div class="total-label">合计：</div>
+            <div class="total-value" id="total2">24.21 <span class="total-unit">元</span></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:24px;">
+          <div class="label"><span class="required">*</span>验证码：</div>
+          <div class="control captcha-row">
+            <input type="text" placeholder="请输入图形验证码" />
+            <div class="captcha-img" title="点击换一张">8K3D</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary btn-large">提交申请</button>
+          <button class="btn btn-default btn-large">取 消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 场景 3：月份选择弹窗演示 ========== -->
+    <div class="scene" id="scene-3">
+      <div class="page-header">
+        <div class="breadcrumb">财务结算 / 发票查询 / 申请手续费发票</div>
+        <h1>申请手续费发票</h1>
+      </div>
+      <div class="card" style="min-height:400px; display:flex; align-items:center; justify-content:center; color:var(--color-text-2);">
+        <div style="text-align:center;">
+          <div style="font-size:48px; margin-bottom:16px;">📅</div>
+          <div style="font-size:16px; color:var(--color-text-1);">月份选择弹窗演示</div>
+          <div style="font-size:13px; margin-top:8px;">请查看右侧弹窗</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 可开票明细弹窗 ========== -->
+<div class="modal-mask hidden" id="invoiceDetailModal">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <div class="title">可开票明细</div>
+      <div class="close" onclick="hideInvoiceDetailModal()">×</div>
+    </div>
+    <div class="modal-body">
+      <!-- 筛选条件 -->
+      <div class="time-range-picker">
+        <div class="picker-label-inline">时间范围：</div>
+        <input type="date" id="startDate" value="2025-01-01" style="width:140px; height:40px; border:1px solid var(--border-base); border-radius:var(--radius-4); padding:0 12px; font-size:14px; color:var(--color-text-1); background:#fff;" />
+        <span style="color:var(--color-text-2);">-</span>
+        <input type="date" id="endDate" value="2025-03-31" style="width:140px; height:40px; border:1px solid var(--border-base); border-radius:var(--radius-4); padding:0 12px; font-size:14px; color:var(--color-text-1); background:#fff;" />
+        <button class="btn btn-primary" onclick="searchInvoiceDetail()">查询</button>
+      </div>
+
+      <!-- 表格 -->
+      <div class="table-container" style="margin-top:16px;">
+        <div class="table-header">
+          <div class="th th-month">月份</div>
+          <div class="th th-fee">交易手续费</div>
+          <div class="th th-fee">结算手续费</div>
+          <div class="th th-fee">增值服务费</div>
+        </div>
+        <div class="table-body" id="invoiceTableBody">
+          <!-- 数据行 -->
+          <div class="table-row" data-month="2025-01">
+            <div class="td td-month">2025-01</div>
+            <div class="td td-fee">3.50 元</div>
+            <div class="td td-fee">2.00 元</div>
+            <div class="td td-fee">1.20 元</div>
+          </div>
+          <div class="table-row" data-month="2025-02">
+            <div class="td td-month">2025-02</div>
+            <div class="td td-fee">4.50 元</div>
+            <div class="td td-fee">3.00 元</div>
+            <div class="td td-fee">1.30 元</div>
+          </div>
+          <div class="table-row" data-month="2025-03">
+            <div class="td td-month">2025-03</div>
+            <div class="td td-fee">4.50 元</div>
+            <div class="td td-fee">3.00 元</div>
+            <div class="td td-fee">1.21 元</div>
+          </div>
+          <div class="table-row" data-month="2025-04">
+            <div class="td td-month">2025-04</div>
+            <div class="td td-fee">5.00 元</div>
+            <div class="td td-fee">4.00 元</div>
+            <div class="td td-fee">1.50 元</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 合计 -->
+    <div class="modal-total-summary">
+      <div class="summary-total">合计 <span id="modalTotalAmount">34.71</span> 元</div>
+      <div class="summary-detail">其中交易手续费：<span id="modalTransFee">17.50</span> 元，结算手续费：<span id="modalSettleFee">12.00</span> 元，增值服务费：<span id="modalValueFee">5.21</span> 元</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="hideInvoiceDetailModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmQuickFill()">快速填入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 演示态切换 ========== -->
+<script>
+  // 演示态切换
+  const switcherItems = document.querySelectorAll('.demo-switcher .demo-item');
+  const scenes = document.querySelectorAll('.scene');
+  switcherItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-scene');
+      switcherItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      scenes.forEach(s => s.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+      // 场景 3 显示弹窗
+      if (target === 'scene-3') {
+        document.getElementById('invoiceDetailModal').classList.remove('hidden');
+        updateSummary();
+      } else {
+        document.getElementById('invoiceDetailModal').classList.add('hidden');
+      }
+    });
+  });
+
+  // 全部填入
+  function fillAll() {
+    document.getElementById('trans1').value = '19.74';
+    document.getElementById('settle1').value = '19.19';
+    document.getElementById('value1').value = '3.71';
+    updateTotal1();
+    alert('已填入最大可开金额，仍可手动编辑微调');
+  }
+
+  // 显示可开票明细弹窗
+  function showInvoiceDetailModal() {
+    document.getElementById('invoiceDetailModal').classList.remove('hidden');
+    updateSummary();
+  }
+
+  // 隐藏可开票明细弹窗
+  function hideInvoiceDetailModal() {
+    document.getElementById('invoiceDetailModal').classList.add('hidden');
+  }
+
+  // 查询明细
+  function searchInvoiceDetail() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    alert('查询时间范围：' + startDate + ' 至 ' + endDate + '\n（演示：数据已根据时间范围筛选）');
+    // 这里可以添加实际的筛选逻辑
+  }
+
+  // 更新合计（统计所有行）
+  function updateSummary() {
+    const allRows = document.querySelectorAll('#invoiceTableBody .table-row');
+    let totalTrans = 0, totalSettle = 0, totalValue = 0;
+
+    // 统计所有行（没有checkbox，默认全部）
+    allRows.forEach(row => {
+      const fees = row.querySelectorAll('.td-fee');
+      totalTrans += parseFloat(fees[0].textContent.replace(' 元', '')) || 0;
+      totalSettle += parseFloat(fees[1].textContent.replace(' 元', '')) || 0;
+      totalValue += parseFloat(fees[2].textContent.replace(' 元', '')) || 0;
+    });
+
+    const totalAmount = totalTrans + totalSettle + totalValue;
+    document.getElementById('modalTotalAmount').textContent = totalAmount.toFixed(2);
+    document.getElementById('modalTransFee').textContent = totalTrans.toFixed(2);
+    document.getElementById('modalSettleFee').textContent = totalSettle.toFixed(2);
+    document.getElementById('modalValueFee').textContent = totalValue.toFixed(2);
+  }
+
+  // 快速填入（填入所有月份的数据）
+  function confirmQuickFill() {
+    const allRows = document.querySelectorAll('#invoiceTableBody .table-row');
+    let totalTrans = 0, totalSettle = 0, totalValue = 0;
+    let months = [];
+
+    // 统计所有行（没有checkbox，默认全部）
+    allRows.forEach(row => {
+      months.push(row.getAttribute('data-month'));
+      const fees = row.querySelectorAll('.td-fee');
+      totalTrans += parseFloat(fees[0].textContent.replace(' 元', '')) || 0;
+      totalSettle += parseFloat(fees[1].textContent.replace(' 元', '')) || 0;
+      totalValue += parseFloat(fees[2].textContent.replace(' 元', '')) || 0;
+    });
+
+    document.getElementById('trans1').value = totalTrans.toFixed(2);
+    document.getElementById('settle1').value = totalSettle.toFixed(2);
+    document.getElementById('value1').value = totalValue.toFixed(2);
+    updateTotal1();
+
+    hideInvoiceDetailModal();
+    alert('已填入所有月份金额（' + months.join(', ') + '），合计 ' + (totalTrans + totalSettle + totalValue).toFixed(2) + ' 元，仍可手动编辑微调');
+  }
+
+  // 合计计算
+  function updateTotal1() {
+    const t = parseFloat(document.getElementById('trans1').value) || 0;
+    const s = parseFloat(document.getElementById('settle1').value) || 0;
+    const v = parseFloat(document.getElementById('value1').value) || 0;
+    document.getElementById('total1').innerHTML = (t + s + v).toFixed(2) + ' <span class="total-unit">元</span>';
+  }
+
+  // 监听输入变化
+  document.querySelectorAll('.fee-input-wrap input').forEach(input => {
+    input.addEventListener('input', updateTotal1);
+  });
+</script>
+
+</body>
+</html>
