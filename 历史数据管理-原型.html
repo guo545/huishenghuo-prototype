@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>历史数据管理 - PC端交互原型</title>
+<style>
+/* ========== 全局变量（遵循会生活PC设计规范） ========== */
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-1);
+  font-size: 14px;
+  line-height: 22px;
+  min-width: 1200px;
+}
+
+/* ========== 顶部导航 ========== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-20);
+  z-index: 100;
+  color: var(--color-text-white);
+}
+.top-nav .logo-area { display: flex; align-items: center; gap: var(--spacing-12); }
+.top-nav .logo {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 13px;
+}
+.top-nav .sys-name { font-size: 16px; font-weight: 500; }
+.top-nav .merchant-name {
+  margin-left: var(--spacing-20);
+  font-size: 14px;
+  padding: 4px var(--spacing-12);
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-4);
+}
+.top-nav .right-area { display: flex; align-items: center; gap: var(--spacing-20); font-size: 14px; }
+.top-nav .right-area .nav-icon { cursor: pointer; display: flex; align-items: center; opacity: 0.95; }
+.top-nav .right-area .nav-icon:hover { opacity: 1; }
+.top-nav .user-area { display: flex; align-items: center; gap: var(--spacing-8); cursor: pointer; }
+.top-nav .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.top-nav .user-meta { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }
+.top-nav .user-name { font-size: 14px; font-weight: 400; }
+.top-nav .role-tag {
+  height: 16px; min-width: 56px; padding: 0 6px;
+  background: rgba(255,255,255,0.25);
+  border-radius: var(--radius-8);
+  font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+
+/* ========== 左侧导航 ========== */
+.layout { padding-top: 64px; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  padding: var(--spacing-12) 0 0;
+  position: fixed;
+  top: 64px; bottom: 0; left: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 300ms;
+  display: flex; flex-direction: column;
+}
+.sidebar.collapsed { width: 64px; }
+.sidebar .menu-group .menu-item, .sidebar .menu-item {
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-20);
+  cursor: pointer;
+  color: var(--color-text-1);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: background 200ms;
+}
+.sidebar .menu-item:hover { background: var(--row-hover); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 500;
+}
+.sidebar .menu-icon { width: 16px; height: 16px; margin-right: var(--spacing-8); flex-shrink: 0; }
+.sidebar .menu-text { white-space: nowrap; }
+.sidebar .arrow { margin-left: auto; color: var(--color-text-2); font-size: 12px; transition: transform 200ms; }
+.sidebar .menu-group.open > .menu-item .arrow { transform: rotate(90deg); }
+.sidebar .submenu { overflow: hidden; max-height: 0; transition: max-height 250ms ease; }
+.sidebar .menu-group.open .submenu { max-height: 260px; }
+.sidebar .submenu .menu-item { padding-left: 48px; font-size: 13px; height: 40px; }
+.sidebar .sidebar-toggle {
+  margin-top: auto;
+  height: 44px;
+  display: flex; align-items: center; gap: var(--spacing-8);
+  padding: 0 var(--spacing-20);
+  border-top: 1px solid var(--border-base);
+  cursor: pointer;
+  color: var(--color-text-2);
+  font-size: 13px;
+}
+.sidebar .sidebar-toggle:hover { background: var(--row-hover); color: var(--color-primary); }
+.sidebar.collapsed .menu-text,
+.sidebar.collapsed .arrow,
+.sidebar.collapsed .submenu,
+.sidebar.collapsed .sidebar-toggle .menu-text { display: none; }
+.sidebar.collapsed .menu-item { justify-content: center; padding: 0; }
+.sidebar.collapsed .menu-icon { margin-right: 0; }
+.sidebar.collapsed .sidebar-toggle { justify-content: center; padding: 0; }
+
+/* ========== 主内容区 ========== */
+.main-content {
+  margin-left: 200px;
+  flex: 1;
+  padding: var(--spacing-20);
+  min-height: calc(100vh - 64px);
+  transition: margin-left 300ms;
+}
+.main-content.expanded { margin-left: 64px; }
+
+/* ========== 页面头部 ========== */
+.page-header { margin-bottom: var(--spacing-16); }
+.page-header h1 { font-size: 20px; font-weight: 600; color: var(--color-text-1); }
+
+/* ========== 操作条 ========== */
+.action-bar {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  display: flex; align-items: center; gap: var(--spacing-16);
+}
+.action-bar .hint {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-2);
+  display: flex; align-items: center; gap: var(--spacing-8);
+  line-height: 22px;
+}
+.action-bar .hint .info-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.action-bar .hint .inline-link { color: var(--color-primary); cursor: pointer; }
+.action-bar .hint .inline-link:hover { color: var(--color-primary-hover); text-decoration: underline; }
+
+/* ========== 按钮 ========== */
+.btn {
+  height: 32px; padding: 0 var(--spacing-16);
+  border: none; border-radius: var(--radius-4);
+  font-size: 14px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 200ms;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.btn-primary { background: var(--color-primary); color: var(--color-text-white); }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-primary:active { background: var(--color-primary); }
+.btn-secondary { background: var(--color-bg-card); color: var(--color-primary); border: 1px solid var(--color-primary); }
+.btn-secondary:hover { color: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.btn-default { background: var(--color-bg-card); color: var(--color-text-1); border: 1px solid var(--border-base); }
+.btn-default:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.btn:disabled, .btn.disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ========== 列表 ========== */
+.list-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+}
+.list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+  margin-bottom: var(--spacing-16);
+}
+.list-head .list-title { font-size: 16px; font-weight: 500; color: var(--color-text-1); }
+.list-head .list-count { font-size: 13px; color: var(--color-text-2); }
+.list-table { width: 100%; border-collapse: collapse; }
+.list-table thead th {
+  height: 48px;
+  background: var(--color-bg-table-header);
+  color: var(--color-text-1);
+  font-size: 14px; font-weight: 500;
+  text-align: left;
+  padding: 0 var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+  white-space: nowrap;
+}
+.list-table tbody td {
+  height: 48px;
+  color: var(--color-text-1);
+  font-size: 14px;
+  padding: 0 var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+  white-space: nowrap;
+}
+.list-table tbody tr:hover td { background: var(--row-hover); }
+.list-table .op-link { color: var(--color-primary); cursor: pointer; }
+.list-table .op-link:hover { color: var(--color-primary-hover); text-decoration: underline; }
+.list-table .op-link.disabled { color: var(--color-text-disable); cursor: not-allowed; text-decoration: none; }
+.status-cell { display: flex; align-items: center; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+.st-success .status-dot { background: var(--color-success); }
+.st-success { color: var(--color-success); }
+.st-processing .status-dot { background: var(--color-warning); }
+.st-processing { color: var(--color-warning); }
+.st-failed .status-dot { background: var(--color-error); }
+.st-failed { color: var(--color-error); }
+
+/* 分页 */
+.pagination {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-16);
+  font-size: 13px; color: var(--color-text-2);
+}
+.pagination .total { margin-right: var(--spacing-12); }
+.page-btn {
+  min-width: 32px; height: 32px; padding: 0 var(--spacing-8);
+  border: 1px solid var(--border-base); background: var(--color-bg-card);
+  border-radius: var(--radius-4); cursor: pointer; font-size: 13px;
+  color: var(--color-text-1); display: inline-flex; align-items: center; justify-content: center;
+}
+.page-btn:hover:not(.disabled):not(.active) { color: var(--color-primary); border-color: var(--color-primary); }
+.page-btn.active { background: var(--color-primary); color: var(--color-text-white); border-color: var(--color-primary); }
+.page-btn.disabled { color: var(--color-text-disable); cursor: not-allowed; }
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-mask.hidden { display: none; }
+.modal {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-4);
+  width: 520px; max-width: 92vw;
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.modal.w-800 { width: 800px; }
+.modal-header {
+  height: 48px; padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; }
+.modal-header .close { cursor: pointer; color: var(--color-text-2); font-size: 18px; line-height: 1; width: 24px; text-align: center; }
+.modal-header .close:hover { color: var(--color-text-1); }
+.modal-body { padding: var(--spacing-20); flex: 1; overflow-y: auto; font-size: 14px; color: var(--color-text-1); }
+.modal-footer {
+  height: 56px; padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--spacing-12);
+  border-top: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+/* ========== 预览模版：Tab ========== */
+.tabs { display: flex; border-bottom: 1px solid var(--border-base); margin-bottom: var(--spacing-16); gap: var(--spacing-8); }
+.tab {
+  padding: var(--spacing-8) var(--spacing-16);
+  cursor: pointer; font-size: 14px; color: var(--color-text-2);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 200ms;
+}
+.tab:hover { color: var(--color-primary); }
+.tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 500; }
+
+/* 预览模版：分块 */
+.section { margin-bottom: var(--spacing-20); }
+.section:last-child { margin-bottom: 0; }
+.section-title {
+  font-size: 15px; font-weight: 500; color: var(--color-text-1);
+  margin-bottom: var(--spacing-8);
+  display: flex; align-items: center; gap: var(--spacing-8);
+}
+.section-title::before { content: ''; width: 3px; height: 14px; background: var(--color-primary); border-radius: 2px; }
+.section-desc { font-size: 13px; color: var(--color-text-2); margin-bottom: var(--spacing-12); line-height: 20px; }
+
+/* 模块一：导出表模版（Excel 风格） */
+.excel-scroll {
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  overflow: auto;
+  max-height: 280px;
+}
+.excel-table { border-collapse: collapse; }
+.excel-table th, .excel-table td {
+  border: 1px solid var(--border-base);
+  padding: 0 var(--spacing-12);
+  height: 36px;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: left;
+  color: var(--color-text-1);
+  background: var(--color-bg-card);
+}
+.excel-table thead th {
+  position: sticky; top: 0;
+  background: var(--color-bg-table-header);
+  font-weight: 500;
+  text-align: center;
+  z-index: 2;
+  color: var(--color-text-1);
+}
+.excel-table .row-num {
+  position: sticky; left: 0;
+  text-align: center;
+  color: var(--color-text-2);
+  background: var(--color-bg-table-header);
+  width: 48px; min-width: 48px;
+  z-index: 3;
+}
+.excel-table thead th.row-num { z-index: 4; }
+
+/* 模块二：数据字典 统计行 */
+.dict-stats { font-size: 13px; color: var(--color-text-2); margin-bottom: var(--spacing-12); }
+.dict-stats b { color: var(--color-text-1); font-weight: 600; }
+
+/* 模块二：数据字典 对比表 */
+.dict-wrap { border: 1px solid var(--border-base); border-radius: var(--radius-4); overflow: hidden; }
+.dict-table { width: 100%; border-collapse: collapse; }
+.dict-table thead th {
+  position: sticky; top: 0;
+  background: var(--color-bg-table-header);
+  height: 40px; font-size: 13px; font-weight: 500;
+  text-align: left; padding: 0 var(--spacing-12);
+  border-bottom: 1px solid var(--border-base); white-space: nowrap;
+}
+.dict-table tbody td {
+  height: 40px; font-size: 13px; padding: 0 var(--spacing-12);
+  border-bottom: 1px solid var(--border-base); color: var(--color-text-1);
+}
+.dict-table tbody tr:last-child td { border-bottom: none; }
+.dict-table tbody tr:hover td { background: var(--row-hover); }
+.dict-table tbody tr.unsupported td { background: var(--color-bg-table-header); color: var(--color-text-2); }
+.dict-table tbody tr.unsupported:hover td { background: var(--row-hover); }
+.dict-table .muted { color: var(--color-text-disable); }
+.dict-table .center { text-align: center; }
+.dict-table .yes { color: var(--color-success); font-weight: 600; }
+.dict-table .no { color: var(--color-error); font-weight: 600; }
+.dict-table .remark { color: var(--color-text-2); }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-12px);
+  background: var(--color-text-1); color: var(--color-text-white);
+  padding: 10px var(--spacing-20); border-radius: var(--radius-4);
+  font-size: 14px; z-index: 300; opacity: 0; pointer-events: none;
+  transition: all 250ms; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ========== 演示态切换器（仅评审用） ========== */
+.demo-switcher {
+  position: fixed; top: 80px; right: var(--spacing-20);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-12);
+  z-index: 150; width: 240px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.demo-switcher .demo-title {
+  font-size: 13px; font-weight: 600; color: var(--color-error);
+  margin-bottom: var(--spacing-8); padding-bottom: var(--spacing-8);
+  border-bottom: 1px solid var(--border-base);
+}
+.demo-switcher .demo-item {
+  display: block; padding: 6px var(--spacing-8);
+  font-size: 13px; color: var(--color-text-1); cursor: pointer;
+  border-radius: var(--radius-4); margin-bottom: 4px;
+}
+.demo-switcher .demo-item:hover { background: var(--row-hover); }
+.demo-switcher .demo-item.active { background: var(--color-bg-select-active); color: var(--color-primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="top-nav">
+  <div class="logo-area">
+    <div class="logo">会</div>
+    <span class="sys-name">会生活管理系统</span>
+    <span class="merchant-name">会生活餐饮管理有限公司</span>
+  </div>
+  <div class="right-area">
+    <span class="nav-icon" title="下载">下载</span>
+    <span class="nav-icon" title="手机客户端下载">手机客户端</span>
+    <span class="nav-icon" title="消息通知">消息</span>
+    <span class="nav-icon" title="帮助中心">帮助</span>
+    <div class="user-area">
+      <div class="avatar">张</div>
+      <div class="user-meta">
+        <span class="user-name">张明</span>
+        <span class="role-tag">财务管理员</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ========== 左侧导航 ========== -->
+  <div class="sidebar" id="sidebar">
+    <div class="menu-group" onclick="toggleMenu(this)">
+      <div class="menu-item">
+        <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.2"/><path d="M2.5 13c0-2 1.8-3.2 3.5-3.2s3.5 1.2 3.5 3.2"/><circle cx="11" cy="6" r="1.8"/><path d="M8.5 13c0-1.6 1.4-2.6 2.5-2.6s2.5 1 2.5 2.6"/></svg>
+        <span class="menu-text">商户管理</span><span class="arrow">▸</span>
+      </div>
+      <div class="submenu">
+        <div class="menu-item">角色管理</div>
+        <div class="menu-item">员工管理</div>
+        <div class="menu-item">设备管理</div>
+        <div class="menu-item">门店管理</div>
+        <div class="menu-item">分店管理</div>
+      </div>
+    </div>
+    <div class="menu-group" onclick="toggleMenu(this)">
+      <div class="menu-item">
+        <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 13.5h11"/><rect x="3.5" y="8" width="2" height="4"/><rect x="7" y="5" width="2" height="7"/><rect x="10.5" y="9.5" width="2" height="2.5"/></svg>
+        <span class="menu-text">交易数据</span><span class="arrow">▸</span>
+      </div>
+      <div class="submenu">
+        <div class="menu-item">交易记录</div>
+        <div class="menu-item">统计报表</div>
+      </div>
+    </div>
+    <div class="menu-group open" onclick="toggleMenu(this)">
+      <div class="menu-item">
+        <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M2 7h12"/><circle cx="11" cy="10" r="0.8" fill="currentColor"/></svg>
+        <span class="menu-text">财务结算</span><span class="arrow">▸</span>
+      </div>
+      <div class="submenu">
+        <div class="menu-item">发票查询</div>
+        <div class="menu-item">账单明细</div>
+        <div class="menu-item">结算记录</div>
+        <div class="menu-item">手工业务</div>
+        <div class="menu-item active">历史数据管理</div>
+      </div>
+    </div>
+    <div class="menu-group" onclick="toggleMenu(this)">
+      <div class="menu-item">
+        <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2h6l3 3v9h-9z"/><path d="M9.5 2v3h3"/><path d="M5.5 8h5M5.5 10.5h5"/></svg>
+        <span class="menu-text">对账管理</span><span class="arrow">▸</span>
+      </div>
+      <div class="submenu">
+        <div class="menu-item">账单汇总</div>
+      </div>
+    </div>
+    <div class="menu-item">
+      <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v6M6.3 6.5h2.4a1 1 0 0 1 0 2H6.8a1 1 0 0 0 0 2h2.4"/></svg>
+      <span class="menu-text">账户资产</span>
+    </div>
+    <div class="menu-group" onclick="toggleMenu(this)">
+      <div class="menu-item">
+        <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l5 2v4c0 3.5-2.5 5.5-5 6.5-2.5-1-5-3-5-6.5V4z"/><path d="M6 8l1.5 1.5L10.5 6.5"/></svg>
+        <span class="menu-text">风控管理</span><span class="arrow">▸</span>
+      </div>
+      <div class="submenu">
+        <div class="menu-item">协查工单</div>
+        <div class="menu-item">风险通知</div>
+      </div>
+    </div>
+    <div class="menu-item">
+      <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="4" height="4"/><rect x="9.5" y="2.5" width="4" height="4"/><rect x="2.5" y="9.5" width="4" height="4"/><rect x="9.5" y="9.5" width="4" height="4"/></svg>
+      <span class="menu-text">应用中心</span>
+    </div>
+    <div class="sidebar-toggle" onclick="toggleSidebar()">
+      <svg class="menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10M3 8h10M3 11h10"/></svg>
+      <span class="menu-text">收起菜单</span>
+    </div>
+  </div>
+
+  <!-- ========== 主内容区 ========== -->
+  <div class="main-content" id="mainContent">
+    <!-- 页面头部 -->
+    <div class="page-header"></div>
+
+    <!-- 操作条：申请按钮 + 提示语 -->
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="applyHistory()">历史数据申请</button>
+      <div class="hint">
+        <span class="info-icon">i</span>
+        <span>历史数据申请数据量较大，预计需要 7 个工作日完成，提交申请后请耐心等待。可提前<a class="inline-link" onclick="openPreview('trade')">预览导出模版</a>，符合要求再申请。</span>
+      </div>
+    </div>
+
+    <!-- 列表 -->
+    <div class="list-card" id="listCard">
+      <div class="list-head">
+        <span class="list-title">明细数据</span>
+        <span class="list-count">共 23 条</span>
+      </div>
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>申请时间</th>
+            <th>数据类型</th>
+            <th>数据区间</th>
+            <th>状态</th>
+            <th style="text-align:right;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-07-10 09:23</td><td>交易记录</td><td>2026-01-01 ~ 2026-06-30</td>
+            <td><span class="status-cell st-success"><span class="status-dot"></span>已完成</span></td>
+            <td style="text-align:right;"><span class="op-link" onclick="downloadRow('LS20260710001')">下载</span></td>
+          </tr>
+          <tr>
+            <td>2026-07-08 14:10</td><td>结算记录</td><td>2026-01-01 ~ 2026-06-30</td>
+            <td><span class="status-cell st-success"><span class="status-dot"></span>已完成</span></td>
+            <td style="text-align:right;"><span class="op-link" onclick="downloadRow('LS20260708002')">下载</span></td>
+          </tr>
+          <tr>
+            <td>2026-07-15 11:05</td><td>交易记录</td><td>2026-04-01 ~ 2026-06-30</td>
+            <td><span class="status-cell st-processing"><span class="status-dot"></span>处理中</span></td>
+            <td style="text-align:right;"><span class="op-link disabled">下载</span></td>
+          </tr>
+          <tr>
+            <td>2026-07-12 16:40</td><td>结算记录</td><td>2026-05-01 ~ 2026-06-30</td>
+            <td><span class="status-cell st-processing"><span class="status-dot"></span>处理中</span></td>
+            <td style="text-align:right;"><span class="op-link disabled">下载</span></td>
+          </tr>
+          <tr>
+            <td>2026-07-01 08:55</td><td>结算记录</td><td>2026-01-01 ~ 2026-03-31</td>
+            <td><span class="status-cell st-success"><span class="status-dot"></span>已完成</span></td>
+            <td style="text-align:right;"><span class="op-link" onclick="downloadRow('LS20260701006')">下载</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <span class="total">共 23 条</span>
+        <button class="page-btn disabled" onclick="prevPage()">‹</button>
+        <button class="page-btn active" data-p="1" onclick="goPage(1)">1</button>
+        <button class="page-btn" data-p="2" onclick="goPage(2)">2</button>
+        <button class="page-btn" data-p="3" onclick="goPage(3)">3</button>
+        <button class="page-btn" onclick="nextPage()">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 预览导出模版弹窗 ========== -->
+<div class="modal-mask hidden" id="previewModal">
+  <div class="modal w-800">
+    <div class="modal-header">
+      <span class="title">预览导出模版</span>
+      <span class="close" onclick="closePreview()">×</span>
+    </div>
+    <div class="modal-body">
+      <!-- Tab -->
+      <div class="tabs">
+        <div class="tab active" data-tab="trade" onclick="switchTab('trade')">交易记录导出模版</div>
+        <div class="tab" data-tab="settle" onclick="switchTab('settle')">结算记录导出模版</div>
+      </div>
+
+      <!-- 模块一：导出表模版 -->
+      <div class="section">
+        <div class="section-title">导出表模版</div>
+        <div class="section-desc">以下为历史数据申请导出的表格字段（仅含支持字段），顺序与实际导出文件一致，可左右滑动查看完整表格。</div>
+        <div class="excel-scroll">
+          <table class="excel-table">
+            <thead id="excelHead"></thead>
+            <tbody id="excelBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 模块二：数据字典 -->
+      <div class="section">
+        <div class="section-title">数据字典</div>
+        <div class="dict-stats" id="dictStats"></div>
+        <div class="dict-wrap">
+          <table class="dict-table">
+            <thead>
+              <tr>
+                <th style="width:56px;">序号</th>
+                <th>字段名称</th>
+                <th class="center" style="width:110px;" id="dictBaselineHead">交易记录导出</th>
+                <th class="center" style="width:96px;">历史数据申请</th>
+                <th style="width:120px;">备注</th>
+              </tr>
+            </thead>
+            <tbody id="dictBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closePreview()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Toast ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== 演示态切换器（仅评审用） ========== -->
+<div class="demo-switcher">
+  <div class="demo-title">评审场景切换</div>
+  <div class="demo-item active" data-scene="home">① 历史数据管理主页</div>
+  <div class="demo-item" data-scene="preview-trade">② 预览模版弹窗（交易记录）</div>
+  <div class="demo-item" data-scene="preview-settle">③ 预览模版弹窗（结算记录）</div>
+  <div class="demo-item" data-scene="applied">④ 申请提交成功提示</div>
+</div>
+
+<script>
+/* ========== 模版字段配置（静态配置，对应方案 historyDataTemplateConfig.ts） ========== */
+const templateConfig = {
+  trade: {
+    supported: ['399商编','商户名称','836商编','交易日期','交易时间','交易完成日期','交易完成时间','交易金额','交易手续费','交易手续费率','商户入账金额','交易类型','支付方式','交易状态','借贷标识','设备编号','支付渠道号','会生活单号','商户订单号','银行卡号','发卡行','原交易订单号','清算日期','批次号','流水号'],
+    unsupported: ['门店名称','门店编号','商品说明','收款备注','设备名称','分账资金管理费','分账资金管理费率','优惠金额','实付金额','交易是否入账','消费者ID','天阙平台订单号','检索参考号','境内外标识','收单渠道','子商户号','收单机构','当前状态','交易来源']
+  },
+  settle: {
+    supported: ['399商编','商户名称','836商编','创建日期','创建时间','结算时间','收款账号','结算账户类型','结算手续费','结算金额','结算流水号','附言信息','结算状态','原因'],
+    unsupported: ['保底/封顶标识','结算产品']
+  }
+};
+
+/* ========== 导出表模版示例数据（按 supported 顺序，仅作格式示意） ========== */
+const templateSamples = {
+  trade: [
+    ['836123456789012','会生活餐饮店','836123456789012','2026-01-15','10:23:45','2026-01-15','10:24:00','128.00','0.64','0.50%','127.36','消费','微信支付','成功','借','DEV000123','WX20260115102345','HSH20260115102345001','SH202601150001','6228******1234','中国农业银行','—','2026-01-16','000001','0000001'],
+    ['836123456789012','会生活餐饮店','836123456789012','2026-01-16','14:08:12','2026-01-16','14:08:30','88.50','0.44','0.50%','88.06','消费','支付宝','成功','贷','DEV000123','ZFB20260116140812','HSH20260116140812001','SH202601160002','—','—','SH202601150001','2026-01-17','000001','0000002']
+  ],
+  settle: [
+    ['836123456789012','会生活餐饮店','836123456789012','2026-01-16','08:00:00','2026-01-16 10:00:00','622848******1234','对公','1.00','10000.00','JS20260116000001','—','结算成功','—'],
+    ['836123456789012','会生活餐饮店','836123456789012','2026-01-17','08:00:00','2026-01-17 10:00:00','622848******1234','对公','0.80','8000.00','JS20260117000002','—','结算成功','—']
+  ]
+};
+
+/* ========== 渲染：导出表模版（Excel 风格） ========== */
+function renderExcel(tab) {
+  var cfg = templateConfig[tab];
+  var head = '<tr><th class="row-num">#</th>';
+  cfg.supported.forEach(function(name){ head += '<th>' + name + '</th>'; });
+  head += '</tr>';
+  document.getElementById('excelHead').innerHTML = head;
+  var body = '';
+  var samples = templateSamples[tab] || [];
+  samples.forEach(function(row, i){
+    body += '<tr><td class="row-num">' + (i + 1) + '</td>';
+    row.forEach(function(v){ body += '<td>' + (v === '' ? '—' : v) + '</td>'; });
+    body += '</tr>';
+  });
+  document.getElementById('excelBody').innerHTML = body;
+}
+
+/* ========== 渲染：数据字典对比表 ========== */
+function renderDict(tab) {
+  renderExcel(tab);
+  var cfg = templateConfig[tab];
+  var total = cfg.supported.length + cfg.unsupported.length;
+  document.getElementById('dictBaselineHead').textContent = tab === 'trade' ? '交易记录导出' : '结算记录导出';
+  document.getElementById('dictStats').innerHTML =
+    '共 <b>' + total + '</b> 个字段，历史数据申请支持 <b style="color:var(--color-success)">' + cfg.supported.length + '</b> 个，不支持 <b style="color:var(--color-error)">' + cfg.unsupported.length + '</b> 个';
+  var rows = '';
+  var idx = 1;
+  cfg.supported.forEach(function(name){
+    rows += '<tr><td>' + (idx++) + '</td><td>' + name + '</td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td><td class="remark"></td></tr>';
+  });
+  cfg.unsupported.forEach(function(name){
+    rows += '<tr class="unsupported"><td>' + (idx++) + '</td><td>' + name + '</td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="no">✗</span></td><td class="remark">历史数据不支持</td></tr>';
+  });
+  document.getElementById('dictBody').innerHTML = rows;
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab === tab); });
+}
+
+/* ========== 弹窗显隐 ========== */
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
+function openPreview(tab){ show('previewModal'); renderDict(tab || 'trade'); }
+function closePreview(){ hide('previewModal'); }
+function switchTab(tab){ renderDict(tab); }
+
+/* ========== Toast ========== */
+function showToast(text){
+  var t = document.getElementById('toast');
+  t.textContent = text; t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+/* ========== 侧边栏 ========== */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.getElementById('mainContent').classList.toggle('expanded');
+}
+function toggleMenu(el){ el.classList.toggle('open'); }
+
+/* ========== 列表操作 ========== */
+function downloadRow(code){ showToast('开始下载：' + code); }
+function reapplyRow(code){ showToast('已重新提交申请：' + code); }
+function applyHistory(){ showToast('申请已提交，预计 7 个工作日完成，请耐心等待'); }
+
+/* ========== 分页 ========== */
+function goPage(p){
+  document.querySelectorAll('.page-btn[data-p]').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.querySelector('.page-btn[data-p="' + p + '"]');
+  if (btn) btn.classList.add('active');
+  updatePageArrows(p);
+}
+function getActivePage(){
+  var a = document.querySelector('.page-btn.active[data-p]');
+  return a ? parseInt(a.dataset.p, 10) : 1;
+}
+function updatePageArrows(p){
+  var btns = document.querySelectorAll('.pagination .page-btn');
+  var prev = btns[0];
+  var last = btns[btns.length - 1];
+  prev.classList.toggle('disabled', p <= 1);
+  last.classList.toggle('disabled', p >= 3);
+}
+function prevPage(){ var p = getActivePage(); if (p > 1) goPage(p - 1); }
+function nextPage(){ var p = getActivePage(); if (p < 3) goPage(p + 1); }
+
+/* ========== 演示态切换器 ========== */
+document.querySelectorAll('.demo-switcher .demo-item').forEach(function(item){
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.demo-switcher .demo-item').forEach(function(i){ i.classList.remove('active'); });
+    item.classList.add('active');
+    var scene = item.dataset.scene;
+    hide('previewModal');
+    if (scene === 'home') { /* 主页 */ }
+    else if (scene === 'preview-trade') openPreview('trade');
+    else if (scene === 'preview-settle') openPreview('settle');
+    else if (scene === 'applied') applyHistory();
+  });
+});
+
+/* ========== 初始化 ========== */
+renderDict('trade');
+document.getElementById('previewModal').addEventListener('click', function(e){
+  if (e.target.id === 'previewModal') closePreview();
+});
+</script>
+</body>
+</html>
