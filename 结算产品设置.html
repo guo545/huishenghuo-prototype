@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>结算产品设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 16px 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 页面主体 */
+        .page-body {
+            height: calc(667px - 44px);
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        /* 顶部导航 */
+        .page-header {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-right {
+            width: 40px;
+        }
+
+        /* 模块区域 */
+        .settle-section {
+            margin: 12px;
+        }
+
+        .settle-section-title {
+            font-size: 13px;
+            color: #999;
+            padding: 0 4px 12px;
+        }
+
+        .settle-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .settle-product-header {
+            padding: 16px 16px 8px;
+        }
+
+        .settle-product-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settle-product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .settle-product-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .settle-product-selector:active {
+            opacity: 0.7;
+        }
+
+        .settle-product-selector-name {
+            font-size: 14px;
+            color: #FA8C16;
+            font-weight: 500;
+        }
+
+        .settle-product-selector-arrow {
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .settle-product-hint {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .settle-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0 16px;
+        }
+
+        .settle-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            cursor: pointer;
+        }
+
+        .settle-status-row:active {
+            background: #fafafa;
+        }
+
+        .settle-status-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .settle-status-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .settle-status-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .settle-status-arrow {
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .settle-detail-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .settle-detail-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .settle-detail-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .settle-time-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .settle-time-row:active {
+            background: #fafafa;
+        }
+
+        .settle-time-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .settle-time-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .settle-time-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 底部弹窗 */
+        .bottom-sheet-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        .bottom-sheet-overlay.active {
+            display: block;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 375px;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            z-index: 10000;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .bottom-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .bottom-sheet-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .bottom-sheet-btn {
+            font-size: 15px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .bottom-sheet-btn.active {
+            color: #FA8C16;
+            font-weight: 600;
+        }
+
+        .bottom-sheet-close {
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .bottom-sheet-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .bottom-sheet-option:last-child {
+            border-bottom: none;
+        }
+
+        .bottom-sheet-option:active {
+            background: #fafafa;
+        }
+
+        .option-label {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .option-check {
+            font-size: 18px;
+            color: #FA8C16;
+        }
+
+        /* 时间选择器 */
+        .time-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .time-picker-item {
+            text-align: center;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .time-picker-item.selected {
+            background: #FFF3C4;
+            color: #FA8C16;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>信号 Wi-Fi 电池</span>
+        </div>
+
+        <!-- 页面主体 -->
+        <div class="page-body">
+            <!-- 顶部导航 -->
+            <div class="page-header">
+                <span class="back-btn">‹</span>
+                <span class="header-title">结算产品设置</span>
+                <span class="header-right"></span>
+            </div>
+
+            <!-- 模块1：自动结算 -->
+            <div class="settle-section">
+                <div class="settle-card">
+                    <div class="settle-product-header">
+                        <div class="settle-product-name-row">
+                            <div class="settle-product-name">自动结算</div>
+                            <div class="settle-product-selector" onclick="openAutoProductSheet()">
+                                <span class="settle-product-selector-name" id="autoProductName">定时到账</span>
+                                <span class="settle-product-selector-arrow">›</span>
+                            </div>
+                        </div>
+                        <div class="settle-product-hint" id="autoProductHint">每天10点自动切批并结算至收款账户，开通当日资金会在次日结算。</div>
+                    </div>
+                    <div id="autoDetail">
+                        <div class="settle-detail-row">
+                            <span class="settle-detail-label">费率</span>
+                            <span class="settle-detail-value">0.10%</span>
+                        </div>
+                        <div class="settle-time-row" onclick="openTimePicker()">
+                            <span class="settle-time-label">结算时间</span>
+                            <div class="settle-time-right">
+                                <span class="settle-time-value" id="settleTimeValue">10:00</span>
+                                <span class="settle-status-arrow">›</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块2：手动结算 -->
+            <div class="settle-section">
+                <div class="settle-section-title">手动结算</div>
+                <div class="settle-card">
+                    <div class="settle-product-header">
+                        <div class="settle-product-name">快速到账</div>
+                        <div class="settle-product-hint">可申请结算全部余额，受理成功后15分钟内到账。</div>
+                    </div>
+                    <div class="settle-divider"></div>
+                    <div class="settle-status-row" onclick="openStatusSheet('manual')">
+                        <span class="settle-status-label">状态</span>
+                        <div class="settle-status-right">
+                            <span class="settle-status-value" id="manualStatusText">已开启</span>
+                            <span class="settle-status-arrow">›</span>
+                        </div>
+                    </div>
+                    <div id="manualDetail">
+                        <div class="settle-detail-row">
+                            <span class="settle-detail-label">费率</span>
+                            <span class="settle-detail-value">0.10%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态选择底部弹窗 -->
+        <div class="bottom-sheet-overlay" id="statusSheetOverlay" onclick="closeStatusSheet()"></div>
+        <div class="bottom-sheet" id="statusSheet">
+            <div class="bottom-sheet-header">
+                <span class="bottom-sheet-title" id="statusSheetTitle">选择状态</span>
+                <span class="bottom-sheet-close" onclick="closeStatusSheet()">✕</span>
+            </div>
+            <div class="bottom-sheet-option" onclick="setStatus('on')">
+                <span class="option-label">开通</span>
+                <span class="option-check" id="optOn">○</span>
+            </div>
+            <div class="bottom-sheet-option" onclick="setStatus('off')">
+                <span class="option-label">关闭</span>
+                <span class="option-check" id="optOff">○</span>
+            </div>
+        </div>
+
+        <div class="bottom-sheet-overlay" id="autoProductSheetOverlay" onclick="closeAutoProductSheet()"></div>
+        <div class="bottom-sheet" id="autoProductSheet">
+            <div class="bottom-sheet-header">
+                <span class="bottom-sheet-btn" onclick="closeAutoProductSheet()">取消</span>
+                <span class="bottom-sheet-title">选择自动结算结算产品</span>
+                <span class="bottom-sheet-btn" id="autoProductConfirmBtn" onclick="confirmAutoProduct()">确认</span>
+            </div>
+            <div class="bottom-sheet-option" data-value="daily" onclick="selectAutoProduct(this)">
+                <span class="option-label">次自然日到账</span>
+                <span class="option-check" id="autoOpt-daily">○</span>
+            </div>
+            <div class="bottom-sheet-option" data-value="workday" onclick="selectAutoProduct(this)">
+                <span class="option-label">次工作日到账</span>
+                <span class="option-check" id="autoOpt-workday">○</span>
+            </div>
+            <div class="bottom-sheet-option" data-value="timed" onclick="selectAutoProduct(this)">
+                <span class="option-label">定时到账</span>
+                <span class="option-check" id="autoOpt-timed">○</span>
+            </div>
+            <div class="bottom-sheet-option" data-value="off" onclick="selectAutoProduct(this)">
+                <span class="option-label">关闭自动结算</span>
+                <span class="option-check" id="autoOpt-off">○</span>
+            </div>
+        </div>
+
+        <!-- 时间选择器弹窗 -->
+        <div class="bottom-sheet-overlay" id="timePickerOverlay" onclick="closeTimePicker()"></div>
+        <div class="bottom-sheet" id="timePickerSheet">
+            <div class="bottom-sheet-header">
+                <span class="bottom-sheet-title">选择结算时间</span>
+                <span class="bottom-sheet-close" onclick="closeTimePicker()">✕</span>
+            </div>
+            <div class="time-picker-grid">
+                <div class="time-picker-item" onclick="selectTime('06')">06:00</div>
+                <div class="time-picker-item" onclick="selectTime('07')">07:00</div>
+                <div class="time-picker-item" onclick="selectTime('08')">08:00</div>
+                <div class="time-picker-item" onclick="selectTime('09')">09:00</div>
+                <div class="time-picker-item selected" onclick="selectTime('10')">10:00</div>
+                <div class="time-picker-item" onclick="selectTime('11')">11:00</div>
+                <div class="time-picker-item" onclick="selectTime('12')">12:00</div>
+                <div class="time-picker-item" onclick="selectTime('13')">13:00</div>
+                <div class="time-picker-item" onclick="selectTime('14')">14:00</div>
+                <div class="time-picker-item" onclick="selectTime('15')">15:00</div>
+                <div class="time-picker-item" onclick="selectTime('16')">16:00</div>
+                <div class="time-picker-item" onclick="selectTime('17')">17:00</div>
+                <div class="time-picker-item" onclick="selectTime('18')">18:00</div>
+                <div class="time-picker-item" onclick="selectTime('19')">19:00</div>
+                <div class="time-picker-item" onclick="selectTime('20')">20:00</div>
+                <div class="time-picker-item" onclick="selectTime('21')">21:00</div>
+                <div class="time-picker-item" onclick="selectTime('22')">22:00</div>
+                <div class="time-picker-item" onclick="selectTime('23')">23:00</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var currentStatusType = '';
+
+        function openStatusSheet(type) {
+            currentStatusType = type;
+            var statusText = type === 'auto'
+                ? document.getElementById('autoStatusText').textContent
+                : document.getElementById('manualStatusText').textContent;
+            var isOn = statusText === '开通';
+            document.getElementById('optOn').textContent = isOn ? '✓' : '○';
+            document.getElementById('optOff').textContent = !isOn ? '✓' : '○';
+            document.getElementById('statusSheetTitle').textContent =
+                type === 'auto' ? '自动结算 - 定时到账' : '手动结算 - 快速到账';
+            document.getElementById('statusSheetOverlay').classList.add('active');
+            document.getElementById('statusSheet').style.display = 'block';
+        }
+
+        function closeStatusSheet() {
+            document.getElementById('statusSheetOverlay').classList.remove('active');
+            document.getElementById('statusSheet').style.display = 'none';
+        }
+
+        function setStatus(val) {
+            var isOn = val === 'on';
+            if (currentStatusType === 'auto') {
+                document.getElementById('autoStatusText').textContent = isOn ? '开通' : '关闭';
+                document.getElementById('autoDetail').style.display = isOn ? 'block' : 'none';
+            } else {
+                document.getElementById('manualStatusText').textContent = isOn ? '开通' : '关闭';
+                document.getElementById('manualDetail').style.display = isOn ? 'block' : 'none';
+            }
+            closeStatusSheet();
+        }
+
+        function openTimePicker() {
+            document.getElementById('timePickerOverlay').classList.add('active');
+            document.getElementById('timePickerSheet').style.display = 'block';
+        }
+
+        function closeTimePicker() {
+            document.getElementById('timePickerOverlay').classList.remove('active');
+            document.getElementById('timePickerSheet').style.display = 'none';
+        }
+
+        function selectTime(time) {
+            var items = document.querySelectorAll('.time-picker-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].classList.remove('selected');
+            }
+            event.target.classList.add('selected');
+            document.getElementById('settleTimeValue').textContent = time + ':00';
+            closeTimePicker();
+        }
+
+        var selectedAutoProduct = 'timed';
+
+        function openAutoProductSheet() {
+            selectedAutoProduct = getAutoProductValue();
+            updateAutoProductCheck();
+            document.getElementById('autoProductSheetOverlay').classList.add('active');
+            document.getElementById('autoProductSheet').style.display = 'block';
+        }
+
+        function closeAutoProductSheet() {
+            document.getElementById('autoProductSheetOverlay').classList.remove('active');
+            document.getElementById('autoProductSheet').style.display = 'none';
+        }
+
+        function selectAutoProduct(el) {
+            selectedAutoProduct = el.getAttribute('data-value');
+            updateAutoProductCheck();
+        }
+
+        function updateAutoProductCheck() {
+            var opts = ['daily', 'workday', 'timed', 'off'];
+            for (var i = 0; i < opts.length; i++) {
+                var el = document.getElementById('autoOpt-' + opts[i]);
+                if (el) el.textContent = (opts[i] === selectedAutoProduct) ? '✓' : '○';
+            }
+        }
+
+        function getAutoProductValue() {
+            var name = document.getElementById('autoProductName').textContent;
+            if (name === '次自然日到账') return 'daily';
+            if (name === '次工作日到账') return 'workday';
+            if (name === '定时到账') return 'timed';
+            return 'off';
+        }
+
+        function confirmAutoProduct() {
+            var names = { daily: '次自然日到账', workday: '次工作日到账', timed: '定时到账', off: '关闭自动结算' };
+            var hints = {
+                daily: '每天自动切批并结算至收款账户，开通当日资金会在次日结算。',
+                workday: '仅限工作日自动结算，节假日延至下一工作日。',
+                timed: '每天10点自动切批并结算至收款账户，开通当日资金会在次日结算。',
+                off: ''
+            };
+            document.getElementById('autoProductName').textContent = names[selectedAutoProduct] || '定时到账';
+            var hintEl = document.getElementById('autoProductHint');
+            if (hintEl) hintEl.textContent = hints[selectedAutoProduct] || '';
+            var detailEl = document.getElementById('autoDetail');
+            if (detailEl) {
+                detailEl.style.display = (selectedAutoProduct === 'timed') ? 'block' : 'none';
+            }
+            closeAutoProductSheet();
+        }
+    </script>
+</body>
+</html>
