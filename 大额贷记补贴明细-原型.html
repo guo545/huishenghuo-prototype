@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>大额贷记补贴明细 — 会生活PC端交互原型</title>
+<style>
+/* ========== 全局变量（遵循会生活PC设计规范） ========== */
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-1);
+  font-size: 14px;
+  line-height: 22px;
+  min-width: 1200px;
+}
+
+/* ========== 顶部导航 ========== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-20);
+  z-index: 100;
+  color: var(--color-text-white);
+}
+.top-nav .logo-area { display: flex; align-items: center; gap: 12px; }
+.top-nav .logo {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.top-nav .sys-name { font-size: 16px; font-weight: 500; }
+.top-nav .merchant-name {
+  margin-left: 24px;
+  font-size: 14px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-4);
+}
+.top-nav .right-area { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+.top-nav .right-area span { cursor: pointer; }
+.top-nav .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+
+/* ========== 左侧导航 ========== */
+.layout { padding-top: 64px; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  padding: var(--spacing-12) 0;
+  position: fixed;
+  top: 64px; bottom: 0; left: 0;
+  overflow-y: auto;
+}
+.sidebar .menu-item {
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-20);
+  cursor: pointer;
+  color: var(--color-text-1);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover { background: var(--row-hover); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 500;
+}
+.sidebar .menu-item .icon { margin-right: 8px; }
+.sidebar .menu-group {
+  padding: 4px var(--spacing-20);
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-top: var(--spacing-12);
+  margin-bottom: 4px;
+}
+
+/* ========== 主内容区 ========== */
+.main-content {
+  margin-left: 200px;
+  flex: 1;
+  padding: var(--spacing-20);
+  min-height: calc(100vh - 64px);
+}
+
+/* ========== 演示态切换器（仅评审用） ========== */
+.demo-switcher {
+  position: fixed;
+  top: 80px; right: 20px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-6);
+  padding: 12px;
+  z-index: 50;
+  width: 260px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.demo-switcher .demo-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-error);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-base);
+}
+.demo-switcher .demo-item {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  border-radius: var(--radius-4);
+  margin-bottom: 4px;
+}
+.demo-switcher .demo-item:hover { background: var(--row-hover); }
+.demo-switcher .demo-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ========== 页面头部 ========== */
+.page-header {
+  background: var(--color-bg-card);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  border-radius: var(--radius-6);
+}
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.page-header .breadcrumb {
+  font-size: 13px;
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+}
+
+/* ========== 分时提示条 ========== */
+.time-tip {
+  background: #E6F7FF;
+  border: 1px solid #91D5FF;
+  border-radius: var(--radius-4);
+  padding: var(--spacing-8) var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+  font-size: 13px;
+  color: var(--color-primary);
+  display: none;
+}
+.time-tip.show { display: flex; align-items: center; gap: 8px; }
+.time-tip .tip-icon { font-size: 16px; }
+
+/* ========== 筛选条件卡片 ========== */
+.filter-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.filter-row:last-child { margin-bottom: 0; }
+
+/* 筛选项标签 */
+.filter-label {
+  font-size: 13px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 筛选控件 */
+.filter-select {
+  height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  background: #fff;
+  cursor: pointer;
+  min-width: 120px;
+  font-family: inherit;
+  outline: none;
+}
+.filter-select:focus { border-color: var(--color-primary); }
+.filter-date {
+  height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  background: #fff;
+  cursor: pointer;
+  width: 140px;
+  font-family: inherit;
+  outline: none;
+}
+.filter-date:focus { border-color: var(--color-primary); }
+.filter-input {
+  height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  background: #fff;
+  width: 240px;
+  font-family: inherit;
+  outline: none;
+}
+.filter-input:focus { border-color: var(--color-primary); }
+.filter-input::placeholder { color: var(--color-text-2); }
+.date-sep { color: var(--color-text-2); font-size: 13px; }
+
+/* 快捷选项按钮 */
+.quick-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  background: #fff;
+  color: var(--color-text-1);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.quick-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.quick-btn.active {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+
+/* 查询/导出按钮 */
+.btn {
+  height: 32px; padding: 0 16px;
+  border-radius: var(--radius-4);
+  border: 1px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px;
+  background: #fff;
+  color: var(--color-text-1);
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-default {
+  background: #fff;
+  color: var(--color-text-1);
+  border-color: var(--border-base);
+}
+.btn-default:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-large { height: 40px; padding: 0 20px; }
+.btn-export {
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-4);
+  background: #fff;
+  color: var(--color-primary);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-export:hover { background: var(--color-primary); color: #fff; }
+
+/* ========== 统计汇总卡片 ========== */
+.stats-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  display: flex;
+  gap: 32px;
+}
+.stat-item { flex: 1; }
+.stat-item .stat-label {
+  font-size: 13px;
+  color: var(--color-text-2);
+  margin-bottom: 6px;
+}
+.stat-item .stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-bottom: 4px;
+}
+.stat-item .stat-value .unit { font-size: 14px; font-weight: 400; color: var(--color-text-2); margin-left: 4px; }
+.stat-item .stat-sub {
+  font-size: 12px;
+  color: var(--color-text-2);
+  display: flex;
+  gap: 16px;
+}
+.stat-item .stat-sub span { display: inline-flex; align-items: center; }
+.stat-item .stat-sub .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+.stat-item .stat-sub .dot.green { background: var(--color-success); }
+.stat-item .stat-sub .dot.orange { background: var(--color-warning); }
+.stat-item .stat-sub .dot.blue { background: var(--color-primary); }
+
+/* ========== 明细列表卡片 ========== */
+.list-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+}
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-16);
+}
+.list-header h3 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+/* 表格 */
+.table-wrap {
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  overflow: hidden;
+}
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.data-table thead th {
+  background: var(--color-bg-table-header);
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-text-1);
+  border-bottom: 1px solid var(--border-base);
+  white-space: nowrap;
+}
+table.data-table tbody td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border-base);
+  color: var(--color-text-1);
+}
+table.data-table tbody tr:hover { background: var(--row-hover); }
+table.data-table tbody tr:last-child td { border-bottom: none; }
+
+/* 状态标签 */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.tag-success { background: #F6FFED; color: var(--color-success); border: 1px solid #B7EB8F; }
+.tag-warning { background: #FFFBE6; color: var(--color-warning); border: 1px solid #FFE58F; }
+.tag-error { background: #FFF2F0; color: var(--color-error); border: 1px solid #FFCCC7; }
+
+/* 订单号下拉 */
+.order-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.order-cell .arrow { font-size: 10px; color: var(--color-text-2); transition: transform 0.15s; }
+.order-cell:hover .arrow { transform: rotate(180deg); }
+.order-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 30;
+  display: none;
+  min-width: 260px;
+}
+.order-dropdown.show { display: block; }
+.order-dropdown .od-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.order-dropdown .od-row:hover { background: var(--row-hover); }
+.order-dropdown .od-row .od-label { color: var(--color-text-2); }
+.order-dropdown .od-row .od-val { color: var(--color-text-1); font-family: "Courier New", monospace; }
+.order-dropdown .od-row .copy-icon { font-size: 12px; color: var(--color-text-2); margin-left: 8px; }
+.order-dropdown .od-row:hover .copy-icon { color: var(--color-primary); }
+
+/* 操作列 */
+.action-link {
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 13px;
+}
+.action-link:hover { text-decoration: underline; }
+
+/* 分页 */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--spacing-16);
+  font-size: 13px;
+  color: var(--color-text-2);
+}
+.pagination .page-btn {
+  min-width: 32px; height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  background: #fff;
+  color: var(--color-text-1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-family: inherit;
+}
+.pagination .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.pagination .page-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+.pagination .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination .page-size {
+  height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-2);
+}
+.empty-state .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state .empty-text { font-size: 14px; }
+.empty-state .empty-hint { font-size: 13px; margin-top: 8px; color: var(--color-text-disable); }
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-mask.hidden { display: none; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius-6);
+  width: 680px;
+  max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.modal-header {
+  height: 48px;
+  padding: 0 var(--spacing-20);
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; flex: 1; display: flex; align-items: center; gap: 8px; }
+.modal-header .title .tag { margin-left: 4px; }
+.modal-header .close {
+  cursor: pointer; color: var(--color-text-2);
+  font-size: 20px; line-height: 1;
+  padding: 4px;
+}
+.modal-header .close:hover { color: var(--color-text-1); }
+.modal-body {
+  padding: var(--spacing-20);
+  flex: 1;
+  overflow-y: auto;
+}
+.modal-footer {
+  height: 56px;
+  padding: 0 var(--spacing-20);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+/* 弹窗区块 */
+.detail-section {
+  margin-bottom: 20px;
+}
+.detail-section:last-child { margin-bottom: 0; }
+.detail-section .section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border-base);
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+.detail-grid .dg-item {
+  display: flex;
+  align-items: baseline;
+  font-size: 13px;
+}
+.detail-grid .dg-label {
+  color: var(--color-text-2);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+.detail-grid .dg-value {
+  color: var(--color-text-1);
+}
+
+/* 场景容器 */
+.scene { display: none; }
+.scene.active { display: block; }
+
+/* 复制成功提示 */
+.copy-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius-4);
+  font-size: 13px;
+  z-index: 300;
+  display: none;
+}
+.copy-toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="top-nav">
+  <div class="logo-area">
+    <div class="logo">R</div>
+    <span class="sys-name">会生活 PC</span>
+    <span class="merchant-name">北京市东山区会生活大厦餐饮连锁店1</span>
+  </div>
+  <div class="right-area">
+    <span>下载</span>
+    <span>手机客户端</span>
+    <span>消息通知</span>
+    <span>帮助中心</span>
+    <div class="avatar">商</div>
+  </div>
+</div>
+
+<!-- ========== 左侧导航 ========== -->
+<div class="layout">
+  <div class="sidebar">
+    <div class="menu-item"><span class="icon">▦</span>商户管理</div>
+    <div class="menu-group">交易数据</div>
+    <div class="menu-item active">
+      <span class="icon">▤</span>大额贷记补贴明细
+    </div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">交易记录</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">交易报表</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">交易走势</div>
+    <div class="menu-item"><span class="icon">▥</span>分账管理</div>
+    <div class="menu-item"><span class="icon">▦</span>财务结算</div>
+    <div class="menu-item"><span class="icon">▣</span>对账管理</div>
+    <div class="menu-item"><span class="icon">▢</span>账户资产</div>
+    <div class="menu-item"><span class="icon">▤</span>风控管理</div>
+    <div class="menu-item"><span class="icon">★</span>应用中心</div>
+  </div>
+
+  <!-- ========== 演示态切换器（仅评审用） ========== -->
+  <div class="demo-switcher">
+    <div class="demo-title">⚠ 演示态切换（评审用）</div>
+    <div class="demo-item active" data-scene="scene-1">① 默认态（有数据）</div>
+    <div class="demo-item" data-scene="scene-2">② 空状态</div>
+    <div class="demo-item" data-scene="scene-3">③ 详情弹窗</div>
+    <div class="demo-item" data-scene="scene-4">④ 商户订单号展示</div>
+  </div>
+
+  <!-- ========== 主内容区 ========== -->
+  <div class="main-content">
+
+    <!-- ========== 场景 1：默认态（有数据） ========== -->
+    <div class="scene active" id="scene-1">
+      <div class="page-header" style="display:none;">
+      </div>
+
+      <!-- 分时提示条 -->
+      <div class="time-tip">
+        <span class="tip-icon">📌</span>
+        <span>当前统计周期：02:00:00 — 次日 01:59:59</span>
+      </div>
+
+      <!-- 筛选条件 -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <!-- 时间维度下拉 -->
+          <select class="filter-select" id="timeDim" style="min-width:110px;">
+            <option value="subsidyTime" selected>补贴时间</option>
+            <option value="transTime">交易完成时间</option>
+          </select>
+          <!-- 开始 ~ 结束 -->
+          <input type="datetime-local" class="filter-date" id="dateStart" value="2026-08-04T00:00:00" />
+          <span class="date-sep">~</span>
+          <input type="datetime-local" class="filter-date" id="dateEnd" value="2026-08-04T23:59:59" />
+          <!-- 快捷选项 -->
+          <button class="quick-btn active">昨日</button>
+          <button class="quick-btn">本月</button>
+          <button class="quick-btn">上月</button>
+        </div>
+        <div class="filter-row">
+          <!-- 订单查询 -->
+          <span class="filter-label">订单查询：</span>
+          <input type="text" class="filter-input" placeholder="请输入商户订单号" />
+          <!-- 分店 -->
+          <span class="filter-label">分店：</span>
+          <select class="filter-select" style="min-width:120px;">
+            <option selected>全部分店</option>
+            <option>朝阳路店</option>
+            <option>望京店</option>
+            <option>中关村店</option>
+          </select>
+          <!-- 交易类型 -->
+          <span class="filter-label">交易类型：</span>
+          <select class="filter-select" style="min-width:100px;">
+            <option selected>全部</option>
+            <option>消费</option>
+            <option>退款</option>
+          </select>
+          <button class="btn btn-primary" onclick="doQuery()">查询</button>
+          <button class="btn btn-default" onclick="doReset()">重置</button>
+        </div>
+      </div>
+
+      <!-- 统计汇总 -->
+      <div class="stats-card">
+        <div class="stat-item">
+          <div class="stat-label">交易金额总计</div>
+          <div class="stat-value">¥158,720.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">手续费总计</div>
+          <div class="stat-value">¥2,380.80</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">补贴金额</div>
+          <div class="stat-value">¥2,345.60</div>
+        </div>
+      </div>
+
+      <!-- 明细列表 -->
+      <div class="list-card">
+        <div class="list-header">
+          <h3>明细列表</h3>
+          <button class="btn-export" onclick="doExport()">📥 导出</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>交易完成时间</th>
+                <th>补贴时间</th>
+                <th>商户名称</th>
+                <th>门店名称</th>
+                <th>交易金额</th>
+                <th>手续费</th>
+                <th>补贴金额</th>
+                <th>交易类型</th>
+                <th>商户订单号</th>
+              </tr>
+            </thead>
+            <tbody id="dataTableBody">
+              <tr>
+                <td>2026-08-04 14:23:05</td>
+                <td>2026-08-05 02:00:00</td>
+                <td>会生活大厦餐饮连锁</td>
+                <td>朝阳路店</td>
+                <td>¥1,580.00</td>
+                <td>¥23.70</td>
+                <td>¥15.80</td>
+                <td>消费</td>
+                <td>ORD20260804001</td>
+              </tr>
+              <tr>
+                <td>2026-08-04 11:10:33</td>
+                <td>—</td>
+                <td>会生活大厦餐饮连锁</td>
+                <td>望京店</td>
+                <td>¥2,200.00</td>
+                <td>¥33.00</td>
+                <td>¥22.00</td>
+                <td>消费</td>
+                <td>ORD20260804002</td>
+              </tr>
+              <tr>
+                <td>2026-08-03 18:45:12</td>
+                <td>2026-08-04 02:00:00</td>
+                <td>会生活大厦餐饮连锁</td>
+                <td>中关村店</td>
+                <td>¥3,100.00</td>
+                <td>¥46.50</td>
+                <td>¥31.00</td>
+                <td>退款</td>
+                <td>ORD20260803003</td>
+              </tr>
+              <tr>
+                <td>2026-08-03 09:22:48</td>
+                <td>2026-08-04 02:00:00</td>
+                <td>会生活大厦餐饮连锁</td>
+                <td>朝阳路店</td>
+                <td>¥1,050.00</td>
+                <td>¥15.75</td>
+                <td>¥10.50</td>
+                <td>消费</td>
+                <td>ORD20260803004</td>
+              </tr>
+              <tr>
+                <td>2026-08-02 20:15:09</td>
+                <td>2026-08-03 02:00:00</td>
+                <td>会生活大厦餐饮连锁</td>
+                <td>望京店</td>
+                <td>¥4,500.00</td>
+                <td>¥67.50</td>
+                <td>¥45.00</td>
+                <td>消费</td>
+                <td>ORD20260802005</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination">
+          <span>共 156 条</span>
+          <button class="page-btn" disabled>‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">›</button>
+          <span>每页</span>
+          <select class="page-size">
+            <option selected>20</option>
+            <option>50</option>
+            <option>100</option>
+          </select>
+          <span>条</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 场景 2：空状态 ========== -->
+    <div class="scene" id="scene-2">
+      <div class="page-header" style="display:none;">
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-row">
+          <select class="filter-select" style="min-width:110px;">
+            <option selected>补贴时间</option>
+            <option>交易完成时间</option>
+          </select>
+          <input type="datetime-local" class="filter-date" value="2026-08-04T00:00:00" />
+          <span class="date-sep">~</span>
+          <input type="datetime-local" class="filter-date" value="2026-08-04T23:59:59" />
+          <button class="quick-btn active">昨日</button>
+          <button class="quick-btn">本月</button>
+          <button class="quick-btn">上月</button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">订单查询：</span>
+          <input type="text" class="filter-input" placeholder="请输入商户订单号" />
+          <span class="filter-label">分店：</span>
+          <select class="filter-select" style="min-width:120px;"><option selected>全部分店</option></select>
+          <span class="filter-label">交易类型：</span>
+          <select class="filter-select" style="min-width:100px;"><option selected>全部</option><option>消费</option><option>退款</option></select>
+          <button class="btn btn-primary">查询</button>
+          <button class="btn btn-default">重置</button>
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <div class="stat-item">
+          <div class="stat-label">交易金额总计</div>
+          <div class="stat-value">¥0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">手续费总计</div>
+          <div class="stat-value">¥0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">补贴金额</div>
+          <div class="stat-value">¥0.00</div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="list-header">
+          <h3>明细列表</h3>
+          <button class="btn-export">📥 导出</button>
+        </div>
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">暂无补贴记录，请调整查询条件</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 场景 3 & 4 复用场景1 + 弹窗 ========== -->
+    <div class="scene" id="scene-3">
+      <div class="page-header" style="display:none;">
+      </div>
+      <div class="filter-card">
+        <div class="filter-row">
+          <select class="filter-select" style="min-width:110px;"><option selected>补贴时间</option><option>交易完成时间</option></select>
+          <input type="datetime-local" class="filter-date" value="2026-08-04T00:00:00" />
+          <span class="date-sep">~</span>
+          <input type="datetime-local" class="filter-date" value="2026-08-04T23:59:59" />
+          <button class="quick-btn active">昨日</button>
+          <button class="quick-btn">本月</button>
+          <button class="quick-btn">上月</button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">订单查询：</span>
+          <input type="text" class="filter-input" placeholder="请输入商户订单号" />
+          <span class="filter-label">补贴状态：</span>
+          <select class="filter-select" style="min-width:100px;"><option selected>全部</option><option>已补贴</option><option>待补贴</option><option>补贴失败</option></select>
+          <span class="filter-label">交易类型：</span>
+          <select class="filter-select" style="min-width:100px;"><option selected>全部</option><option>消费</option><option>退款</option></select>
+          <span class="filter-label">区域：</span>
+          <select class="filter-select" style="min-width:100px;"><option selected>全部</option></select>
+          <span class="filter-label">门店：</span>
+          <select class="filter-select" style="min-width:120px;"><option selected>全部门店</option></select>
+          <button class="btn btn-primary">查询</button>
+          <button class="btn btn-default">重置</button>
+        </div>
+      </div>
+      <div class="list-card">
+        <div style="text-align:center; padding:60px; color:var(--color-text-2);">
+          <div style="font-size:48px; margin-bottom:16px;">📋</div>
+          <div style="font-size:16px; color:var(--color-text-1);">详情弹窗演示</div>
+          <div style="font-size:13px; margin-top:8px;">请查看右侧弹窗，点击任意行"详情"也可触发</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="showDetail('已补贴')">显示已补贴详情</button>
+            <button class="btn btn-default" style="margin-left:12px;" onclick="showDetail('补贴失败')">显示补贴失败详情</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scene" id="scene-4">
+      <div class="page-header" style="display:none;">
+      </div>
+      <div class="list-card">
+        <div style="text-align:center; padding:60px; color:var(--color-text-2);">
+          <div style="font-size:48px; margin-bottom:16px;">📋</div>
+          <div style="font-size:16px; color:var(--color-text-1);">列表商户订单号展示</div>
+          <div style="font-size:13px; margin-top:8px;">商户订单号以纯文本展示，无下拉交互</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 详情弹窗 ========== -->
+<div class="modal-mask hidden" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="title">补贴明细 <span class="tag" id="detailStatusTag">已补贴</span></div>
+      <span class="close" onclick="hideDetail()">×</span>
+    </div>
+    <div class="modal-body">
+
+      <!-- 交易信息 -->
+      <div class="detail-section">
+        <div class="section-title">交易信息</div>
+        <div class="detail-grid">
+          <div class="dg-item"><span class="dg-label">交易完成时间</span><span class="dg-value" id="dg_transTime">2026-08-04 14:23:05</span></div>
+          <div class="dg-item"><span class="dg-label">商户订单号</span><span class="dg-value">ORD20260804001</span></div>
+          <div class="dg-item"><span class="dg-label">上游订单号</span><span class="dg-value">UP8901234567890</span></div>
+          <div class="dg-item"><span class="dg-label">交易金额</span><span class="dg-value">¥1,580.00</span></div>
+          <div class="dg-item"><span class="dg-label">交易类型</span><span class="dg-value">消费</span></div>
+          <div class="dg-item"><span class="dg-label">支付方式</span><span class="dg-value">银联二维码贷记卡</span></div>
+          <div class="dg-item"><span class="dg-label">商户名称</span><span class="dg-value">会生活大厦餐饮连锁</span></div>
+          <div class="dg-item"><span class="dg-label">门店名称</span><span class="dg-value">朝阳路店</span></div>
+          <div class="dg-item"><span class="dg-label">员工</span><span class="dg-value">张三</span></div>
+        </div>
+      </div>
+
+      <!-- 补贴明细 -->
+      <div class="detail-section">
+        <div class="section-title">补贴明细</div>
+        <div class="detail-grid">
+          <div class="dg-item"><span class="dg-label">手续费</span><span class="dg-value">¥23.70</span></div>
+          <div class="dg-item"><span class="dg-label">实收手续费</span><span class="dg-value">¥7.90</span></div>
+          <div class="dg-item"><span class="dg-label">补贴金额</span><span class="dg-value" style="color:var(--color-error); font-weight:600;">¥15.80</span></div>
+          <div class="dg-item"><span class="dg-label">补贴状态</span><span class="dg-value" id="dg_subsidyStatus">已补贴</span></div>
+          <div class="dg-item"><span class="dg-label">补贴时间</span><span class="dg-value">2026-08-05 02:00:00</span></div>
+          <div class="dg-item" id="dg_failReasonRow" style="display:none;"><span class="dg-label">失败原因</span><span class="dg-value" id="dg_failReason" style="color:var(--color-error);"></span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="hideDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 复制成功提示 -->
+<div class="copy-toast" id="copyToast">已复制到剪贴板</div>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// ===== 演示态切换 =====
+const switcherItems = document.querySelectorAll('.demo-switcher .demo-item');
+const scenes = document.querySelectorAll('.scene');
+switcherItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const target = item.getAttribute('data-scene');
+    switcherItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    scenes.forEach(s => s.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    // 场景3自动显示弹窗
+    if (target === 'scene-3') {
+      document.getElementById('detailModal').classList.remove('hidden');
+      showDetail('已补贴');
+    } else {
+      hideDetail();
+    }
+    // 关闭所有已展开的下拉
+    closeAllDropdowns();
+  });
+});
+
+// ===== 快捷日期 =====
+function setQuickDate(btn, type) {
+  document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const today = new Date();
+  let start, end;
+  if (type === 'today') {
+    start = end = today;
+  } else if (type === 'yesterday') {
+    start = end = new Date(today.getTime() - 86400000);
+  } else if (type === 'month') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = today;
+  } else if (type === 'lastMonth') {
+    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    end = new Date(today.getFullYear(), today.getMonth(), 0);
+  }
+  document.getElementById('dateStart').value = formatDate(start);
+  document.getElementById('dateEnd').value = formatDate(end);
+}
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+// ===== 查询/重置 =====
+function doQuery() { alert('查询：根据筛选条件加载数据（演示态数据不变）'); }
+function doReset() {
+  document.querySelectorAll('.filter-select').forEach(s => s.selectedIndex = 0);
+  document.querySelectorAll('.filter-input').forEach(i => i.value = '');
+  setQuickDate(document.querySelector('.quick-btn'), 'today');
+}
+
+// ===== 导出 =====
+function doExport() { alert('导出任务已提交至下载中心，生成完成后请在下载中心下载。\n\n导出上限：100万条'); }
+
+// ===== 订单号下拉 =====
+function toggleOrderDropdown(el) {
+  event.stopPropagation();
+  const dd = el.querySelector('.order-dropdown');
+  const isOpen = dd.classList.contains('show');
+  closeAllDropdowns();
+  if (!isOpen) dd.classList.add('show');
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.order-dropdown').forEach(d => d.classList.remove('show'));
+}
+
+document.addEventListener('click', closeAllDropdowns);
+
+// ===== 复制 =====
+function copyText(e, text) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('已复制：' + text);
+  }).catch(() => {
+    showToast('已复制：' + text);
+  });
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('copyToast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1500);
+}
+
+// ===== 详情弹窗 =====
+function showDetail(status) {
+  document.getElementById('detailModal').classList.remove('hidden');
+  const tag = document.getElementById('detailStatusTag');
+  const dgStatus = document.getElementById('dg_subsidyStatus');
+  const failRow = document.getElementById('dg_failReasonRow');
+  const failReason = document.getElementById('dg_failReason');
+
+  tag.className = 'tag';
+  dgStatus.innerHTML = '';
+
+  if (status === '已补贴') {
+    tag.classList.add('tag-success');
+    tag.textContent = '已补贴';
+    dgStatus.innerHTML = '已补贴';
+    failRow.style.display = 'none';
+  } else if (status === '待补贴') {
+    tag.classList.add('tag-warning');
+    tag.textContent = '待补贴';
+    dgStatus.innerHTML = '待补贴';
+    failRow.style.display = 'none';
+  } else if (status === '补贴失败') {
+    tag.classList.add('tag-error');
+    tag.textContent = '补贴失败';
+    dgStatus.innerHTML = '补贴失败';
+    failRow.style.display = 'flex';
+    failReason.textContent = '商户账户余额不足，补贴发放失败';
+  }
+}
+
+function hideDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+
+// 点击遮罩关闭
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) hideDetail();
+});
+</script>
+
+</body>
+</html>
