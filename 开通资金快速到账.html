@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>开通资金快速到账</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 16px 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 页面主体 */
+        .page-body {
+            height: calc(667px - 44px);
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        /* 顶部导航 */
+        .page-header {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-right {
+            width: 40px;
+        }
+
+        /* 成功页内容 */
+        .result-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 24px 24px;
+            background: #fff;
+            min-height: calc(667px - 44px);
+        }
+
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .result-info-card {
+            background: #FFF9E6;
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .result-info-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 14px;
+        }
+
+        .result-product-block {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0e0a0;
+        }
+
+        .result-product-block:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .result-product-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FA8C16;
+            margin-bottom: 10px;
+        }
+
+        .result-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .result-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-info-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .result-info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+            </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>信号 Wi-Fi 电池</span>
+        </div>
+
+        <!-- 页面主体 -->
+        <div class="page-body">
+            <!-- 顶部导航 -->
+            <div class="page-header">
+                <span class="back-btn">‹</span>
+                <span class="header-title">开通资金快速到账</span>
+                <span class="header-right"></span>
+            </div>
+
+            <!-- 成功页内容 -->
+            <div class="result-page">
+                <div class="result-icon">✅</div>
+                <div class="result-title">资金快速到账方案开通成功了！</div>
+                <div class="result-desc">您现在可以使用资金快速到账服务啦</div>
+
+                <div class="result-info-card">
+                    <div class="result-info-section-title">已开通的结算产品</div>
+
+                    <div class="result-product-block">
+                        <div class="result-product-name">手动快速到账</div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">费率</span>
+                            <span class="result-info-value">0.10%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-product-block">
+                        <div class="result-product-name">自动定时到账</div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">费率</span>
+                            <span class="result-info-value">0.10%</span>
+                        </div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">结算时间</span>
+                            <span class="result-info-value">10:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
