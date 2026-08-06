@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>优质商户开通D0 - 交互原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(180deg, #FFF9E6 0%, #fff 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 16px 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header {
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .back-btn {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .setting-btn {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .content {
+            height: calc(100% - 88px);
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        .home-header {
+            background: linear-gradient(180deg, #FFF9E6 0%, #fff 100%);
+            padding: 10px 16px 20px;
+        }
+
+        .home-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .home-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .add-btn {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .today-card {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .today-label {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .today-amount {
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .today-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        .widget-row {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+
+        .widget-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .widget-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .widget-arrow {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .widget-chart {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .tab-section {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px 0;
+        }
+
+        .tab-titles {
+            display: flex;
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+
+        .tab-title {
+            font-size: 18px;
+            color: #333;
+            margin-right: 40px;
+            padding-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .tab-title.active {
+            border-bottom: 3px solid #FFD700;
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: flex;
+            padding: 0 16px;
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid #eee;
+        }
+
+        .tab-item:last-child {
+            border-right: none;
+        }
+
+        .tab-item-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .tab-item-value {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .message-section {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .message-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .message-item:last-child {
+            border-bottom: none;
+        }
+
+        .message-avatar {
+            width: 50px;
+            height: 50px;
+            background: #FFF9E6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-badge {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: #FF6B00;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 12px;
+            text-align: center;
+            line-height: 18px;
+            margin-right: 8px;
+        }
+
+        .message-title {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .message-dot {
+            width: 8px;
+            height: 8px;
+            background: #FF3B30;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 4px;
+        }
+
+        .message-time {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .function-bar {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .function-item {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .function-icon {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto 8px;
+            font-size: 28px;
+        }
+
+        .function-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .tab-bar-item {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .tab-bar-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .tab-bar-name {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .tab-bar-item.active .tab-bar-name {
+            color: #FFD700;
+        }
+
+        .red-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: #FF3B30;
+            border-radius: 50%;
+        }
+
+        .page {
+            display: none;
+            height: 100%;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .d0-intro-page.active,
+        .agreement-page.active {
+            display: flex !important;
+        }
+
+        .account-header-card {
+            background: #fff;
+            margin: 16px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .account-settle-tip {
+            background: #FFF9E6;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #B8860B;
+        }
+
+        .d0-account-banner {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            margin: 12px 16px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .d0-banner-left {
+            flex: 1;
+            pointer-events: none;
+        }
+
+        .d0-banner-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .d0-banner-tip {
+            font-size: 12px;
+            color: #7a5c00;
+        }
+
+        .d0-banner-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            color: #333;
+            border: none;
+            border-radius: 16px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: 12px;
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        .settle-method-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 16px 12px;
+        }
+
+        .settle-method-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .settle-method-placeholder {
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            color: #ccc;
+            cursor: pointer;
+        }
+
+        .d0-settle-ad-card {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin: 0 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .d0-settle-ad-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .d0-settle-ad-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .d0-settle-ad-text {
+            flex: 1;
+        }
+
+        .d0-settle-ad-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .d0-settle-ad-tip {
+            font-size: 12px;
+            color: #7a5c00;
+        }
+
+        .account-settle-inline {
+            background: #FFF9E6;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #B8860B;
+            margin: -20px -20px 16px -20px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .account-label {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .account-amount {
+            font-size: 42px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .account-detail-link {
+            color: #FF8C00;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .account-funds {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .fund-item {
+            text-align: center;
+        }
+
+        .fund-label {
+            font-size: 14px;
+            color: #B8860B;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .fund-value {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .fund-info-icon {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .pending-funds-card {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 20px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pending-label {
+            font-size: 18px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pending-amount {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .menu-list {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .menu-content {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .menu-desc {
+            font-size: 13px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .menu-arrow {
+            font-size: 18px;
+            color: #ccc;
+        }
+
+        .menu-value {
+            font-size: 16px;
+            color: #999;
+            margin-right: 8px;
+        }
+
+        .d0-upgrade-card {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
+            border: 1px solid #FFD700;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .d0-upgrade-content {
+            flex: 1;
+        }
+
+        .d0-upgrade-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #B8860B;
+            margin-bottom: 4px;
+        }
+
+        .d0-upgrade-desc {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .d0-upgrade-btn {
+            background: #FFD700;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .d0-status-card {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
+            border: 1px solid #FFD700;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .d0-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .d0-status-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #B8860B;
+        }
+
+        .d0-tag {
+            background: #FFD700;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        .d0-quota-bar {
+            background: #f5f5f5;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .d0-quota-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700 0%, #FFB800 100%);
+            width: 30%;
+            border-radius: 4px;
+        }
+
+        .d0-quota-text {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .d0-fee-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .d0-intro-page {
+            background: #f5f5f5;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .d0-intro-header {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            padding: 20px 20px 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .d0-intro-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .d0-intro-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .d0-intro-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .d0-intro-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .d0-feature-section {
+            display: flex;
+            gap: 12px;
+            padding: 20px 16px;
+        }
+
+        .d0-feature-item {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #f0e5b0;
+            border-radius: 12px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .d0-feature-icon {
+            width: 40px;
+            height: 40px;
+            background: #FFF9E6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .d0-feature-content {
+            width: 100%;
+        }
+
+        .d0-feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .d0-feature-desc {
+            font-size: 11px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .d0-plan-card {
+            background: #FFF9E6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 20px 30px;
+        }
+
+        .d0-plan-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .d0-plan-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .d0-plan-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .d0-plan-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .d0-plan-note {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .d0-plan-option {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .d0-plan-option.selected {
+            border-color: #FFD700;
+            background: #FFF9E6;
+        }
+
+        .d0-plan-option.checked {
+            border-color: #FFD700;
+            background: #FFFEF8;
+        }
+
+        .d0-plan-option-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .d0-plan-option-radio {
+            font-size: 18px;
+            margin-right: 8px;
+            color: #999;
+        }
+
+        .d0-plan-option.selected .d0-plan-option-radio {
+            color: #FFD700;
+        }
+
+        .d0-plan-checkbox {
+            font-size: 20px;
+            margin-right: 10px;
+            color: #ccc;
+            line-height: 1;
+        }
+
+        .d0-plan-option.checked .d0-plan-checkbox {
+            color: #FFD700;
+        }
+
+        .d0-plan-option.checked {
+            border-color: #FFD700;
+        }
+
+        .d0-plan-detail {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .d0-plan-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .d0-plan-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .d0-plan-detail-label {
+            color: #666;
+        }
+
+        .d0-plan-detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .d0-time-picker {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .d0-time-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .d0-time-value {
+            flex: 1;
+            font-size: 14px;
+            color: #999;
+            text-align: right;
+            margin-right: 6px;
+        }
+
+        .d0-time-value.selected {
+            color: #333;
+        }
+
+        /* 时间选择器弹窗 */
+        .time-picker-modal {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 100%;
+            max-width: 375px;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            z-index: 3000;
+            display: none;
+        }
+
+        .time-picker-modal.active {
+            display: block;
+        }
+
+        .time-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .time-picker-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .time-picker-close {
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .time-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .time-picker-item {
+            height: 40px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .time-picker-item:active {
+            background: #FFF9E6;
+        }
+
+        .time-picker-item.selected {
+            background: #FFD700;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .time-picker-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2999;
+            display: none;
+        }
+
+        .time-picker-modal-overlay.active {
+            display: block;
+        }
+
+        .d0-agreement-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .d0-agreement-link {
+            color: #FF8C00;
+            cursor: pointer;
+        }
+
+        .d0-agreement-link b {
+            color: #FF8C00;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .d0-bottom-section {
+            flex-shrink: 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 16px;
+            border-top: 1px solid #eee;
+            z-index: 100;
+            box-sizing: border-box;
+            max-width: 375px;
+            margin: 0 auto;
+        }
+
+        .d0-agreement-check-bottom {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            max-width: 343px;
+        }
+
+        .d0-radio {
+            font-size: 20px;
+            margin-right: 8px;
+            color: #999;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .d0-radio.checked {
+            color: #FFD700;
+        }
+
+        .d0-open-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .agreement-page {
+            background: #f5f5f5;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .agreement-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .agreement-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .agreement-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .agreement-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .agreement-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 16px;
+            border-top: 1px solid #eee;
+            box-sizing: border-box;
+            max-width: 375px;
+            margin: 0 auto;
+        }
+
+        .agreement-btn {
+            width: 100%;
+            background: #ddd;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            cursor: not-allowed;
+        }
+
+        .agreement-btn.active {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            color: #333;
+            cursor: pointer;
+        }
+
+        .agreement-btn:disabled {
+            background: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .result-page {
+            background: #fff;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .result-info-card {
+            background: #FFF9E6;
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .result-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .result-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-info-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .result-info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .result-info-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 14px;
+        }
+
+        .result-product-block {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0e0a0;
+        }
+
+        .result-product-block:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .result-product-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FA8C16;
+            margin-bottom: 10px;
+        }
+
+        .result-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            color: #333;
+            border: none;
+            border-radius: 24px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .withdraw-page {
+            background: #f5f5f5;
+            height: 100%;
+        }
+
+        .withdraw-card {
+            background: #fff;
+            margin: 16px;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .withdraw-available {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .withdraw-amount-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 20px;
+        }
+
+        .withdraw-currency {
+            font-size: 24px;
+            color: #333;
+            margin-right: 4px;
+        }
+
+        .withdraw-input {
+            font-size: 36px;
+            font-weight: 500;
+            color: #333;
+            border: none;
+            outline: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        .withdraw-all-btn {
+            color: #FF8C00;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: right;
+            margin-top: -40px;
+            margin-bottom: 20px;
+        }
+
+        .withdraw-fee-section {
+            border-top: 1px solid #f5f5f5;
+            padding-top: 16px;
+        }
+
+        .withdraw-fee-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .withdraw-fee-row.highlight {
+            padding-top: 12px;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .withdraw-fee-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .withdraw-fee-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .withdraw-fee-row.highlight .withdraw-fee-value {
+            color: #FF8C00;
+            font-weight: 500;
+        }
+
+        .withdraw-arrive-time {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .withdraw-bank-card {
+            background: #fff;
+            margin: 0 16px 16px;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .withdraw-bank-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .withdraw-bank-icon {
+            width: 36px;
+            height: 36px;
+            background: #E60012;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .withdraw-bank-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .withdraw-bank-account {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .withdraw-bottom-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 335px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            color: #333;
+            border: none;
+            border-radius: 24px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .withdraw-bottom-tip {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ===== 结算产品设置页 ===== */
+        .settle-product-page {
+            background: #f5f5f5;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settle-product-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .settle-section {
+            margin-bottom: 12px;
+        }
+
+        .settle-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            padding: 12px 4px 8px;
+        }
+
+        .settle-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .settle-card-header {
+            font-size: 13px;
+            color: #999;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .settle-product-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .settle-product-row:last-child {
+            border-bottom: none;
+        }
+
+        .settle-product-info {
+            flex: 1;
+        }
+
+        .settle-product-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .settle-product-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .settle-product-rate {
+            font-size: 12px;
+            color: #FA8C16;
+        }
+
+        .settle-product-min {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .settle-toggle {
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            background: #ddd;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .settle-toggle.on {
+            background: #FA8C16;
+        }
+
+        .settle-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            top: 2px;
+            right: 2px;
+            transition: right 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        .settle-toggle.on::after {
+            right: 22px;
+        }
+
+        .settle-time-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .settle-time-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .settle-time-value {
+            font-size: 13px;
+            color: #FA8C16;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 时间选择器弹窗 */
+        .time-picker-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        .time-picker-modal-overlay.active {
+            display: block;
+        }
+
+        .time-picker-modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            z-index: 10000;
+            max-width: 375px;
+            margin: 0 auto;
+        }
+
+        .time-picker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .time-picker-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .time-picker-close {
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .time-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .time-picker-item {
+            text-align: center;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .time-picker-item.selected {
+            background: #FFF3C4;
+            color: #FA8C16;
+            font-weight: 600;
+        }
+
+        /* ===== 结算产品设置页 ===== */
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 3000;
+            display: none;
+        }
+
+        .toast.active {
+            display: block;
+        }
+
+        .float-notice-btn {
+            position: fixed;
+            right: 30px;
+            bottom: 120px;
+            width: 56px;
+            height: 56px;
+            background: #FFD700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255, 184, 0, 0.4);
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            width: 300px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-title {
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .modal-body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            display: flex;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .modal-btn-cancel {
+            color: #666;
+            border-right: 1px solid #f5f5f5;
+        }
+
+        .modal-btn-confirm {
+            color: #FF8C00;
+            font-weight: 500;
+        }
+
+        .d0-popup-card {
+            background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .d0-popup-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .d0-popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .d0-popup-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+
+        <!-- 首页 -->
+        <div class="page active" id="homePage">
+            <div class="home-header">
+                <div class="home-top-bar">
+                    <span class="home-title">💰 收款</span>
+                    <span class="add-btn">+</span>
+                </div>
+                <div class="today-card">
+                    <div class="today-label">今日营业额(元)</div>
+                    <div class="today-amount">0.00</div>
+                    <div class="today-stats">
+                        <span>交易共 0 笔</span>
+                        <span>新增会员 0 个</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content" style="height: calc(100% - 200px); padding-bottom: 60px;">
+
+                <div class="widget-row">
+                    <div class="widget-card">
+                        <div class="widget-title">生意报表 <span class="widget-arrow">›</span></div>
+                        <div class="widget-chart">
+                            <div style="width: 100%; height: 100px; position: relative;">
+                                <svg width="100%" height="100%" viewBox="0 0 150 80">
+                                    <defs>
+                                        <style>
+                                            .grid-line { stroke: #eee; stroke-width: 1; }
+                                        </style>
+                                    </defs>
+                                    <text x="10" y="15" fill="#999" font-size="10">8</text>
+                                    <text x="10" y="35" fill="#999" font-size="10">6</text>
+                                    <text x="10" y="55" fill="#999" font-size="10">4</text>
+                                    <text x="10" y="75" fill="#999" font-size="10">2</text>
+                                    <text x="10" y="95" fill="#999" font-size="10">0</text>
+                                    <line x1="20" y1="10" x2="140" y2="10" class="grid-line"/>
+                                    <line x1="20" y1="30" x2="140" y2="30" class="grid-line"/>
+                                    <line x1="20" y1="50" x2="140" y2="50" class="grid-line"/>
+                                    <line x1="20" y1="70" x2="140" y2="70" class="grid-line"/>
+                                    <line x1="20" y1="90" x2="140" y2="90" class="grid-line"/>
+                                    <text x="20" y="100" fill="#999" font-size="9">05-07</text>
+                                    <text x="70" y="100" fill="#999" font-size="9">05-10</text>
+                                    <text x="120" y="100" fill="#999" font-size="9">05-13</text>
+                                    <line x1="20" y1="90" x2="140" y2="90" stroke="#333" stroke-width="2"/>
+                                </svg>
+                                <div style="position: absolute; top: 35px; left: 50%; transform: translateX(-50%); color: #999; font-size: 14px;">近7天暂无交易</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget-card">
+                        <div class="widget-title">实时账本 <span class="widget-arrow">›</span></div>
+                        <div class="widget-chart" style="flex-direction: column;">
+                            <div style="font-size: 40px;">💰</div>
+                            <div style="color: #999; font-size: 14px; margin-top: 8px;">近7天暂无交易</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-section">
+                    <div class="tab-titles">
+                        <span class="tab-title active">扫码点单</span>
+                        <span class="tab-title">智慧营销</span>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-item">
+                            <div class="tab-item-label">进行中(单) <span>›</span></div>
+                            <div class="tab-item-value">0</div>
+                        </div>
+                        <div class="tab-item">
+                            <div class="tab-item-label">已完成(单) <span>›</span></div>
+                            <div class="tab-item-value">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message-section">
+                    <div class="message-item">
+                        <div class="message-avatar">👩🏻‍💼</div>
+                        <div class="message-content">
+                            <span class="message-badge">1</span>
+                            <span class="message-title">结算成功通知</span>
+                            <span class="message-dot"></span>
+                        </div>
+                        <span class="message-time">05-12</span>
+                    </div>
+                    <div class="message-item">
+                        <div class="message-avatar">👩🏻‍💼</div>
+                        <div class="message-content">
+                            <span class="message-badge" style="background: #FFB800;">2</span>
+                            <span class="message-title">劳动节结算通知</span>
+                            <span class="message-dot"></span>
+                        </div>
+                        <span class="message-time">04-28</span>
+                    </div>
+                </div>
+
+                <div class="function-bar">
+                    <div class="function-item">
+                        <div class="function-icon">👤</div>
+                        <div class="function-name">员工</div>
+                    </div>
+                    <div class="function-item">
+                        <div class="function-icon">🏦</div>
+                        <div class="function-name">收款设备</div>
+                    </div>
+                    <div class="function-item">
+                        <div class="function-icon">📍</div>
+                        <div class="function-name">门店</div>
+                    </div>
+                    <div class="function-item">
+                        <div class="function-icon">💠</div>
+                        <div class="function-name">结算记录</div>
+                    </div>
+                    <div class="function-item">
+                        <div class="function-icon">🏪</div>
+                        <div class="function-name">智慧经营</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="float-notice-btn">🔊</div>
+
+            <div class="tab-bar">
+                <div class="tab-bar-item active">
+                    <div class="tab-bar-icon">🍳</div>
+                    <div class="tab-bar-name">首页</div>
+                </div>
+                <div class="tab-bar-item" onclick="showToast('消息页面')">
+                    <div class="tab-bar-icon" style="position: relative;">
+                        📝
+                        <span class="red-dot"></span>
+                    </div>
+                    <div class="tab-bar-name">消息</div>
+                </div>
+                <div class="tab-bar-item" onclick="goToAccount()">
+                    <div class="tab-bar-icon">👤</div>
+                    <div class="tab-bar-name">我的</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收款账户页 - 未开通D0 -->
+        <div class="page" id="accountPage">
+            <div class="header">
+                <span class="back-btn" onclick="goHome()">‹</span>
+                <span class="header-title">收款账户</span>
+                <span class="setting-btn" onclick="goToSettleProduct()">⚙️</span>
+            </div>
+
+            <div class="d0-account-banner">
+                <div class="d0-banner-left">
+                    <div class="d0-banner-title">开通专属资金快速到账权益</div>
+                    <div class="d0-banner-tip">当天收款当天提、节假日不延迟</div>
+                </div>
+                <button class="d0-banner-btn" onclick="goToD0Intro()">立即开通</button>
+            </div>
+
+            <div class="content" style="height: calc(100% - 84px); position: relative; z-index: 1;">
+                <div class="account-header-card">
+                    <div class="account-settle-inline">
+                        <span>次自然日自动结算</span>
+                        <span>结算卡621483****3697</span>
+                    </div>
+                    <div class="account-label">账户资产</div>
+                    <div class="account-amount">¥0.00</div>
+                    <div class="account-detail-link">资金明细</div>
+                    <div class="account-funds">
+                        <div class="fund-item">
+                            <div class="fund-label">结算中资金 <span class="fund-info-icon">ⓘ</span></div>
+                            <div class="fund-value">0</div>
+                        </div>
+                        <div class="fund-item">
+                            <div class="fund-label">可用资金 <span class="fund-info-icon">ⓘ</span></div>
+                            <div class="fund-value">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pending-funds-card">
+                    <span class="pending-label">小程序订单待收货资金 <span class="fund-info-icon">ⓘ</span></span>
+                    <span class="pending-amount">¥0.00</span>
+                </div>
+
+                <div class="menu-list">
+                    <div class="menu-item">
+                        <div class="menu-icon">💳</div>
+                        <div class="menu-content">
+                            <div class="menu-title">申请结算</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">📋</div>
+                        <div class="menu-content">
+                            <div class="menu-title">收款账单</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">📑</div>
+                        <div class="menu-content">
+                            <div class="menu-title">分账账单</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💹</div>
+                        <div class="menu-content">
+                            <div class="menu-title">结算记录</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💰</div>
+                        <div class="menu-content">
+                            <div class="menu-title">预留金额</div>
+                            <div class="menu-desc">未设置</div>
+                        </div>
+                        <span class="menu-value">未设置</span>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💳</div>
+                        <div class="menu-content">
+                            <div class="menu-title">结算银行卡</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收款账户页 - 已开通D0 -->
+        <div class="page" id="accountPageOpened">
+            <div class="header">
+                <span class="back-btn" onclick="goHome()">‹</span>
+                <span class="header-title">收款账户</span>
+                <span class="setting-btn" onclick="goToSettleProduct()">⚙️</span>
+            </div>
+
+            <div class="d0-account-banner">
+                <div class="d0-banner-left">
+                    <div class="d0-banner-title">开通专属资金快速到账权益</div>
+                    <div class="d0-banner-tip">当天收款当天提、节假日不延迟</div>
+                </div>
+                <button class="d0-banner-btn" onclick="goToD0Intro()">立即开通</button>
+            </div>
+
+            <div class="content" style="height: calc(100% - 84px); position: relative; z-index: 1;">
+                <div class="account-header-card">
+                    <div class="account-settle-inline">
+                        <span>次自然日自动结算</span>
+                        <span>结算卡621483****3697</span>
+                    </div>
+                    <div class="account-label">账户资产</div>
+                    <div class="account-amount">¥15,680.00</div>
+                    <div class="account-detail-link">资金明细</div>
+                    <div class="account-funds">
+                        <div class="fund-item">
+                            <div class="fund-label">结算中资金 <span class="fund-info-icon">ⓘ</span></div>
+                            <div class="fund-value">¥3,200</div>
+                        </div>
+                        <div class="fund-item">
+                            <div class="fund-label">可用资金 <span class="fund-info-icon">ⓘ</span></div>
+                            <div class="fund-value">¥12,480</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已开通D0状态卡片 -->
+                <div class="d0-status-card">
+                    <div class="d0-status-header">
+                        <span class="d0-status-title">D0实时到账 <span class="d0-tag">已开通</span></span>
+                        <span class="d0-tag" style="background: #f5f5f5; color: #666;">费率0.2%</span>
+                    </div>
+                    <div class="d0-quota-bar">
+                        <div class="d0-quota-progress" style="width: 30%;"></div>
+                    </div>
+                    <div class="d0-quota-text">
+                        <span>已用：¥15,000</span>
+                        <span>日额度：¥50,000</span>
+                    </div>
+                    <div class="d0-fee-info">今日手续费累计：¥30.00</div>
+                </div>
+
+                <div class="menu-list">
+                    <div class="menu-item" onclick="goToWithdraw()">
+                        <div class="menu-icon">💳</div>
+                        <div class="menu-content">
+                            <div class="menu-title">D0 提现</div>
+                            <div class="menu-desc">实时到账，费率0.2%</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">📋</div>
+                        <div class="menu-content">
+                            <div class="menu-title">收款账单</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">📑</div>
+                        <div class="menu-content">
+                            <div class="menu-title">分账账单</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💹</div>
+                        <div class="menu-content">
+                            <div class="menu-title">结算记录</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💰</div>
+                        <div class="menu-content">
+                            <div class="menu-title">预留金额</div>
+                            <div class="menu-desc">未设置</div>
+                        </div>
+                        <span class="menu-value">未设置</span>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">💳</div>
+                        <div class="menu-content">
+                            <div class="menu-title">结算银行卡</div>
+                        </div>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- D0产品介绍页 -->
+        <div class="page d0-intro-page" id="d0IntroPage">
+            <div class="header" style="background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%); flex-shrink: 0;">
+                <span class="back-btn" onclick="goToAccount()">‹</span>
+                <span class="header-title">D0实时到账</span>
+                <span></span>
+            </div>
+
+            <div class="d0-intro-header" style="flex-shrink: 0;">
+                <div class="d0-intro-icon">⚡</div>
+                <div class="d0-intro-title">开通专属资金快速到账权益</div>
+                <div class="d0-intro-subtitle">当天收款 当天提现 节假日不延迟</div>
+            </div>
+
+            <div class="d0-intro-content">
+                <div class="d0-feature-section">
+                <div class="d0-feature-item">
+                    <div class="d0-feature-icon">💰</div>
+                    <div class="d0-feature-content">
+                        <div class="d0-feature-title">资金不站岗</div>
+                        <div class="d0-feature-desc">周末/节假日提现，资金当天到账不等待</div>
+                    </div>
+                </div>
+                <div class="d0-feature-item">
+                    <div class="d0-feature-icon">🚀</div>
+                    <div class="d0-feature-content">
+                        <div class="d0-feature-title">到账速度快</div>
+                        <div class="d0-feature-desc">提现后15分钟内到账</div>
+                    </div>
+                </div>
+                <div class="d0-feature-item">
+                    <div class="d0-feature-icon">📊</div>
+                    <div class="d0-feature-content">
+                        <div class="d0-feature-title">费率透明</div>
+                        <div class="d0-feature-desc">低至0.XX%，手续费笔笔可查</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d0-plan-card">
+                <div class="d0-plan-title">您的专属资金快速到账权益</div>
+
+                <!-- 手动快速到账 -->
+                <div class="d0-plan-option" id="planManual">
+                    <div class="d0-plan-option-header">
+                        <span class="d0-plan-option-name">手动快速到账</span>
+                    </div>
+                    <div class="d0-plan-detail" id="detailManual">
+                        <div class="d0-plan-detail-row">
+                            <span class="d0-plan-detail-label">费率</span>
+                            <span class="d0-plan-detail-value">0.1%</span>
+                        </div>
+                        <div class="d0-plan-detail-row">
+                            <span class="d0-plan-detail-label">手续费保底</span>
+                            <span class="d0-plan-detail-value">1元</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自动定时到账 - 全展开 -->
+                <div class="d0-plan-option" id="planAuto">
+                    <div class="d0-plan-option-header">
+                        <span class="d0-plan-option-name">自动定时到账</span>
+                    </div>
+                    <div class="d0-plan-detail" id="detailAuto">
+                        <div class="d0-plan-detail-row">
+                            <span class="d0-plan-detail-label">费率</span>
+                            <span class="d0-plan-detail-value">0.1%</span>
+                        </div>
+                    </div>
+                    <!-- 结算时间选择器 - 全展开 -->
+                    <div class="d0-time-picker" onclick="showTimePicker()">
+                        <span class="d0-time-label">结算时间</span>
+                        <span class="d0-time-value" id="timeValue">请选择</span>
+                        <span class="menu-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding-bottom: 20px;"></div>
+            </div><!-- end d0-intro-content -->
+
+            <!-- 底部固定开通区域 -->
+            <div class="d0-bottom-section">
+                <button class="d0-open-btn" id="openBtn" onclick="submitD0Open()">立即开通</button>
+            </div>
+        </div>
+
+        <!-- 时间选择器弹窗 -->
+        <div class="time-picker-modal-overlay" id="timePickerOverlay" onclick="closeTimePicker()"></div>
+        <div class="time-picker-modal" id="timePickerModal">
+            <div class="time-picker-header">
+                <span class="time-picker-title">选择结算时间</span>
+                <span class="time-picker-close" onclick="closeTimePicker()">✕</span>
+            </div>
+            <div class="time-picker-grid">
+                <div class="time-picker-item" onclick="selectTime('01')">01:00</div>
+                <div class="time-picker-item" onclick="selectTime('02')">02:00</div>
+                <div class="time-picker-item" onclick="selectTime('03')">03:00</div>
+                <div class="time-picker-item" onclick="selectTime('04')">04:00</div>
+                <div class="time-picker-item" onclick="selectTime('05')">05:00</div>
+                <div class="time-picker-item" onclick="selectTime('06')">06:00</div>
+                <div class="time-picker-item" onclick="selectTime('07')">07:00</div>
+                <div class="time-picker-item" onclick="selectTime('08')">08:00</div>
+                <div class="time-picker-item" onclick="selectTime('09')">09:00</div>
+                <div class="time-picker-item" onclick="selectTime('10')">10:00</div>
+                <div class="time-picker-item" onclick="selectTime('11')">11:00</div>
+                <div class="time-picker-item" onclick="selectTime('12')">12:00</div>
+                <div class="time-picker-item" onclick="selectTime('13')">13:00</div>
+                <div class="time-picker-item" onclick="selectTime('14')">14:00</div>
+                <div class="time-picker-item" onclick="selectTime('15')">15:00</div>
+                <div class="time-picker-item" onclick="selectTime('16')">16:00</div>
+                <div class="time-picker-item" onclick="selectTime('17')">17:00</div>
+                <div class="time-picker-item" onclick="selectTime('18')">18:00</div>
+                <div class="time-picker-item" onclick="selectTime('19')">19:00</div>
+                <div class="time-picker-item" onclick="selectTime('20')">20:00</div>
+                <div class="time-picker-item" onclick="selectTime('21')">21:00</div>
+                <div class="time-picker-item" onclick="selectTime('22')">22:00</div>
+                <div class="time-picker-item" onclick="selectTime('23')">23:00</div>
+            </div>
+        </div>
+
+        <!-- D0实时结算服务协议详情页 -->
+        <div class="page agreement-page" id="agreementPage">
+            <div class="header" style="flex-shrink: 0;">
+                <span class="back-btn" onclick="goBackFromAgreement()">‹</span>
+                <span class="header-title">D0实时结算服务协议</span>
+                <span></span>
+            </div>
+
+            <div class="agreement-content">
+                <div class="agreement-section">
+                    <div class="agreement-section-title">一、服务说明</div>
+                    <div class="agreement-text">
+                        D0实时结算服务（以下简称"本服务"）是會生活平台为优质商户提供的即时到账结算产品。商户成功开通本服务后，可在平台规定的时间内自主发起提现申请，系统将在合规前提下实时处理您的提现请求，资金通常在提现发起后数分钟内到达您绑定的银行账户。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">二、服务费用</div>
+                    <div class="agreement-text">
+                        1. 手续费率：按提现金额的<span style="color:#FF8C00;font-weight:600;">0.10%</span>收取（即每提现1万元收取10元手续费）。<br><br>
+                        2. 手续费保底：单笔最低收取<span style="color:#FF8C00;font-weight:600;">1元</span>，不足1元按1元收取。<br><br>
+                        3. 费用扣取：手续费将在提现成功后，从商户账户余额中自动扣除，账单将明确标注手续费金额。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">三、提现规则</div>
+                    <div class="agreement-text">
+                        1. 单笔限额：最低10元，最高5万元。<br><br>
+                        2. 单日限额：累计最高20万元，商户可联系客服申请调高。<br><br>
+                        3. 单日限次：每日最多可发起3次提现申请。<br><br>
+                        4. 时间限制：仅支持每日早上<span style="color:#FF8C00;font-weight:600;">06:00</span>至夜间<span style="color:#FF8C00;font-weight:600;">23:00</span>发起提现，其余时间暂停服务。<br><br>
+                        5. 资金范围：冻结资金、预留资金不可用于D0提现，仅支持可用余额提现。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">四、到账时效</div>
+                    <div class="agreement-text">
+                        1. 正常情况下，商户发起提现后资金将在<span style="color:#FF8C00;font-weight:600;">15分钟内</span>到达银行账户。<br><br>
+                        2. 银行处理速度因银行而异，最快可<span style="color:#FF8C00;font-weight:600;">1分钟内</span>到账。<br><br>
+                        3. 周末及法定节假日期间，正常受理提现申请，确保资金当天到账不延迟。<br><br>
+                        4. 提现高峰期（节假日前夕、账期结算日等）可能出现到账延迟，请提前做好资金安排。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">五、风险告知</div>
+                    <div class="agreement-text">
+                        1. 商户需确保绑定结算的银行账户信息真实有效，因账户信息错误导致的资金损失由商户自行承担。<br><br>
+                        2. 本服务仅限商户本人使用，不得转让、转借或用于代他人收款，一经发现平台有权立即关闭服务。<br><br>
+                        3. 商户不得利用本服务进行套现、洗钱、虚假交易等违规操作，一经发现平台有权冻结账户并配合相关部门处理。<br><br>
+                        4. 如商户账户触发风控预警，平台有权临时暂停本服务，待风险排查完毕后恢复。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">六、违规处罚</div>
+                    <div class="agreement-text">
+                        商户出现以下情形之一，平台有权永久关闭D0服务权限，且保留追究法律责任的权利：<br><br>
+                        1. 涉嫌套现、虚假交易、洗钱等违法违规行为；<br><br>
+                        2. 账户存在交易异常，疑似被黑产利用；<br><br>
+                        3. 频繁开关服务企图套取平台优惠；<br><br>
+                        4. 其他违反平台协议及监管规定的行为。
+                    </div>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="agreement-section-title">七、服务关闭</div>
+                    <div class="agreement-text">
+                        1. 商户自主关闭：商户可在【结算产品设置】中自主关闭D0服务，关闭后当日不可再次开通，次日恢复申请资格。<br><br>
+                        2. 平台风控关闭：商户触发风控规则时，平台有权不经通知直接关闭服务。
+                    </div>
+                </div>
+
+                <div style="height: 80px;"></div>
+            </div>
+
+            <!-- 底部同意签署按钮 -->
+            <div class="agreement-footer">
+                <button class="agreement-btn" id="agreementSignBtn" onclick="goToResult()">同意签署</button>
+            </div>
+        </div>
+
+        <!-- 开通结果页 - 成功 -->
+        <div class="page" id="resultPage">
+            <div class="header">
+                <span class="back-btn" onclick="goHome()">‹</span>
+                <span class="header-title">开通资金快速到账</span>
+                <span></span>
+            </div>
+            <div class="result-page">
+                <div class="result-icon">✅</div>
+                <div class="result-title">资金快速到账方案开通成功了！</div>
+                <div class="result-desc">您现在可以使用资金快速到账服务啦</div>
+
+                <div class="result-info-card">
+                    <div class="result-info-section-title">已开通的结算产品</div>
+
+                    <div class="result-product-block">
+                        <div class="result-product-name">手动快速到账</div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">费率</span>
+                            <span class="result-info-value">0.10%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-product-block">
+                        <div class="result-product-name">自动定时到账</div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">费率</span>
+                            <span class="result-info-value">0.10%</span>
+                        </div>
+                        <div class="result-info-row">
+                            <span class="result-info-label">结算时间</span>
+                            <span class="result-info-value">10:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="result-btn" onclick="goToAccount()">去看看</button>
+            </div>
+        </div>
+
+        <!-- 结算产品设置页 -->
+        <div class="page settle-product-page" id="settleProductPage">
+            <div class="header">
+                <span class="back-btn" onclick="goToAccount()">‹</span>
+                <span class="header-title">结算产品设置</span>
+                <span></span>
+            </div>
+            <div class="settle-product-body">
+                <!-- D0服务 -->
+                <div class="settle-section">
+                    <div class="settle-section-title">D0服务</div>
+
+                    <div class="settle-card">
+                        <div class="settle-card-header">手动结算</div>
+                        <div class="settle-product-row">
+                            <div class="settle-product-info">
+                                <div class="settle-product-name">快速到账</div>
+                                <div class="settle-product-meta">
+                                    <span class="settle-product-rate">费率0.10%</span>
+                                    <span class="settle-product-min">保底金额¥1.00</span>
+                                </div>
+                            </div>
+                            <div class="settle-toggle on" id="toggleD0Manual" onclick="toggleSettleProduct('d0Manual')"></div>
+                        </div>
+                    </div>
+
+                    <div class="settle-card">
+                        <div class="settle-card-header">自动结算</div>
+                        <div class="settle-product-row">
+                            <div class="settle-product-info">
+                                <div class="settle-product-name">定时到账</div>
+                                <div class="settle-product-meta">
+                                    <span class="settle-product-rate">费率0.10%</span>
+                                    <span class="settle-product-min">保底金额¥1.00</span>
+                                </div>
+                            </div>
+                            <div class="settle-toggle on" id="toggleD0Auto" onclick="toggleSettleProduct('d0Auto')"></div>
+                        </div>
+                        <div class="settle-time-row" onclick="showTimePicker()">
+                            <span class="settle-time-label">到账时间</span>
+                            <span class="settle-time-value" id="settleTimeValue">09:00 ›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 普通结算 -->
+                <div class="settle-section">
+                    <div class="settle-section-title">普通结算</div>
+
+                    <div class="settle-card">
+                        <div class="settle-card-header">手动结算</div>
+                        <div class="settle-product-row">
+                            <div class="settle-product-info">
+                                <div class="settle-product-name">普通到账</div>
+                                <div class="settle-product-meta">
+                                    <span class="settle-product-rate">不收费</span>
+                                </div>
+                            </div>
+                            <div class="settle-toggle on" id="toggleNormalManual" onclick="toggleSettleProduct('normalManual')"></div>
+                        </div>
+                    </div>
+
+                    <div class="settle-card">
+                        <div class="settle-card-header">自动结算</div>
+                        <div class="settle-product-row">
+                            <div class="settle-product-info">
+                                <div class="settle-product-name">次自然日结算</div>
+                                <div class="settle-product-meta">
+                                    <span class="settle-product-rate">不收费</span>
+                                </div>
+                            </div>
+                            <div class="settle-toggle on" id="toggleNormalAuto" onclick="toggleSettleProduct('normalAuto')"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 时间选择器弹窗 -->
+    <div class="time-picker-modal-overlay" id="timePickerOverlay" onclick="closeTimePicker()"></div>
+    <div class="time-picker-modal" id="timePickerModal">
+        <div class="time-picker-header">
+            <span class="time-picker-title">选择到账时间</span>
+            <span class="time-picker-close" onclick="closeTimePicker()">✕</span>
+        </div>
+        <div class="time-picker-grid">
+            <div class="time-picker-item" onclick="selectTime('06')">06:00</div>
+            <div class="time-picker-item" onclick="selectTime('07')">07:00</div>
+            <div class="time-picker-item" onclick="selectTime('08')">08:00</div>
+            <div class="time-picker-item selected" onclick="selectTime('09')">09:00</div>
+            <div class="time-picker-item" onclick="selectTime('10')">10:00</div>
+            <div class="time-picker-item" onclick="selectTime('11')">11:00</div>
+            <div class="time-picker-item" onclick="selectTime('12')">12:00</div>
+            <div class="time-picker-item" onclick="selectTime('13')">13:00</div>
+            <div class="time-picker-item" onclick="selectTime('14')">14:00</div>
+            <div class="time-picker-item" onclick="selectTime('15')">15:00</div>
+            <div class="time-picker-item" onclick="selectTime('16')">16:00</div>
+            <div class="time-picker-item" onclick="selectTime('17')">17:00</div>
+            <div class="time-picker-item" onclick="selectTime('18')">18:00</div>
+            <div class="time-picker-item" onclick="selectTime('19')">19:00</div>
+            <div class="time-picker-item" onclick="selectTime('20')">20:00</div>
+            <div class="time-picker-item" onclick="selectTime('21')">21:00</div>
+            <div class="time-picker-item" onclick="selectTime('22')">22:00</div>
+            <div class="time-picker-item" onclick="selectTime('23')">23:00</div>
+        </div>
+    </div>
+
+    <!-- D0开通邀请弹窗 -->
+    <div class="modal-overlay" id="d0PopupModal">
+        <div class="modal">
+            <div class="modal-body">
+                <div class="d0-popup-card">
+                    <div class="d0-popup-icon">⚡</div>
+                    <div class="d0-popup-title">您已升级为优质商户，为您提供专属资金快速到账权益</div>
+                    <div class="d0-popup-desc">当天营业额当天提现<br>节假日也能正常到账</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeD0Popup()">稍后再说</button>
+                <button class="modal-btn modal-btn-confirm" onclick="goD0FromPopup()">立即开通</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let d0SwitchOn = true;
+        let selectedTime = null;
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            const targetPage = document.getElementById(pageId);
+            targetPage.classList.add('active');
+        }
+
+        function showD0Popup() {
+            setTimeout(() => {
+                document.getElementById('d0PopupModal').classList.add('active');
+            }, 1000);
+        }
+
+        function closeD0Popup() {
+            document.getElementById('d0PopupModal').classList.remove('active');
+        }
+
+        function goD0FromPopup() {
+            closeD0Popup();
+            goToD0Intro();
+        }
+
+        function goHome() {
+            showPage('homePage');
+            showD0Popup();
+        }
+
+        function goToAccount() {
+            showPage('accountPage');
+        }
+
+        function goToAccountOpened() {
+            showPage('accountPageOpened');
+        }
+
+        function goToD0Intro() {
+            showPage('d0IntroPage');
+        }
+
+        function goToResult() {
+            showPage('resultPage');
+        }
+
+        function goToWithdraw() {
+            showPage('withdrawPage');
+        }
+
+        function goToSettleProduct() {
+            showPage('settleProductPage');
+        }
+
+        function goToApplySettle() {
+            showPage('applySettlePage');
+        }
+
+        function toggleSettleProduct(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('on');
+        }
+
+        function showTimePicker() {
+            document.getElementById('timePickerOverlay').classList.add('active');
+            document.getElementById('timePickerModal').style.display = 'block';
+        }
+
+        function closeTimePicker() {
+            document.getElementById('timePickerOverlay').classList.remove('active');
+            document.getElementById('timePickerModal').style.display = 'none';
+        }
+
+        function selectTime(time) {
+            document.querySelectorAll('.time-picker-item').forEach(function(item) {
+                item.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('settleTimeValue').textContent = time + ':00 ›';
+            closeTimePicker();
+        }
+
+
+        function submitD0Open() {
+            goToResult();
+        }
+
+        function showTimePicker() {
+            document.getElementById('timePickerModal').classList.add('active');
+            document.getElementById('timePickerOverlay').classList.add('active');
+        }
+
+        function closeTimePicker() {
+            document.getElementById('timePickerModal').classList.remove('active');
+            document.getElementById('timePickerOverlay').classList.remove('active');
+        }
+
+        function selectTime(hour) {
+            selectedTime = hour;
+            document.getElementById('timeValue').textContent = hour + ':00';
+            document.getElementById('timeValue').classList.add('selected');
+            document.querySelectorAll('.time-picker-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            setTimeout(closeTimePicker, 300);
+        }
+
+        function fillAllAmount() {
+            document.getElementById('withdrawInput').value = '12480';
+            calculateFee();
+        }
+
+        function calculateFee() {
+            const input = document.getElementById('withdrawInput');
+            const amount = parseFloat(input.value) || 0;
+            const fee = amount * 0.002;
+            const actualAmount = amount - fee;
+
+            document.getElementById('withdrawAmountDisplay').textContent = '¥' + amount.toFixed(2);
+            document.getElementById('feeDisplay').textContent = '¥' + fee.toFixed(2);
+            document.getElementById('actualAmountDisplay').textContent = '¥' + actualAmount.toFixed(2);
+        }
+
+        function calculateApplyFee() {
+            const input = document.getElementById('applySettleInput');
+            const amount = parseFloat(input.value) || 0;
+            const fee = amount * 0.002;
+            const actualAmount = amount - fee;
+
+            document.getElementById('applyWithdrawDisplay').textContent = '¥' + amount.toFixed(2);
+            document.getElementById('applyFeeDisplay').textContent = '¥' + fee.toFixed(2);
+            document.getElementById('applyActualDisplay').textContent = '¥' + actualAmount.toFixed(2);
+        }
+
+        function fillApplyAmount() {
+            document.getElementById('applySettleInput').value = '0';
+            calculateApplyFee();
+        }
+
+        function confirmWithdraw() {
+            const input = document.getElementById('withdrawInput');
+            const amount = parseFloat(input.value) || 0;
+
+            if (amount <= 0) {
+                showToast('请输入提现金额');
+                return;
+            }
+
+            if (amount > 50000) {
+                showToast('超过D0可用额度');
+                return;
+            }
+
+            showToast('提现申请已提交，预计5分钟内到账');
+            setTimeout(() => {
+                goToAccountOpened();
+            }, 1500);
+        }
+
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('active');
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 2500);
+        }
+
+        window.onload = function() {
+            showD0Popup();
+        }
+    </script>
+</body>
+</html>
