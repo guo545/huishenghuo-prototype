@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>凭证申请 - PC端交互原型</title>
+<style>
+/* ========== 全局变量（遵循会生活PC设计规范） ========== */
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-1);
+  font-size: 14px;
+  line-height: 22px;
+  min-width: 1200px;
+}
+
+/* ========== 顶部导航 ========== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-20);
+  z-index: 100;
+  color: var(--color-text-white);
+}
+.top-nav .logo-area { display: flex; align-items: center; gap: 12px; }
+.top-nav .logo {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.top-nav .sys-name { font-size: 16px; font-weight: 500; }
+.top-nav .merchant-name {
+  margin-left: 24px;
+  font-size: 14px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-4);
+}
+.top-nav .right-area { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+.top-nav .right-area span { cursor: pointer; }
+.top-nav .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+
+/* ========== 左侧导航 ========== */
+.layout { padding-top: 64px; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  padding: var(--spacing-12) 0;
+  position: fixed;
+  top: 64px; bottom: 0; left: 0;
+  overflow-y: auto;
+}
+.sidebar .menu-item {
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-20);
+  cursor: pointer;
+  color: var(--color-text-1);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover { background: var(--row-hover); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 500;
+}
+.sidebar .menu-item .icon { margin-right: 8px; }
+
+/* ========== 主内容区 ========== */
+.main-content {
+  margin-left: 200px;
+  flex: 1;
+  padding: var(--spacing-20);
+  min-height: calc(100vh - 64px);
+}
+
+/* ========== 演示态切换器（仅评审用） ========== */
+.demo-switcher {
+  position: fixed;
+  top: 80px; right: 20px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-6);
+  padding: 12px;
+  z-index: 50;
+  width: 260px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.demo-switcher .demo-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-error);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-base);
+}
+.demo-switcher .demo-item {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  border-radius: var(--radius-4);
+  margin-bottom: 4px;
+}
+.demo-switcher .demo-item:hover { background: var(--row-hover); }
+.demo-switcher .demo-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ========== 页面头部 ========== */
+.page-header {
+  background: var(--color-bg-card);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  border-radius: var(--radius-6);
+}
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.page-header .breadcrumb {
+  font-size: 13px;
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+}
+
+/* ========== 卡片 ========== */
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  padding: var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+}
+
+/* ========== 顶部操作区 ========== */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.action-bar .hint {
+  font-size: 13px;
+  color: var(--color-text-2);
+}
+.action-bar .preview-link {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.action-bar .preview-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ========== 信息条（蓝色） ========== */
+.info-bar {
+  background: var(--color-bg-select-active);
+  border: 1px solid #BAE0FF;
+  border-radius: var(--radius-4);
+  padding: var(--spacing-12) var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+  font-size: 13px;
+  color: var(--color-text-1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-bar .info-icon {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ========== 列表 ========== */
+.list-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-1);
+  padding-bottom: var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+  margin-bottom: var(--spacing-16);
+}
+.list-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.list-table thead th {
+  height: 48px;
+  background: var(--color-bg-table-header);
+  color: var(--color-text-1);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  padding: 0 var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+}
+.list-table tbody td {
+  height: 48px;
+  color: var(--color-text-1);
+  font-size: 14px;
+  padding: 0 var(--spacing-16);
+  border-bottom: 1px solid var(--border-base);
+}
+.list-table tbody tr:hover td {
+  background: var(--row-hover);
+}
+.list-table .status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.list-table .status-processing .status-dot { background: var(--color-warning); }
+.list-table .status-success .status-dot { background: var(--color-success); }
+.list-table .op-link {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.list-table .op-link:hover { color: var(--color-primary-hover); text-decoration: underline; }
+.list-table .op-link.disabled {
+  color: var(--color-text-disable);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* 状态角标 ⓘ + 悬浮气泡 */
+.list-table .status-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+}
+.list-table .status-info:hover { background: var(--color-primary); color: #fff; }
+.list-table .status-info .status-popover {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--color-text-1);
+  white-space: nowrap;
+  z-index: 30;
+  display: none;
+  font-weight: 400;
+}
+.list-table .status-info:hover .status-popover,
+.list-table .status-info.show .status-popover { display: block; }
+.list-table .status-info .status-popover::after {
+  content: '';
+  position: absolute;
+  bottom: -5px; left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px; height: 8px;
+  background: #fff;
+  border-right: 1px solid var(--border-base);
+  border-bottom: 1px solid var(--border-base);
+}
+
+/* ========== 分页 ========== */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-top: var(--spacing-16);
+  margin-top: var(--spacing-16);
+  font-size: 13px;
+  color: var(--color-text-1);
+}
+.pagination .page-info { color: var(--color-text-2); margin-right: 8px; }
+.pagination .page-btn {
+  min-width: 32px; height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0 8px;
+}
+.pagination .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.pagination .page-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+.pagination input {
+  width: 50px; height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+}
+.pagination input:focus { border-color: var(--color-primary); }
+
+/* ========== 按钮 ========== */
+.btn {
+  height: 32px; padding: 0 16px;
+  border-radius: var(--radius-4);
+  border: 1px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px;
+  background: #fff;
+  color: var(--color-text-1);
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-default {
+  background: #fff;
+  color: var(--color-text-1);
+  border-color: var(--border-base);
+}
+.btn-default:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-large { height: 40px; padding: 0 20px; }
+.btn:disabled, .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-mask.hidden { display: none; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius-4);
+  width: 520px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.modal.w-420 { width: 420px; }
+.modal.w-640 { width: 640px; }
+.modal-header {
+  height: 48px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; }
+.modal-header .close {
+  cursor: pointer; color: var(--color-text-2);
+  font-size: 18px; line-height: 1;
+}
+.modal-body {
+  padding: var(--spacing-20);
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text-1);
+}
+.modal-footer {
+  height: 56px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-footer.center { justify-content: center; }
+
+/* ========== 表单（弹窗内） ========== */
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-16);
+}
+.form-row:last-child { margin-bottom: 0; }
+.form-row .label {
+  width: 110px;
+  text-align: right;
+  padding-right: 12px;
+  padding-top: 9px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.form-row .label .required { color: var(--color-error); margin-right: 4px; }
+.form-row .control {
+  flex: 1;
+  position: relative;
+}
+.form-row .control input,
+.form-row .control select {
+  width: 100%; height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+.form-row .control input:focus,
+.form-row .control select:focus { border-color: var(--color-primary); }
+.form-row .control input.error { border-color: var(--color-error); }
+.form-row .control input[readonly] {
+  background: var(--row-hover);
+  cursor: not-allowed;
+}
+.form-row .control .err-tip {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: 4px;
+}
+.form-row .control .helper {
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin-top: 4px;
+}
+.form-row .control .readonly-text {
+  padding-top: 9px;
+  color: var(--color-text-1);
+  font-size: 14px;
+}
+
+/* 通知方式单选样式优化 */
+.form-row input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+/* 错误提示动画 */
+.err-tip {
+  animation: shake 0.2s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* 日期选择器 */
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.date-range .date-input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-family: inherit;
+}
+.date-range .date-input:hover { border-color: var(--color-primary); }
+.date-range .date-input .calendar-icon {
+  color: var(--color-text-2);
+  font-size: 14px;
+}
+.date-range .date-input.placeholder-style { color: var(--color-text-disable); }
+.date-range .date-sep { color: var(--color-text-2); font-size: 14px; }
+  .acquirer-tip { font-size: 12px; color: var(--color-text-2); margin-top: 6px; line-height: 18px; }
+  /* 申请商户选择器（单选） */
+  .store-multi {
+    border: 1px solid var(--border-base); border-radius: var(--radius-4);
+    padding: 6px 12px; min-height: 40px; background: #fff; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .store-multi:hover { border-color: var(--color-primary); }
+  .store-multi .chip {
+    background: var(--color-bg-select-active); color: var(--color-primary);
+    border-radius: var(--radius-4); padding: 2px 8px; font-size: 12px;
+  }
+  .store-tip { font-size: 12px; color: var(--color-text-2); margin-top: 4px; }
+  .merchant-dropdown { position: absolute; left: 0; right: 0; top: 46px; z-index: 10;
+    background: #fff; border: 1px solid var(--border-base); border-radius: var(--radius-4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12); overflow: hidden; }
+  .merchant-dropdown .merchant-option { padding: 10px 12px; font-size: 14px; color: var(--color-text-1); cursor: pointer; }
+  .merchant-dropdown .merchant-option:hover { background: var(--row-hover); color: var(--color-primary); }
+
+/* 成功提示弹窗 */
+.success-content {
+  text-align: center;
+  padding: var(--spacing-20) 0;
+}
+.success-content .success-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: var(--spacing-16);
+  line-height: 1;
+}
+.success-content .success-text {
+  font-size: 16px;
+  color: var(--color-text-1);
+  margin-bottom: var(--spacing-20);
+}
+
+/* 模板预览图 */
+.template-preview {
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: var(--spacing-20);
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+.template-preview .tp-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-bottom: var(--spacing-16);
+  padding-bottom: var(--spacing-12);
+  border-bottom: 2px solid var(--color-text-1);
+}
+.template-preview .tp-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  margin-bottom: var(--spacing-16);
+}
+.template-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.template-preview table th,
+.template-preview table td {
+  border: 1px solid #999;
+  padding: 6px 4px;
+  text-align: right;
+  color: var(--color-text-1);
+}
+.template-preview table th {
+  background: #F5F5F5;
+  font-weight: 500;
+  text-align: center;
+  font-size: 11px;
+}
+.template-preview table td:first-child {
+  text-align: center;
+}
+.template-preview table tr.tp-total-row td {
+  background: #FAFAFA;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.template-preview table tr.tp-stamp-row td {
+  padding: 0;
+  height: 140px;
+  background: #fff;
+}
+.template-preview .tp-stamp-cell {
+  position: relative;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 24px;
+}
+.template-preview .tp-stamp-label {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  font-weight: 500;
+}
+.template-preview .tp-stamp {
+  margin-top: var(--spacing-20);
+  text-align: right;
+  position: relative;
+  height: 110px;
+}
+.template-preview .tp-stamp-img {
+  display: inline-block;
+  width: 110px; height: 110px;
+  border: 2px solid var(--color-error);
+  border-radius: 50%;
+  color: var(--color-error);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  position: relative;
+  opacity: 0.85;
+}
+.template-preview .tp-stamp-img .stamp-star {
+  font-size: 20px;
+  position: absolute;
+  top: 38px; left: 0; right: 0;
+}
+.template-preview .tp-stamp-img .stamp-top {
+  position: absolute;
+  top: 16px; left: 0; right: 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.template-preview .tp-stamp-img .stamp-bottom {
+  position: absolute;
+  bottom: 16px; left: 0; right: 0;
+  font-size: 10px;
+}
+.template-preview-note {
+  margin-top: var(--spacing-16);
+  padding: var(--spacing-12) var(--spacing-16);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  background: #FAFAFA;
+  font-size: 12px;
+  color: var(--color-text-1);
+  line-height: 22px;
+}
+.template-preview-note .tp-note-title {
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-bottom: 4px;
+}
+.template-preview-note .tp-note-item {
+  color: var(--color-text-1);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 80px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radius-4);
+  font-size: 14px;
+  z-index: 300;
+  display: none;
+  white-space: nowrap;
+}
+.toast.show { display: block; }
+
+/* 演示态 */
+.scene { display: none; }
+.scene.active { display: block; }
+
+/* hidden 类通用 */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="top-nav">
+  <div class="logo-area">
+    <div class="logo">R</div>
+    <span class="sys-name">会生活 PC</span>
+    <span class="merchant-name">北京市天山区永天大厦程以秀服装店1</span>
+  </div>
+  <div class="right-area">
+    <span>下载</span>
+    <span>手机客户端</span>
+    <span>消息通知</span>
+    <span>帮助中心</span>
+    <div class="avatar">商</div>
+  </div>
+</div>
+
+<!-- ========== 左侧导航 ========== -->
+<div class="layout">
+  <div class="sidebar">
+    <div class="menu-item"><span class="icon">▦</span>商户管理</div>
+    <div class="menu-item"><span class="icon">▤</span>交易数据</div>
+    <div class="menu-item"><span class="icon">▥</span>分账管理</div>
+    <div class="menu-item active">
+      <span class="icon">▦</span>财务结算
+    </div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">发票查询</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">账单明细</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">结算记录</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">手工业务</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px;">历史数据管理</div>
+    <div class="menu-item" style="padding-left:36px; font-size:13px; color:var(--color-primary); background:var(--color-bg-select-active);">凭证申请</div>
+    <div class="menu-item"><span class="icon">▣</span>对账管理</div>
+    <div class="menu-item"><span class="icon">▢</span>账户资产</div>
+    <div class="menu-item"><span class="icon">▤</span>风控管理</div>
+    <div class="menu-item"><span class="icon">★</span>应用中心</div>
+  </div>
+
+  <!-- ========== 演示态切换器（仅评审用） ========== -->
+  <div class="demo-switcher">
+    <div class="demo-title">⚠ 演示态切换（评审用）</div>
+    <div class="demo-item active" data-scene="scene-1">① 主页 - 列表</div>
+    <div class="demo-item" data-scene="scene-2">② 申请凭证弹窗（普通商户·仅随行付）</div>
+    <div class="demo-item" data-scene="scene-2a">②-1 邮箱通知</div>
+    <div class="demo-item" data-scene="scene-2b">②-2 短信通知</div>
+    <div class="demo-item" data-scene="scene-2c">②-3 多收单方提示（普通商户）</div>
+    <div class="demo-item" data-scene="scene-3">③ 申请凭证弹窗（总店·未选申请商户）</div>
+    <div class="demo-item" data-scene="scene-3a">③-1 总店·选定仅随行付</div>
+    <div class="demo-item" data-scene="scene-3b">③-2 多收单方提示（总店）</div>
+    <div class="demo-item" data-scene="scene-7">④ 模板预览弹窗</div>
+    <div class="demo-item" data-scene="scene-8">⑤ 提交成功 Toast</div>
+  </div>
+<!-- ========== 主内容区 ========== -->
+  <div class="main-content">
+
+    <!-- 主页：顶部操作区 + 信息条 + 列表（所有场景共用） -->
+    <div class="page-header">
+      <div class="breadcrumb">财务结算 / 凭证申请</div>
+      <h1>凭证申请</h1>
+    </div>
+
+    <div class="card">
+      <div class="action-bar">
+        <button class="btn btn-primary btn-large" id="btn-apply">申请凭证</button>
+        <div class="hint">
+          申请提交后，平台将在 24 小时内处理，请耐心等待，可提前
+          <span class="preview-link" id="btn-preview">预览凭证模版</span>
+          ，符合要求再申请。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="info-bar">
+        <span class="info-icon">i</span>
+        <span>为您保留近 30 天的申请记录，过期自动清除</span>
+      </div>
+
+      <div class="list-title">查询结果</div>
+
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th style="width:200px;">申请时间</th>
+            <th style="width:180px;">凭证类型</th>
+            <th>数据区间</th>
+            <th style="width:140px;">状态</th>
+            <th style="width:100px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="status-success">
+            <td>2026-06-12 10:30:00</td>
+            <td>商户账单记录</td>
+            <td>2026-05-01 至 2026-05-31</td>
+            <td><span class="status-dot"></span>生成成功</td>
+            <td><span class="op-link">下载</span></td>
+          </tr>
+          <tr class="status-processing">
+            <td>2026-06-10 14:20:15</td>
+            <td>商户账单记录</td>
+            <td>2026-04-01 至 2026-04-30</td>
+            <td>
+              <span class="status-dot"></span>处理中
+              <span class="status-info" tabindex="0">ⓘ
+                <span class="status-popover">预计 24 小时内完成，请耐心等待</span>
+              </span>
+            </td>
+            <td><span class="op-link disabled">下载</span></td>
+          </tr>
+          <tr class="status-success">
+            <td>2026-06-03 09:15:42</td>
+            <td>商户账单记录</td>
+            <td>2026-03-15 至 2026-03-31</td>
+            <td><span class="status-dot"></span>生成成功</td>
+            <td><span class="op-link">下载</span></td>
+          </tr>
+          <tr class="status-success">
+            <td>2026-05-28 17:39:06</td>
+            <td>商户账单记录</td>
+            <td>2026-03-01 至 2026-03-14</td>
+            <td><span class="status-dot"></span>生成成功</td>
+            <td><span class="op-link">下载</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <span class="page-info">第 1 页（共 1 页，总计 4 条）</span>
+        <span class="page-btn">&lt;</span>
+        <span class="page-btn active">1</span>
+        <span class="page-btn">&gt;</span>
+        <span>跳至</span>
+        <input type="text" value="1" />
+        <span>页</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 申请凭证弹窗 ========== -->
+<div class="modal-mask hidden" id="applyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="title">申请凭证</div>
+      <div class="close" onclick="hide('applyModal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px; padding:10px 12px; background:var(--color-bg-select-active); border-radius:var(--radius-4); font-size:13px; color:var(--color-text-1); border:1px solid #BAE0FF;">
+        <div style="font-weight:600; margin-bottom:6px;">注意：</div>
+        <div style="line-height:20px;">1.凭证数据为交易入账数据，不含分账业务数据、不入账的交易数据等。</div>
+        <div style="line-height:20px;">2.入账金额为商户的随行付账户交易的净收入不含商家出资的优惠金额</div>
+      </div>
+
+      <!-- 申请商户选择器（仅总店/总部登录展示） -->
+      <div class="form-row hidden" id="applyMerchantRow">
+        <div class="label"><span class="required">*</span>申请商户：</div>
+        <div class="control">
+          <div class="store-multi" id="applyMerchantSel" onclick="toggleMerchantDropdown()">
+            <span style="color:var(--color-text-2);">请选择申请商户</span>
+            <span style="margin-left:auto; color:var(--color-text-2); font-size:12px;">▾</span>
+          </div>
+          <div class="merchant-dropdown hidden" id="merchantDropdown">
+            <div class="merchant-option" onclick="selectMerchant('m1')">商户1-随行付</div>
+            <div class="merchant-option" onclick="selectMerchant('m2')">商户2-非随行付</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下方字段：普通商户默认展示；总店未选申请商户时隐藏 -->
+      <div id="applyDetailFields">
+        <div class="form-row">
+          <div class="label">收单方：</div>
+          <div class="control">
+            <div class="readonly-text">随行付支付有限公司</div>
+            <div class="acquirer-tip">账单凭证将由负责收单的第三方支付机构向您开具</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label">商户名称：</div>
+          <div class="control">
+            <div class="readonly-text" id="merchantName">会生活餐饮店</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label">商户编号：</div>
+          <div class="control">
+            <div class="readonly-text" id="merchantId">836812345678901</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label"><span class="required">*</span>数据区间：</div>
+          <div class="control">
+            <div class="date-range">
+              <div class="date-input" id="start-date">
+                <span>2026-05-01</span>
+                <span class="calendar-icon">📅</span>
+              </div>
+              <span class="date-sep">至</span>
+              <div class="date-input" id="end-date">
+                <span>2026-05-31</span>
+                <span class="calendar-icon">📅</span>
+              </div>
+            </div>
+            <div class="helper">日期跨度不超过一年</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="label">通知方式：</div>
+          <div class="control">
+            <div style="display:flex; align-items:center; gap:24px; margin-top:8px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="notifyType" value="none" checked onchange="toggleNotifyInput()" />
+                <span>无需通知</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="notifyType" value="email" onchange="toggleNotifyInput()" />
+                <span>邮箱通知</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="notifyType" value="sms" onchange="toggleNotifyInput()" />
+                <span>短信通知</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 邮箱通知输入框（动态显示） -->
+        <div class="form-row hidden" id="emailInputRow">
+          <div class="label"><span class="required">*</span>接收邮箱：</div>
+          <div class="control">
+            <input type="text" placeholder="请输入接收通知的邮箱" id="notify-email" />
+            <div class="err-tip hidden" id="email-error">请输入接收通知的邮箱</div>
+          </div>
+        </div>
+
+        <!-- 短信通知输入框（动态显示） -->
+        <div class="form-row hidden" id="smsInputRow">
+          <div class="label"><span class="required">*</span>接收手机：</div>
+          <div class="control">
+            <input type="text" placeholder="请输入接收通知的手机号" id="notify-phone" maxlength="11" />
+            <div class="err-tip hidden" id="phone-error">请输入接收通知的手机号</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="hide('applyModal')">取 消</button>
+      <button class="btn btn-primary" onclick="submitApply()">提交申请</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ========== 多收单方提示弹窗 ========== -->
+<div class="modal-mask hidden" id="acquirerMultiModal">
+  <div class="modal w-420">
+    <div class="modal-header">
+      <div class="title">提示</div>
+      <div class="close" onclick="closeAcquirerMulti()">×</div>
+    </div>
+    <div class="modal-body">
+      <div id="acquirerMultiText" style="text-align:center; padding:24px 12px; font-size:14px; color:var(--color-text-1); line-height:24px;">
+        您存在多个收单方为您提供收款服务，请分别向各收单方申请，暂不支持线上办理
+      </div>
+    </div>
+    <div class="modal-footer center">
+      <button class="btn btn-primary" onclick="closeAcquirerMulti()">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 模板预览弹窗 ========== -->
+<div class="modal-mask hidden" id="previewModal">
+  <div class="modal w-640" style="max-height: 80vh;">
+    <div class="modal-header">
+      <div class="title">凭证模板预览</div>
+      <div class="close" onclick="hide('previewModal')">×</div>
+    </div>
+    <div class="modal-body" style="background:var(--color-bg-page); max-height: calc(80vh - 104px); overflow-y: auto;">
+      <div class="template-preview">
+        <div class="tp-title">随行付商户账单记录</div>
+        <div class="tp-meta">
+          <div>商户编号：836812345678901</div>
+          <div>商户名称：程以秀服装店</div>
+          <div>起始日期：2026-05-01</div>
+          <div>结束日期：2026-05-31</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>收退款合计</th>
+              <th>收款金额</th>
+              <th>收款笔数</th>
+              <th>退款金额</th>
+              <th>退款笔数</th>
+              <th>手续费</th>
+              <th>入账金额</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-05-01</td>
+              <td>1,234.56</td>
+              <td>1,234.56</td>
+              <td>12</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>7.40</td>
+              <td>1,227.16</td>
+            </tr>
+            <tr>
+              <td>2026-05-02</td>
+              <td>2,100.00</td>
+              <td>2,100.00</td>
+              <td>18</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>12.60</td>
+              <td>2,087.40</td>
+            </tr>
+            <tr>
+              <td>2026-05-03</td>
+              <td>-150.00</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>150.00</td>
+              <td>1</td>
+              <td>0.00</td>
+              <td>-150.00</td>
+            </tr>
+            <tr>
+              <td>2026-05-04</td>
+              <td>0.00</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>0.00</td>
+              <td>0.00</td>
+            </tr>
+            <tr>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+              <td>……</td>
+            </tr>
+            <tr>
+              <td>2026-05-31</td>
+              <td>985.20</td>
+              <td>985.20</td>
+              <td>9</td>
+              <td>0.00</td>
+              <td>0</td>
+              <td>5.91</td>
+              <td>979.29</td>
+            </tr>
+            <tr class="tp-total-row">
+              <td>合计</td>
+              <td>56,789.12</td>
+              <td>58,239.12</td>
+              <td>521</td>
+              <td>1,450.00</td>
+              <td>13</td>
+              <td>340.73</td>
+              <td>56,448.39</td>
+            </tr>
+            <tr class="tp-stamp-row">
+              <td colspan="8">
+                <div class="tp-stamp-cell">
+                  <span class="tp-stamp-label">签章处</span>
+                  <div class="tp-stamp-img">
+                    <div class="stamp-top">随行付支付</div>
+                    <div class="stamp-star">★</div>
+                    <div class="stamp-bottom">电子签章专用</div>
+                  </div>
+                  <div style="margin-top:12px; text-align:right; font-size:12px; color:var(--color-text-1);">
+                    <div style="font-weight:600;">随行付支付有限公司</div>
+                    <div>2026年07月01日</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="template-preview-note">
+        <div class="tp-note-title">重要提示：</div>
+        <div class="tp-note-item">注：此凭证仅证明所选时间内其随行付账户中的业务单据的情况，仅包含交易入账数据，不含入账后分账的业务数据、不含不入账的交易数据。入账金额为该日交易的净收入（不含商家出资的优惠金额）</div>
+        <div class="tp-note-item">1.此凭证有任何修改和涂改均无效。</div>
+        <div class="tp-note-item">2.此凭证随行付具有该回单唯一解释权。</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="hide('previewModal')">关 闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Toast ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== 演示态切换 ========== -->
+<script>
+  // 弹窗工具
+  // 弹窗工具
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+  function hideAllModals() {
+    ['applyModal','previewModal','acquirerMultiModal','merchantDropdown'].forEach(id => hide(id));
+  }
+  // 多收单方提示：知道了 -> 仅关闭提示弹窗；申请凭证弹窗保留（总店可重选申请商户）
+  function closeAcquirerMulti() {
+    hide('acquirerMultiModal');
+  }
+  function showToast(text) {
+    const t = document.getElementById('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // 多收单方提示文案：普通商户 / 总店 两套
+  function setAcquirerMultiText(isHead) {
+    const el = document.getElementById('acquirerMultiText');
+    el.textContent = isHead
+      ? '申请商户存在多个收单方为其提供收款服务，请分别向各收单方申请，暂不支持线上办理'
+      : '您存在多个收单方为您提供收款服务，请分别向各收单方申请，暂不支持线上办理';
+  }
+
+  // 普通商户：隐藏申请商户选择器，展示下方字段
+  function setNormalMode() {
+    document.getElementById('applyMerchantRow').classList.add('hidden');
+    document.getElementById('applyDetailFields').classList.remove('hidden');
+    document.getElementById('merchantName').textContent = '会生活餐饮店';
+    document.getElementById('merchantId').textContent = '836812345678901';
+    hide('merchantDropdown');
+    hide('acquirerMultiModal');
+  }
+  // 总店：展示申请商户选择器，未选 -> 隐藏下方字段
+  function setHeadModeUnselected() {
+    document.getElementById('applyMerchantRow').classList.remove('hidden');
+    document.getElementById('applyDetailFields').classList.add('hidden');
+    document.getElementById('applyMerchantSel').innerHTML =
+      '<span style="color:var(--color-text-2);">请选择申请商户</span><span style="margin-left:auto; color:var(--color-text-2); font-size:12px;">▾</span>';
+    hide('merchantDropdown');
+    hide('acquirerMultiModal');
+  }
+  // 申请商户下拉
+  function toggleMerchantDropdown() {
+    document.getElementById('merchantDropdown').classList.toggle('hidden');
+  }
+  function selectMerchant(key) {
+    hide('merchantDropdown');
+    const sel = document.getElementById('applyMerchantSel');
+    const arrow = '<span style="margin-left:auto; color:var(--color-text-2); font-size:12px;">▾</span>';
+    if (key === 'm1') {
+      // 商户1-随行付：仅含随行付 -> 展开下方字段
+      sel.innerHTML = '<span class="chip">商户1-随行付</span>' + arrow;
+      document.getElementById('applyDetailFields').classList.remove('hidden');
+      document.getElementById('merchantName').textContent = '商户1';
+      document.getElementById('merchantId').textContent = '836812345678901';
+      hide('acquirerMultiModal');
+    } else if (key === 'm2') {
+      // 商户2-非随行付：含其他收单方 -> 弹多收单方提示（总店文案），保留申请凭证弹窗
+      sel.innerHTML = '<span class="chip">商户2-非随行付</span>' + arrow;
+      document.getElementById('applyDetailFields').classList.add('hidden');
+      setAcquirerMultiText(true);
+      show('acquirerMultiModal');
+    }
+  }
+  function resetNotify() {
+    document.querySelector('input[name="notifyType"][value="none"]').checked = true;
+    toggleNotifyInput();
+  }
+
+  // 演示态切换：每次切换都先关闭所有弹窗，再按场景打开
+  const switcherItems = document.querySelectorAll('.demo-switcher .demo-item');
+  const SCENE_MAP = {
+    'scene-1': () => { /* 主页，不开弹窗 */ },
+    'scene-2': () => { show('applyModal'); setNormalMode(); resetNotify(); },
+    'scene-2a': () => { show('applyModal'); setNormalMode(); document.querySelector('input[name="notifyType"][value="email"]').checked = true; toggleNotifyInput(); },
+    'scene-2b': () => { show('applyModal'); setNormalMode(); document.querySelector('input[name="notifyType"][value="sms"]').checked = true; toggleNotifyInput(); },
+    'scene-2c': () => { setAcquirerMultiText(false); show('acquirerMultiModal'); },
+    'scene-3': () => { show('applyModal'); setHeadModeUnselected(); resetNotify(); },
+    'scene-3a': () => { show('applyModal'); document.getElementById('applyMerchantRow').classList.remove('hidden'); selectMerchant('m1'); resetNotify(); },
+    'scene-3b': () => { show('applyModal'); document.getElementById('applyMerchantRow').classList.remove('hidden'); selectMerchant('m2'); },
+    'scene-7': () => show('previewModal'),
+    'scene-8': () => showToast('申请已提交，平台将在 24 小时内处理，请耐心等待'),
+  };
+
+  switcherItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-scene');
+      switcherItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      hideAllModals();
+      if (SCENE_MAP[target]) SCENE_MAP[target]();
+    });
+  });
+
+  // 主页：点击「申请凭证」按钮 -> 普通商户演示：收单方校验通过，打开申请凭证弹窗
+  document.getElementById('btn-apply').addEventListener('click', () => {
+    hideAllModals();
+    show('applyModal');
+    setNormalMode();
+    resetNotify();
+  });
+
+  // 主页：点击「预览凭证模版」
+  document.getElementById('btn-preview').addEventListener('click', () => {
+    hideAllModals();
+    show('previewModal');
+  });
+
+  // 点击申请商户选择器外区域关闭下拉
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('merchantDropdown');
+    const sel = document.getElementById('applyMerchantSel');
+    if (dd && !dd.classList.contains('hidden') && sel && !sel.contains(e.target) && !dd.contains(e.target)) {
+      dd.classList.add('hidden');
+    }
+  });
+
+  // 申请凭证 -> 提交申请（演示：默认走成功 Toast）
+  function submitApply() {
+    const notifyType = document.querySelector('input[name="notifyType"]:checked').value;
+    const emailInput = document.getElementById('notify-email');
+    const phoneInput = document.getElementById('notify-phone');
+    const emailError = document.getElementById('email-error');
+    const phoneError = document.getElementById('phone-error');
+
+    emailError.classList.add('hidden');
+    phoneError.classList.add('hidden');
+    emailInput.classList.remove('error');
+    phoneInput.classList.remove('error');
+
+    if (notifyType === 'email') {
+      const email = emailInput.value.trim();
+      if (!email) { emailInput.classList.add('error'); emailError.classList.remove('hidden'); emailError.textContent = '请输入接收通知的邮箱'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.classList.add('error'); emailError.classList.remove('hidden'); emailError.textContent = '邮箱格式错误，请输入正确的邮箱地址'; return; }
+    }
+    if (notifyType === 'sms') {
+      const phone = phoneInput.value.trim();
+      if (!phone) { phoneInput.classList.add('error'); phoneError.classList.remove('hidden'); phoneError.textContent = '请输入接收通知的手机号'; return; }
+      if (!/^1\d{10}$/.test(phone)) { phoneInput.classList.add('error'); phoneError.classList.remove('hidden'); phoneError.textContent = '手机号格式错误，请输入正确的 11 位手机号'; return; }
+    }
+
+    hide('applyModal');
+    showToast('申请已提交，平台将在 24 小时内处理，请耐心等待');
+  }
+
+  // 切换通知方式输入框显示
+  function toggleNotifyInput() {
+    const notifyType = document.querySelector('input[name="notifyType"]:checked').value;
+    document.getElementById('emailInputRow').classList.toggle('hidden', notifyType !== 'email');
+    document.getElementById('smsInputRow').classList.toggle('hidden', notifyType !== 'sms');
+  }
+
+  // 状态角标 ⓘ
+  document.querySelectorAll('.list-table .status-info').forEach(badge => {
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.list-table .status-info').forEach(b => { if (b !== badge) b.classList.remove('show'); });
+      badge.classList.toggle('show');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.list-table .status-info').forEach(b => b.classList.remove('show'));
+  });
+</script>
+
+</body>
+</html>
