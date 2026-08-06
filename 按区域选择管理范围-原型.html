@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>按区域选择管理范围 - PC端交互原型</title>
+<style>
+/* ========== 全局变量（遵循会生活PC设计规范） ========== */
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  color: var(--color-text-1);
+  font-size: 14px;
+  line-height: 22px;
+  min-width: 1200px;
+}
+
+/* ========== 顶部导航 ========== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-20);
+  z-index: 100;
+  color: var(--color-text-white);
+}
+.top-nav .logo-area { display: flex; align-items: center; gap: 12px; }
+.top-nav .logo {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.top-nav .sys-name { font-size: 16px; font-weight: 500; }
+.top-nav .merchant-name {
+  margin-left: 24px;
+  font-size: 14px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-4);
+}
+.top-nav .right-area { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+.top-nav .right-area span { cursor: pointer; }
+.top-nav .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+
+/* ========== 左侧导航 ========== */
+.layout { padding-top: 64px; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  padding: var(--spacing-12) 0;
+  position: fixed;
+  top: 64px; bottom: 0; left: 0;
+  overflow-y: auto;
+}
+.sidebar .menu-item {
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-20);
+  cursor: pointer;
+  color: var(--color-text-1);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover { background: var(--row-hover); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  font-weight: 500;
+}
+.sidebar .menu-item .icon { margin-right: 8px; }
+
+/* ========== 主内容区 ========== */
+.main-content {
+  margin-left: 200px;
+  flex: 1;
+  padding: var(--spacing-20);
+  min-height: calc(100vh - 64px);
+}
+
+/* ========== 页面头部 ========== */
+.page-header {
+  background: var(--color-bg-card);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  border-radius: var(--radius-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.page-header .breadcrumb {
+  font-size: 13px;
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+}
+.page-header .actions { display: flex; gap: 12px; }
+
+/* ========== 按钮 ========== */
+.btn {
+  height: 32px; padding: 0 16px;
+  border-radius: var(--radius-4);
+  border: 1px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px;
+  background: #fff;
+  color: var(--color-text-1);
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-white);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-secondary {
+  background: #fff;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-secondary:hover { background: var(--color-bg-select-active); }
+.btn-default:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-large { height: 40px; padding: 0 20px; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ========== 筛选卡片 ========== */
+.filter-card {
+  background: var(--color-bg-card);
+  padding: var(--spacing-16) var(--spacing-20);
+  border-radius: var(--radius-6);
+  margin-bottom: var(--spacing-16);
+}
+
+/* ========== 表格 ========== */
+.table-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-6);
+  overflow: hidden;
+}
+.table-header {
+  height: 64px;
+  padding: 0 var(--spacing-20);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-base);
+}
+.table-header .title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+.table-header .actions { display: flex; gap: 12px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table thead th {
+  background: var(--color-bg-table-header);
+  height: 48px;
+  text-align: left;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-1);
+  border-bottom: 1px solid var(--border-base);
+}
+table thead th .th-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  margin-left: 4px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  border-radius: 50%;
+  cursor: help;
+  vertical-align: middle;
+  font-weight: 400;
+}
+table tbody td {
+  height: 48px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  border-bottom: 1px solid var(--border-base);
+}
+table tbody tr:hover { background: var(--row-hover); }
+.text-link { color: var(--color-primary); cursor: pointer; }
+.text-link:hover { color: var(--color-primary-hover); }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-4);
+  font-size: 12px;
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+}
+.tag-default {
+  background: #FFF7E6;
+  color: var(--color-warning);
+}
+.fixed-tag { display:inline-block; padding:1px 6px; background:#FFF7E6; color:var(--color-warning); font-size:12px; border-radius:2px; }
+
+/* ========== 分页 ========== */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--spacing-16) var(--spacing-20);
+  gap: 8px;
+}
+.pagination .page-info { color: var(--color-text-2); font-size: 13px; }
+.pagination .page-btn {
+  min-width: 32px; height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.pagination .page-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-mask.hidden { display: none; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius-4);
+  width: 520px;
+  max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.modal-medium { width: 640px; }
+.modal-large { width: 800px; }
+.modal-header {
+  height: 48px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; }
+.modal-header .close {
+  cursor: pointer; color: var(--color-text-2);
+  font-size: 18px; line-height: 1;
+}
+.modal-body {
+  padding: var(--spacing-20);
+  flex: 1;
+  overflow-y: auto;
+}
+.modal-footer {
+  height: 56px;
+  padding: 0 var(--spacing-16);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+/* ========== 弹窗内表单 ========== */
+.form-item {
+  display: flex; align-items: flex-start;
+  margin-bottom: var(--spacing-20);
+  position: relative;
+}
+.form-item:last-child { margin-bottom: 0; }
+.form-item .label {
+  width: 100px; text-align: right;
+  padding-right: 12px; padding-top: 9px;
+  color: var(--color-text-1);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.form-item .label .required { color: var(--color-error); margin-right: 4px; }
+.form-item .control { flex: 1; position: relative; }
+.form-item .control input,
+.form-item .control select {
+  width: 100%; height: 32px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text-1);
+  outline: none;
+  background: #fff;
+}
+.form-item .control input:focus,
+.form-item .control select:focus { border-color: var(--color-primary); }
+.form-item .control .picker {
+  display: flex; align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  width: 100%;
+  cursor: pointer;
+  background: #fff;
+  justify-content: space-between;
+}
+.form-item .control .picker:hover { border-color: var(--color-primary); }
+.form-item .control .picker .arrow { color: var(--color-text-2); font-size: 12px; }
+.form-item .control .picker .picker-text { color: var(--color-text-1); }
+.form-item .control .picker .picker-text.placeholder { color: var(--color-text-disable); }
+.form-item .control .checkbox-row {
+  display: flex; align-items: center; gap: 6px;
+  padding-top: 9px;
+  font-size: 14px;
+}
+
+/* ========== 下拉选择器（参考交易记录区域交互） ========== */
+.dropdown {
+  position: absolute;
+  top: 36px; left: 0;
+  width: 420px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 10;
+  display: none;
+}
+.dropdown.show { display: block; }
+.dropdown-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-base);
+}
+.dropdown-search input {
+  width: 100%; height: 28px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+.dropdown-search input:focus { border-color: var(--color-primary); }
+.dropdown-content {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.tree-node { border-bottom: 1px solid var(--border-base); }
+.tree-node:last-child { border-bottom: none; }
+.tree-node-row {
+  display: flex; align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+}
+.tree-node-row:hover { background: var(--row-hover); }
+.tree-node-row .caret {
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-right: 4px;
+  color: var(--color-text-2);
+  font-size: 10px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.tree-node-row .caret.expanded { transform: rotate(90deg); }
+.tree-node-row .caret.placeholder { visibility: hidden; }
+.tree-node-row .checkbox {
+  width: 14px; height: 14px;
+  border: 1px solid var(--border-base);
+  border-radius: 2px;
+  margin-right: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #fff;
+}
+.tree-node-row .checkbox.checked,
+.tree-node-row .checkbox.indeterminate {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+/* 按店铺管理模式：区域无勾选项（仅用于展示分组） */
+.tree-node-row .checkbox.disabled {
+  visibility: hidden;
+  border: none;
+  background: transparent;
+}
+.tree-node-row.no-checkbox .checkbox {
+  display: none;
+}
+.tree-node-row .label-text { flex: 1; }
+.tree-node-row .label-text .count { color: var(--color-text-2); font-size: 12px; margin-left: 4px; }
+.tree-node-children {
+  padding-left: 24px;
+  background: #fafafa;
+}
+.tree-node-children .tree-node-children { background: #fff; }
+.tree-section-title {
+  display: flex; align-items: center;
+  padding: 6px 12px;
+  background: #F5F5F5;
+  font-size: 12px;
+  color: var(--color-text-2);
+  border-top: 1px solid var(--border-base);
+}
+.tree-section-title .label-text { font-weight: 500; }
+.dropdown-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-base);
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+.dropdown-footer .count-num { color: var(--color-primary); font-weight: 500; }
+.dropdown-footer .actions { display: flex; gap: 4px; }
+.dropdown-footer .actions a { color: var(--color-primary); cursor: pointer; }
+
+/* 联动门店下拉 */
+.linked-dropdown {
+  position: absolute;
+  top: 36px; left: 0;
+  width: 420px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 10;
+  display: none;
+}
+.linked-dropdown.show { display: block; }
+
+/* ========== 管理方式 + 范围 联动布局 ========== */
+.scope-mode-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.scope-mode-row .picker { width: auto; min-width: 140px; }
+.scope-mode-row .picker-mode { flex: 0 0 140px; }
+.scope-mode-row .picker-range { flex: 1; }
+.scope-tip {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #FFF7E6;
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-4);
+  font-size: 12px;
+  color: #874D00;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.scope-tip::before {
+  content: "💡";
+  flex-shrink: 0;
+}
+.scope-tip.tip-blue {
+  background: #E6F7FF;
+  border-left-color: var(--color-primary);
+  color: #0050B3;
+}
+
+/* 仅按区域下拉时的紧凑下拉 */
+.dropdown-compact .tree-node-children {
+  padding-left: 12px;
+  background: #fff;
+}
+
+/* 场景导航 - 放左侧,在主侧边栏右侧 */
+.scenario-nav {
+  position: fixed;
+  top: 80px; left: 220px;
+  background: #fff;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-6);
+  padding: 12px;
+  z-index: 50;
+  width: 220px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.scenario-nav .nav-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-1);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-base);
+}
+.scenario-nav .nav-item {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  border-radius: var(--radius-4);
+  line-height: 1.5;
+}
+.scenario-nav .nav-item:hover { background: var(--color-bg-select-active); color: var(--color-primary); }
+.scenario-nav .nav-item.active { background: var(--color-bg-select-active); color: var(--color-primary); font-weight: 500; }
+.scenario-nav .nav-section {
+  font-size: 12px;
+  color: var(--color-text-2);
+  margin: 8px 0 4px;
+  padding-left: 8px;
+}
+
+/* ========== 管理权限展示 ========== */
+.scope-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 14px;
+  max-width: 260px;
+}
+.scope-display:hover { color: var(--color-primary-hover); }
+.scope-display .arrow { font-size: 12px; flex-shrink: 0; }
+.scope-display .scope-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.scope-detail-list {
+  background: #fafafa;
+  border-radius: var(--radius-4);
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.scope-detail-section { margin-bottom: 12px; }
+.scope-detail-section:last-child { margin-bottom: 0; }
+.scope-detail-section .section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-1);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.scope-detail-section .section-title .badge {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  padding: 1px 6px;
+  border-radius: var(--radius-4);
+  font-size: 12px;
+  font-weight: 400;
+}
+.scope-detail-section .section-items {
+  padding-left: 16px;
+  font-size: 13px;
+  color: var(--color-text-1);
+  line-height: 24px;
+}
+.scope-detail-section .section-items .item {
+  display: flex; align-items: center; gap: 6px;
+}
+.scope-detail-section .section-items .item::before {
+  content: "·";
+  color: var(--color-text-2);
+}
+.scope-detail-section .section-items .item-indent { padding-left: 16px; }
+
+/* 角色选择弹窗中的角色列表 */
+.role-list { display: flex; flex-direction: column; }
+.role-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.role-item:hover { border-color: var(--color-primary); background: var(--color-bg-select-active); }
+.role-item .role-name { font-size: 14px; font-weight: 500; }
+.role-item .role-desc { font-size: 12px; color: var(--color-text-2); margin-top: 2px; }
+.role-item .role-tag {
+  font-size: 12px;
+  padding: 1px 6px;
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  border-radius: 2px;
+  margin-left: 8px;
+}
+
+/* 工具样式 */
+.flex { display: flex; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="top-nav">
+  <div class="logo-area">
+    <div class="logo">惠</div>
+    <div class="sys-name">会生活管理系统</div>
+    <div class="merchant-name" id="merchant-name-display">阳光美食广场（普通商户）</div>
+  </div>
+  <div class="right-area">
+    <span>下载</span>
+    <span>手机客户端</span>
+    <span>消息通知</span>
+    <span>帮助中心</span>
+    <div class="avatar">郭</div>
+  </div>
+</div>
+
+<!-- ========== 左侧导航 ========== -->
+<div class="layout">
+  <div class="sidebar">
+    <div class="menu-item"><span class="icon">▣</span>商户管理</div>
+    <div class="menu-item"><span class="icon">▤</span>交易数据</div>
+    <div class="menu-item"><span class="icon">▥</span>分账管理</div>
+    <div class="menu-item"><span class="icon">▦</span>财务结算</div>
+    <div class="menu-item"><span class="icon">▧</span>对账管理</div>
+    <div class="menu-item"><span class="icon">▨</span>账户资产</div>
+    <div class="menu-item"><span class="icon">▩</span>风控管理</div>
+    <div class="menu-item"><span class="icon">▪</span>应用中心</div>
+  </div>
+
+  <!-- ========== 主内容区：员工管理列表页 ========== -->
+  <div class="main-content">
+
+    <!-- 场景导航 -->
+    <div class="scenario-nav">
+      <div class="nav-title">📑 原型场景导航</div>
+      <div class="nav-section">商户类型切换</div>
+      <div class="nav-item active" data-merchant="normal">普通商户/连锁分店</div>
+      <div class="nav-item" data-merchant="chain">连锁总店</div>
+      <div class="nav-section">区域数据</div>
+      <div style="padding:4px 8px;display:flex;align-items:center;gap:8px;font-size:12px;">
+        <span style="color:var(--color-text-2);">已建立区域</span>
+        <label style="display:inline-flex;align-items:center;cursor:pointer;gap:4px;">
+          <input type="checkbox" id="region-exists-toggle" checked>
+          <span id="region-exists-label" style="font-weight:500;color:var(--color-success);">是</span>
+        </label>
+      </div>
+      <div class="nav-section">交互场景</div>
+      <div class="nav-item" data-scenario="create">创建员工-下拉选区域</div>
+      <div class="nav-item" data-scenario="edit">编辑员工-区域回显</div>
+      <div class="nav-item" data-scenario="scope">管理权限详情</div>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">商户管理 / 员工管理</div>
+        <h1>员工管理</h1>
+      </div>
+    </div>
+
+    <!-- 筛选 -->
+    <div class="filter-card">
+      <div class="flex" style="gap:24px;flex-wrap:wrap;align-items:center;">
+        <div>
+          <div style="font-size:13px;color:var(--color-text-2);margin-bottom:4px;">所属角色</div>
+          <div class="picker" style="width:180px;">
+            <span>请选择角色</span>
+            <span class="arrow">▾</span>
+          </div>
+        </div>
+        <div data-merchant-only="normal">
+          <div style="font-size:13px;color:var(--color-text-2);margin-bottom:4px;">所属门店</div>
+          <div class="picker" style="width:200px;">
+            <span>全部门店</span>
+            <span class="arrow">▾</span>
+          </div>
+        </div>
+        <div data-merchant-only="chain" style="display:none;">
+          <div style="font-size:13px;color:var(--color-text-2);margin-bottom:4px;">所属分店</div>
+          <div class="picker" style="width:200px;">
+            <span>全部分店</span>
+            <span class="arrow">▾</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--color-text-2);margin-bottom:4px;">关键字</div>
+          <input type="text" placeholder="姓名/手机号" style="width:200px;height:32px;border:1px solid var(--border-base);border-radius:var(--radius-4);padding:0 12px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;align-self:flex-end;">
+          <button class="btn btn-default">重置</button>
+          <button class="btn btn-primary">查询</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 列表 -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="title">明细数据（共5条）</div>
+        <div class="actions">
+          <button class="btn btn-default">批量添加</button>
+          <button class="btn btn-primary" onclick="openCreateModal()">+ 创建员工</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox"></th>
+            <th>员工姓名</th>
+            <th>管理权限<i class="th-badge" title="点击行内可查看完整管理权限">i</i></th>
+            <th>角色类型</th>
+            <th>所属角色</th>
+            <th>手机号</th>
+            <th>退款权限</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td>王华东</td>
+            <td>
+              <span class="scope-display" onclick="openScopeModal()">
+                <span class="scope-text" data-merchant-only="normal">2个区域，12个门店</span>
+                <span class="scope-text" data-merchant-only="chain" style="display:none;">2个区域，5个分店</span>
+                <span class="arrow">▾</span>
+              </span>
+            </td>
+            <td>自定义角色</td>
+            <td>区域经理</td>
+            <td>13800138000</td>
+            <td>开启</td>
+            <td>已激活</td>
+            <td>
+              <span class="text-link" onclick="openEditModal()">编辑</span> &nbsp;
+              <span class="text-link">删除</span>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td>李大区</td>
+            <td>
+              <span class="scope-display" onclick="openScopeModal()">
+                <span class="scope-text">5个区域，15个分店</span>
+                <span class="arrow">▾</span>
+              </span>
+            </td>
+            <td>自定义角色</td>
+            <td>大区经理</td>
+            <td>13900139000</td>
+            <td>关闭</td>
+            <td>已激活</td>
+            <td>
+              <span class="text-link" onclick="openEditModal()">编辑</span> &nbsp;
+              <span class="text-link">删除</span>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td>张全选</td>
+            <td>
+              <span class="scope-display" onclick="openScopeModal()">
+                <span class="scope-text" data-merchant-only="normal">1个区域，15个门店</span>
+                <span class="scope-text" data-merchant-only="chain" style="display:none;">1个区域，8个分店</span>
+                <span class="arrow">▾</span>
+              </span>
+            </td>
+            <td>自定义角色</td>
+            <td>运营专员</td>
+            <td>13700137000</td>
+            <td>关闭</td>
+            <td>已激活</td>
+            <td>
+              <span class="text-link" onclick="openEditModal()">编辑</span> &nbsp;
+              <span class="text-link">删除</span>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td>陈小张</td>
+            <td>
+              <span class="scope-display" onclick="openScopeModal()">
+                <span class="scope-text">1个区域，3个门店</span>
+                <span class="arrow">▾</span>
+              </span>
+            </td>
+            <td>自定义角色</td>
+            <td>区域经理</td>
+            <td>13600136000</td>
+            <td>关闭</td>
+            <td>未激活</td>
+            <td>
+              <span class="text-link" onclick="openEditModal()">编辑</span> &nbsp;
+              <span class="text-link">删除</span>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td>刘店长</td>
+            <td>
+              <span data-merchant-only="normal">上海徐汇店（001）</span>
+              <span data-merchant-only="chain" style="display:none;">上海分店（F001）</span>
+            </td>
+            <td>默认角色</td>
+            <td>店长</td>
+            <td>13500135000</td>
+            <td>—</td>
+            <td>已激活</td>
+            <td>
+              <span class="text-link">编辑</span> &nbsp;
+              <span class="text-link">删除</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span class="page-info">共 5 条</span>
+        <button class="page-btn">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">›</button>
+        <span class="page-info" style="margin-left:12px;">10条/页</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 弹窗A：选择角色                                 -->
+<!-- ============================================== -->
+<div class="modal-mask hidden" id="modal-role">
+  <div class="modal modal-medium">
+    <div class="modal-header">
+      <div class="title">选择角色</div>
+      <span class="close" onclick="closeModal('modal-role')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="role-list">
+        <div class="role-item" onclick="selectRole(this, '店长')">
+          <div>
+            <div class="role-name">店长 <span class="role-tag">默认角色</span></div>
+            <div class="role-desc">管理归属门店</div>
+          </div>
+          <span class="text-link">选择 ›</span>
+        </div>
+        <div class="role-item" onclick="selectRole(this, '收银员')">
+          <div>
+            <div class="role-name">收银员 <span class="role-tag">默认角色</span></div>
+            <div class="role-desc">查询归属门店</div>
+          </div>
+          <span class="text-link">选择 ›</span>
+        </div>
+        <div class="role-item" onclick="selectRole(this, '区域经理')">
+          <div>
+            <div class="role-name" data-merchant-only="normal">区域经理 <span class="role-tag">自定义角色</span></div>
+            <div class="role-name" data-merchant-only="chain" style="display:none;">大区经理 <span class="role-tag">自定义角色</span></div>
+            <div class="role-desc" data-merchant-only="normal">管理指定门店，支持按区域选择</div>
+            <div class="role-desc" data-merchant-only="chain" style="display:none;">管理指定分店，支持按区域选择</div>
+          </div>
+          <span class="text-link">选择 ›</span>
+        </div>
+        <div class="role-item" onclick="selectRole(this, '运营专员')">
+          <div>
+            <div class="role-name">运营专员 <span class="role-tag">自定义角色</span></div>
+            <div class="role-desc" data-merchant-only="normal">管理全部门店</div>
+            <div class="role-desc" data-merchant-only="chain" style="display:none;">管理全部分店</div>
+          </div>
+          <span class="text-link">选择 ›</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('modal-role')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 弹窗B：创建员工（普通商户版）                    -->
+<!-- ============================================== -->
+<div class="modal-mask hidden" id="modal-create">
+  <div class="modal modal-medium">
+    <div class="modal-header">
+      <div class="title">创建员工</div>
+      <span class="close" onclick="closeModal('modal-create')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>姓名：</div>
+        <div class="control">
+          <input type="text" value="王华东" placeholder="请输入员工姓名">
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>手机号：</div>
+        <div class="control">
+          <input type="text" value="13800138000" placeholder="请输入手机号">
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>所属角色：</div>
+        <div class="control">
+          <div class="picker" onclick="openModal('modal-role')">
+            <span class="picker-text" data-merchant-only="normal">区域经理（自定义角色）</span>
+            <span class="picker-text" data-merchant-only="chain" style="display:none;">大区经理（自定义角色）</span>
+            <span class="arrow">▾</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>管理权限：</div>
+        <div class="control">
+          <!-- 管理方式 + 范围 双 picker 横排 -->
+          <div class="scope-mode-row">
+            <!-- 管理方式选择器（仅当已建立区域时显示切换） -->
+            <div class="picker picker-mode" id="create-mode-picker" onclick="toggleModeDropdown('dropdown-mode-create', event)">
+              <span class="picker-text" id="create-mode-text">按区域管理</span>
+              <span class="arrow">▾</span>
+            </div>
+            <!-- 管理方式下拉 -->
+            <div class="dropdown" id="dropdown-mode-create" style="width:140px;" onclick="event.stopPropagation()">
+              <div class="dropdown-content" style="padding:4px 0;">
+                <div class="tree-node-row" data-mode="region" onclick="switchScopeMode('create','region')">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox checked">✓</span>
+                  <span class="label-text">按区域管理</span>
+                </div>
+                <div class="tree-node-row" data-mode="store" onclick="switchScopeMode('create','store')">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">按店铺管理</span>
+                </div>
+              </div>
+            </div>
+            <!-- 范围选择器 -->
+            <div class="picker picker-range" onclick="toggleDropdown('create', event)">
+              <span class="picker-text placeholder" id="create-range-text">请选择</span>
+              <span class="arrow">▾</span>
+            </div>
+            <!-- 范围下拉：按区域（区域可展开查看店铺） -->
+            <div class="dropdown dropdown-compact" id="dropdown-range-region-create" onclick="event.stopPropagation()">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 搜索区域名称">
+              </div>
+              <div class="dropdown-content">
+                <!-- 顶部：全部 总开关 -->
+                <div class="tree-node" style="background:#EEF6FF;">
+                  <div class="tree-node-row" data-all-switch>
+                    <span class="caret placeholder">▶</span>
+                    <span class="checkbox indeterminate">−</span>
+                    <span class="label-text"><strong>全部</strong><span class="count">（3个区域）</span></span>
+                  </div>
+                </div>
+                <div data-merchant-only="normal">
+                  <div class="tree-node">
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华东区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海徐汇店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海浦东店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">杭州西湖店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">南京新街口店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">苏州工业园店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华南大区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">广州天河店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">广州越秀店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">深圳福田店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">深圳南山店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">厦门思明店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">福州鼓楼店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">海口店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华北区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">北京朝阳店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">天津和平店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">石家庄店</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div data-merchant-only="chain" style="display:none;">
+                  <div class="tree-node">
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华东大区</strong><span class="count">（3个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">杭州分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">南京分店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华南大区</strong><span class="count">（2个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">广州分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">深圳分店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华北大区</strong><span class="count">（3个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">北京分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">天津分店</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 范围下拉：按店铺（区域可展开，但区域无勾选项，只能选择店铺） -->
+            <div class="dropdown" id="dropdown-range-store-create" onclick="event.stopPropagation()">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 搜索区域/门店名称">
+              </div>
+              <div class="dropdown-content">
+                <!-- 顶部：全部 总开关（与下方树形分离，作为整棵树的总开关） -->
+                <div class="tree-node" style="background:#EEF6FF;">
+                  <div class="tree-node-row" data-all-switch>
+                    <span class="caret placeholder">▶</span>
+                    <span class="checkbox indeterminate">−</span>
+                    <span class="label-text"><strong>全部</strong><span class="count" data-merchant-only="normal">（15个门店）</span><span class="count" data-merchant-only="chain" style="display:none;">（8个分店）</span></span>
+                  </div>
+                </div>
+                <div data-merchant-only="normal">
+                  <div class="tree-node">
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华东区</strong></span>
+                      </div>
+                      <div class="tree-node-children">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海徐汇店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海浦东店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">杭州西湖店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">南京新街口店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">苏州工业园店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华南大区</strong></span>
+                      </div>
+                      <div class="tree-node-children">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">广州天河店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">广州越秀店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">深圳福田店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">深圳南山店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">厦门思明店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">福州鼓楼店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">海口店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华北区</strong></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">北京朝阳店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">天津和平店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">石家庄店</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tree-section-title">
+                    <span class="caret placeholder" style="margin-right:6px;">▶</span>
+                    <span class="label-text">未设置区域的店铺</span>
+                  </div>
+                  <div class="tree-node-children">
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">武汉光谷店</span>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">长沙岳麓店</span>
+                    </div>
+                  </div>
+                </div>
+                <div data-merchant-only="chain" style="display:none;">
+                  <div class="tree-node">
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华东大区</strong><span class="count">（3个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">杭州分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">南京分店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华南大区</strong><span class="count">（2个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">广州分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">深圳分店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华北大区</strong><span class="count">（3个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">北京分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">天津分店</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tree-section-title">
+                    <span class="caret placeholder" style="margin-right:6px;">▶</span>
+                    <span class="label-text">未设置区域的店铺</span>
+                  </div>
+                  <div class="tree-node-children">
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">苏州分店</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 未建区域时的扁平店铺列表下拉（无区域字段） -->
+          <div class="dropdown dropdown-compact" id="dropdown-range-flat-create" onclick="event.stopPropagation()" style="display:none;">
+            <div class="dropdown-search">
+              <input type="text" placeholder="🔍 搜索门店名称">
+            </div>
+            <div class="dropdown-content">
+              <!-- 顶部：全部 总开关 -->
+              <div class="tree-node" style="background:#EEF6FF;">
+                <div class="tree-node-row" data-all-switch>
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text"><strong>全部</strong><span class="count" data-merchant-only="normal">（15个门店）</span><span class="count" data-merchant-only="chain" style="display:none;">（8个分店）</span></span>
+                </div>
+              </div>
+              <!-- 普通商户：扁平门店列表 -->
+              <div data-merchant-only="normal">
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">上海徐汇店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">上海浦东店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">杭州西湖店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">南京新街口店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">苏州工业园店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">广州天河店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">广州越秀店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">深圳福田店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">深圳南山店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">厦门思明店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">福州鼓楼店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">海口店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">武汉光谷店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">长沙岳麓店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">北京朝阳店</span>
+                </div>
+              </div>
+              <!-- 连锁总店：扁平分店列表 -->
+              <div data-merchant-only="chain" style="display:none;">
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">上海分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">杭州分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">南京分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">广州分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">深圳分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">北京分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">天津分店</span>
+                </div>
+                <div class="tree-node-row">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">苏州分店</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 提示语 -->
+          <div class="scope-tip" id="create-scope-tip">区域内新增或移除店铺，员工管理范围也会同步更新。</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label">退款权限：</div>
+        <div class="control">
+          <div class="checkbox-row">
+            <input type="checkbox"> 开启退款权限
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('modal-create')">取消</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-create')">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 弹窗B-edit：编辑员工                             -->
+<!-- ============================================== -->
+<div class="modal-mask hidden" id="modal-edit">
+  <div class="modal modal-medium">
+    <div class="modal-header">
+      <div class="title">编辑员工</div>
+      <span class="close" onclick="closeModal('modal-edit')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <div class="label">姓名：</div>
+        <div class="control">
+          <input type="text" value="王华东">
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label">手机号：</div>
+        <div class="control">
+          <input type="text" value="13800138000" disabled style="background:#f5f5f5;color:#999;">
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>所属角色：</div>
+        <div class="control">
+          <div class="picker" onclick="openModal('modal-role')">
+            <span class="picker-text" data-merchant-only="normal">区域经理（自定义角色）</span>
+            <span class="picker-text" data-merchant-only="chain" style="display:none;">大区经理（自定义角色）</span>
+            <span class="arrow">▾</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label"><span class="required">*</span>管理权限：</div>
+        <div class="control">
+          <!-- 管理方式 + 范围 双 picker 横排 -->
+          <div class="scope-mode-row">
+            <div class="picker picker-mode" id="edit-mode-picker" onclick="toggleModeDropdown('dropdown-mode-edit', event)">
+              <span class="picker-text" id="edit-mode-text">按区域管理</span>
+              <span class="arrow">▾</span>
+            </div>
+            <div class="dropdown" id="dropdown-mode-edit" style="width:140px;" onclick="event.stopPropagation()">
+              <div class="dropdown-content" style="padding:4px 0;">
+                <div class="tree-node-row" data-mode="region" onclick="switchScopeMode('edit','region')">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox checked">✓</span>
+                  <span class="label-text">按区域管理</span>
+                </div>
+                <div class="tree-node-row" data-mode="store" onclick="switchScopeMode('edit','store')">
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text">按店铺管理</span>
+                </div>
+              </div>
+            </div>
+            <div class="picker picker-range" onclick="toggleDropdown('edit', event)">
+              <span class="picker-text" id="edit-range-text">华东区、华南大区</span>
+              <span class="arrow">▾</span>
+            </div>
+            <!-- 按区域下拉（区域可展开查看店铺） -->
+            <div class="dropdown dropdown-compact" id="dropdown-range-region-edit" onclick="event.stopPropagation()">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 搜索区域名称">
+              </div>
+              <div class="dropdown-content">
+                <!-- 顶部：全部 总开关 -->
+                <div class="tree-node" style="background:#EEF6FF;">
+                  <div class="tree-node-row" data-all-switch>
+                    <span class="caret placeholder">▶</span>
+                    <span class="checkbox checked">✓</span>
+                    <span class="label-text"><strong>全部</strong><span class="count">（2个区域）</span></span>
+                  </div>
+                </div>
+                <div data-merchant-only="normal">
+                  <div class="tree-node">
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华东区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海徐汇店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海浦东店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">杭州西湖店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">南京新街口店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">苏州工业园店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华南大区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">广州天河店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">广州越秀店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">深圳福田店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">深圳南山店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">厦门思明店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">福州鼓楼店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">海口店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华北区</strong></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">北京朝阳店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">天津和平店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">石家庄店</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div data-merchant-only="chain" style="display:none;">
+                  <div class="tree-node">
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox checked">✓</span>
+                      <span class="label-text"><strong>华东大区</strong><span class="count">（3个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">上海分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">杭州分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox checked">✓</span>
+                        <span class="label-text">南京分店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华南大区</strong><span class="count">（2个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">广州分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">深圳分店</span>
+                      </div>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text"><strong>华北大区</strong><span class="count">（3个分店）</span></span>
+                    </div>
+                    <div class="tree-node-children" style="display:none;">
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">北京分店</span>
+                      </div>
+                      <div class="tree-node-row">
+                        <span class="caret placeholder">▶</span>
+                        <span class="checkbox"></span>
+                        <span class="label-text">天津分店</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 按店铺下拉（区域可展开，但区域无勾选项，只能选择店铺） -->
+            <div class="dropdown" id="dropdown-range-store-edit" onclick="event.stopPropagation()">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 搜索区域/门店名称">
+              </div>
+              <div class="dropdown-content">
+                <!-- 顶部：全部 总开关 -->
+                <div class="tree-node" style="background:#EEF6FF;">
+                  <div class="tree-node-row" data-all-switch>
+                    <span class="caret placeholder">▶</span>
+                    <span class="checkbox indeterminate">−</span>
+                    <span class="label-text"><strong>全部</strong><span class="count" data-merchant-only="normal">（15个门店）</span><span class="count" data-merchant-only="chain" style="display:none;">（8个分店）</span></span>
+                  </div>
+                </div>
+                <div data-merchant-only="normal">
+                  <div class="tree-node">
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华东区</strong></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海徐汇店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海浦东店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">杭州西湖店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">南京新街口店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">苏州工业园店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华南大区</strong></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">广州天河店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">广州越秀店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">深圳福田店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">深圳南山店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">厦门思明店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">福州鼓楼店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">海口店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华北区</strong></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">北京朝阳店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">天津和平店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">石家庄店</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tree-section-title">
+                    <span class="caret placeholder" style="margin-right:6px;">▶</span>
+                    <span class="label-text">未设置区域的店铺</span>
+                  </div>
+                  <div class="tree-node-children">
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">武汉光谷店</span>
+                    </div>
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">长沙岳麓店</span>
+                    </div>
+                  </div>
+                </div>
+                <div data-merchant-only="chain" style="display:none;">
+                  <div class="tree-node">
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华东大区</strong><span class="count">（3个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">上海分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">杭州分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox checked">✓</span>
+                          <span class="label-text">南京分店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华南大区</strong><span class="count">（2个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">广州分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">深圳分店</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tree-node">
+                      <div class="tree-node-row no-checkbox">
+                        <span class="caret">▶</span>
+                        <span class="label-text"><strong>华北大区</strong><span class="count">（3个分店）</span></span>
+                      </div>
+                      <div class="tree-node-children" style="display:none;">
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">北京分店</span>
+                        </div>
+                        <div class="tree-node-row">
+                          <span class="caret placeholder">▶</span>
+                          <span class="checkbox"></span>
+                          <span class="label-text">天津分店</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tree-section-title">
+                    <span class="caret placeholder" style="margin-right:6px;">▶</span>
+                    <span class="label-text">未设置区域的店铺</span>
+                  </div>
+                  <div class="tree-node-children">
+                    <div class="tree-node-row">
+                      <span class="caret placeholder">▶</span>
+                      <span class="checkbox"></span>
+                      <span class="label-text">苏州分店</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 未建区域时的扁平店铺列表下拉 -->
+          <div class="dropdown dropdown-compact" id="dropdown-range-flat-edit" onclick="event.stopPropagation()" style="display:none;">
+            <div class="dropdown-search">
+              <input type="text" placeholder="🔍 搜索门店名称">
+            </div>
+            <div class="dropdown-content">
+              <div class="tree-node" style="background:#EEF6FF;">
+                <div class="tree-node-row" data-all-switch>
+                  <span class="caret placeholder">▶</span>
+                  <span class="checkbox"></span>
+                  <span class="label-text"><strong>全部</strong><span class="count" data-merchant-only="normal">（15个门店）</span><span class="count" data-merchant-only="chain" style="display:none;">（8个分店）</span></span>
+                </div>
+              </div>
+              <div data-merchant-only="normal">
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">上海徐汇店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">上海浦东店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">杭州西湖店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">南京新街口店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">苏州工业园店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">广州天河店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">广州越秀店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">深圳福田店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">深圳南山店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">厦门思明店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">福州鼓楼店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">海口店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">武汉光谷店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">长沙岳麓店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">北京朝阳店</span></div>
+              </div>
+              <div data-merchant-only="chain" style="display:none;">
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">上海分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">杭州分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">南京分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">广州分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">深圳分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">北京分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">天津分店</span></div>
+                <div class="tree-node-row"><span class="caret placeholder">▶</span><span class="checkbox"></span><span class="label-text">苏州分店</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="scope-tip" id="edit-scope-tip">区域内新增或移除店铺，员工管理范围也会同步更新。</div>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="label">退款权限：</div>
+        <div class="control">
+          <div class="checkbox-row">
+            <input type="checkbox" checked> 开启退款权限
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('modal-edit')">取消</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-edit')">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 弹窗D：管理权限详情                              -->
+<!-- ============================================== -->
+<div class="modal-mask hidden" id="modal-scope">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="title">管理权限详情</div>
+      <span class="close" onclick="closeModal('modal-scope')">×</span>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fafafa;padding:8px 12px;border-radius:var(--radius-4);margin-bottom:12px;font-size:13px;">
+        <span data-merchant-only="normal" style="color:var(--color-text-title);">
+          <span style="color:var(--color-text-2);">所属角色：</span>区域经理 &nbsp;&nbsp;
+          <span style="color:var(--color-text-2);">管理</span>2个区域<span style="color:var(--color-text-2);">，总计</span>12个门店
+        </span>
+        <span data-merchant-only="chain" style="display:none;color:var(--color-text-title);">
+          <span style="color:var(--color-text-2);">所属角色：</span>大区经理 &nbsp;&nbsp;
+          <span style="color:var(--color-text-2);">管理</span>1个区域<span style="color:var(--color-text-2);">，总计</span>3个分店
+        </span>
+      </div>
+
+      <div class="scope-detail-list" data-merchant-only="normal">
+        <div class="scope-detail-section">
+          <div class="section-title">
+            华东区
+            <span class="badge">5个门店</span>
+          </div>
+          <div class="section-items">
+            <div class="item">上海徐汇店（001）</div>
+            <div class="item">上海浦东店（002）</div>
+            <div class="item">杭州西湖店（005）</div>
+            <div class="item">南京新街口店（008）</div>
+            <div class="item">苏州工业园店（010）</div>
+          </div>
+        </div>
+        <div class="scope-detail-section">
+          <div class="section-title">
+            华南大区
+            <span class="badge">7个门店</span>
+          </div>
+          <div class="section-items">
+            <div class="item">广州天河店（020）</div>
+            <div class="item">广州越秀店（021）</div>
+            <div class="item">深圳福田店（025）</div>
+            <div class="item">深圳南山店（026）</div>
+            <div class="item">厦门思明店（030）</div>
+            <div class="item">福州鼓楼店（032）</div>
+            <div class="item">海口店（035）</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scope-detail-list" data-merchant-only="chain" style="display:none;">
+        <div class="scope-detail-section">
+          <div class="section-title">
+            华东大区
+            <span class="badge">3个分店</span>
+          </div>
+          <div class="section-items">
+            <div class="item">上海分店（F001）</div>
+            <div class="item">杭州分店（F002）</div>
+            <div class="item">南京分店（F003）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('modal-scope')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 弹窗控制 ==========
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+function openCreateModal() {
+  closeAllDropdowns();
+  openModal('modal-create');
+}
+function openEditModal() {
+  closeAllDropdowns();
+  openModal('modal-edit');
+}
+function openScopeModal() { openModal('modal-scope'); }
+
+// ========== 下拉框控制（参考交易记录） ==========
+function toggleDropdown(scene, event) {
+  // scene: 'create' | 'edit'
+  if (event) event.stopPropagation();
+
+  // 关闭所有下拉框（包括其他场景的）
+  closeAllDropdowns();
+  // 打开范围下拉时，自动关闭对应的管理方式下拉
+  closeAllModeDropdowns();
+
+  // 根据当前激活模式，找到应该展开的下拉框
+  // 优先检查 data-active-mode="active" 的下拉框
+  const dropdowns = document.querySelectorAll(`[id^="dropdown-range-"][id$="-${scene}"]`);
+  let targetDropdown = null;
+
+  dropdowns.forEach(d => {
+    if (d.getAttribute('data-active-mode') === 'active') {
+      targetDropdown = d;
+    }
+  });
+
+  // 如果没找到激活的下拉框，根据当前管理方式来判断
+  if (!targetDropdown) {
+    const modeTextEl = document.getElementById(`${scene}-mode-text`);
+    const mode = modeTextEl ? (modeTextEl.textContent.includes('店铺') ? 'store' : 'region') : 'region';
+    targetDropdown = document.getElementById(`dropdown-range-${mode}-${scene}`);
+  }
+
+  // 展开目标下拉框
+  if (targetDropdown) {
+    targetDropdown.classList.toggle('show');
+  }
+}
+function closeAllDropdowns(exceptId) {
+  document.querySelectorAll('.dropdown').forEach(d => {
+    if (d.id !== exceptId) d.classList.remove('show');
+  });
+}
+function closeAllModeDropdowns() {
+  document.querySelectorAll('[id^="dropdown-mode-"]').forEach(d => d.classList.remove('show'));
+}
+function confirmDropdown(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// 管理方式下拉开关
+function toggleModeDropdown(id, event) {
+  if (event) event.stopPropagation();
+  // 关闭其它所有下拉（包括范围下拉）
+  document.querySelectorAll('.dropdown').forEach(d => {
+    if (d.id !== id) d.classList.remove('show');
+  });
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+}
+
+// ========== 管理方式切换联动 ==========
+const SCOPE_TIPS = {
+  region: '区域内新增或移除店铺，员工管理范围也会同步更新。',
+  store:  '员工管理范围为实际选择的店铺，主体下新增店铺不会影响员工的管理范围。'
+};
+const SCOPE_LABELS = { region: '按区域管理', store: '按店铺管理' };
+
+function switchScopeMode(scene, mode, options = {}) {
+  // scene: 'create' | 'edit'
+  const { resetText = true } = options;
+  const modeTextEl   = document.getElementById(`${scene}-mode-text`);
+  const rangeTextEl  = document.getElementById(`${scene}-range-text`);
+  const tipEl        = document.getElementById(`${scene}-scope-tip`);
+  const modePickerEl = document.getElementById(`${scene}-mode-picker`);
+
+  // 1. 切换管理方式选择器自身的回显 + 选项里的勾选态
+  if (modeTextEl) modeTextEl.textContent = SCOPE_LABELS[mode];
+  const modeDropdown = document.getElementById(`dropdown-mode-${scene}`);
+  if (modeDropdown) {
+    modeDropdown.querySelectorAll('.tree-node-row').forEach(row => {
+      const cb = row.querySelector('.checkbox');
+      const m = row.getAttribute('data-mode');
+      if (m === mode) {
+        cb.classList.add('checked'); cb.textContent = '✓';
+        cb.classList.remove('indeterminate');
+      } else {
+        cb.classList.remove('checked', 'indeterminate'); cb.textContent = '';
+      }
+    });
+  }
+  // 2. 切换提示语
+  if (tipEl) tipEl.textContent = SCOPE_TIPS[mode];
+
+  // 3. 联动范围选择器：根据 mode 决定哪个下拉可用（但不自动展开）
+  //    注意：下拉框的显示由用户点击范围选择器时控制，这里只控制哪个下拉"准备好"
+  //    使用 visibility 或 opacity 来切换，避免影响布局
+  const regionDropdown = document.getElementById(`dropdown-range-region-${scene}`);
+  const storeDropdown  = document.getElementById(`dropdown-range-store-${scene}`);
+  const flatDropdown   = document.getElementById(`dropdown-range-flat-${scene}`);
+
+  // 将所有下拉框设置为默认隐藏状态（移除show类）
+  // 并通过一个自定义属性标记当前激活的是哪个下拉
+  [regionDropdown, storeDropdown, flatDropdown].forEach(d => {
+    if (!d) return;
+    d.classList.remove('show');
+    d.setAttribute('data-active-mode', 'inactive');
+  });
+
+  // 标记当前模式对应的下拉为"激活"状态
+  if (mode === 'region' && regionDropdown) {
+    regionDropdown.setAttribute('data-active-mode', 'active');
+  } else if (mode === 'store' && storeDropdown) {
+    storeDropdown.setAttribute('data-active-mode', 'active');
+  } else if (flatDropdown) {
+    flatDropdown.setAttribute('data-active-mode', 'active');
+  }
+
+  // 4. 清空已选范围（避免脏数据）
+  if (resetText && rangeTextEl) {
+    rangeTextEl.textContent = '请选择';
+    rangeTextEl.classList.add('placeholder');
+  }
+  // 同时清空三个下拉里所有 checkbox 的勾选
+  [regionDropdown, storeDropdown, document.getElementById(`dropdown-range-flat-${scene}`)].forEach(d => {
+    if (!d) return;
+    d.querySelectorAll('.checkbox').forEach(cb => {
+      cb.classList.remove('checked', 'indeterminate');
+      cb.textContent = '';
+    });
+  });
+
+  // 5. 关闭模式选择器自身
+  if (modeDropdown) modeDropdown.classList.remove('show');
+}
+
+// 点击其他位置关闭下拉
+document.addEventListener('click', () => {
+  closeAllDropdowns();
+  closeAllModeDropdowns();
+});
+
+// ========== 选择角色 ==========
+function selectRole(el, name) {
+  document.querySelectorAll('.role-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  setTimeout(() => {
+    closeModal('modal-role');
+  }, 200);
+}
+
+// ========== 场景导航切换 ==========
+const navItems = document.querySelectorAll('.scenario-nav .nav-item');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const merchant = item.getAttribute('data-merchant');
+    const scenario = item.getAttribute('data-scenario');
+    if (merchant) {
+      // 切换商户类型
+      navItems.forEach(n => {
+        if (n.getAttribute('data-merchant')) n.classList.remove('active');
+      });
+      item.classList.add('active');
+      switchMerchant(merchant);
+    } else if (scenario) {
+      // 切换场景
+      navItems.forEach(n => {
+        if (n.getAttribute('data-scenario')) n.classList.remove('active');
+      });
+      item.classList.add('active');
+      // 这里只是视觉切换场景，所有弹窗都是用户主动触发
+    }
+  });
+});
+
+// 切换商户类型
+function switchMerchant(type) {
+  // 切换顶部商户名称
+  const merchantName = document.getElementById('merchant-name-display');
+  if (type === 'normal') {
+    merchantName.textContent = '阳光美食广场（普通商户）';
+  } else {
+    merchantName.textContent = '阳光美食广场（连锁总店）';
+  }
+  // 切换 data-merchant-only 元素
+  document.querySelectorAll('[data-merchant-only]').forEach(el => {
+    if (el.getAttribute('data-merchant-only') === type) {
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  // 关闭所有弹窗和下拉
+  closeAllDropdowns();
+  document.querySelectorAll('.modal-mask').forEach(m => m.classList.add('hidden'));
+}
+
+// ========== 树节点展开收起 ==========
+document.querySelectorAll('.tree-node-row').forEach(row => {
+  const caret = row.querySelector('.caret');
+  if (!caret || caret.classList.contains('placeholder')) return;
+  row.addEventListener('click', e => {
+    if (e.target.classList.contains('checkbox')) return;
+    const children = row.nextElementSibling;
+    if (children && children.classList.contains('tree-node-children')) {
+      caret.classList.toggle('expanded');
+      children.style.display = caret.classList.contains('expanded') ? 'block' : 'none';
+    }
+  });
+});
+
+// ========== 树节点勾选切换（演示） ==========
+document.querySelectorAll('.tree-node-row .checkbox').forEach(cb => {
+  cb.addEventListener('click', e => {
+    e.stopPropagation();
+    // 跳过隐藏的checkbox（如no-checkbox行中的checkbox）
+    const row = cb.closest('.tree-node-row');
+    if (row && row.classList.contains('no-checkbox')) return;
+
+    // 「全部」总开关：联动整个下拉里其他 checkbox（仅联动显示的）
+    if (row && row.hasAttribute('data-all-switch')) {
+      const dropdown = row.closest('.dropdown');
+      if (!dropdown) return;
+      // 当前是否全选：看自己是不是已 checked
+      const willCheck = !cb.classList.contains('checked');
+      // 只联动实际显示的checkbox（排除no-checkbox行中的隐藏checkbox）
+      dropdown.querySelectorAll('.tree-node-row:not(.no-checkbox) .checkbox').forEach(c => {
+        if (c === cb) return;
+        if (willCheck) {
+          c.classList.add('checked'); c.classList.remove('indeterminate'); c.textContent = '✓';
+        } else {
+          c.classList.remove('checked', 'indeterminate'); c.textContent = '';
+        }
+      });
+      if (willCheck) {
+        cb.classList.add('checked'); cb.classList.remove('indeterminate'); cb.textContent = '✓';
+      } else {
+        cb.classList.remove('checked', 'indeterminate'); cb.textContent = '';
+      }
+      return;
+    }
+    // 普通 checkbox 切换
+    if (cb.classList.contains('checked')) {
+      cb.classList.remove('checked');
+      cb.textContent = '';
+    } else if (cb.classList.contains('indeterminate')) {
+      cb.classList.remove('indeterminate');
+      cb.classList.add('checked');
+      cb.textContent = '✓';
+    } else {
+      cb.classList.add('checked');
+      cb.textContent = '✓';
+    }
+    // 同步更新同下拉的"全部"状态
+    syncAllSwitch(row && row.closest('.dropdown'));
+  });
+});
+
+// 子节点变更后，刷新同下拉"全部"总开关的状态（演示版：根据是否全选/部分选切换 indeterminate / checked / none）
+// 注意：只统计实际显示的checkbox（排除no-checkbox行中的隐藏checkbox）
+function syncAllSwitch(dropdown) {
+  if (!dropdown) return;
+  const allRow = dropdown.querySelector('[data-all-switch]');
+  if (!allRow) return;
+  const allCb = allRow.querySelector('.checkbox');
+  // 只统计实际显示的checkbox
+  const cbs = Array.from(dropdown.querySelectorAll('.tree-node-row:not(.no-checkbox) .checkbox')).filter(c => c !== allCb);
+  if (!cbs.length) return;
+  const checked   = cbs.filter(c => c.classList.contains('checked')).length;
+  const partial   = cbs.filter(c => c.classList.contains('indeterminate')).length;
+  if (checked === 0 && partial === 0) {
+    allCb.classList.remove('checked', 'indeterminate'); allCb.textContent = '';
+  } else if (checked === cbs.length) {
+    allCb.classList.add('checked'); allCb.classList.remove('indeterminate'); allCb.textContent = '✓';
+  } else {
+    allCb.classList.add('indeterminate'); allCb.classList.remove('checked'); allCb.textContent = '−';
+  }
+}
+
+// ========== 批量添加按钮（无交互） ==========
+document.querySelectorAll('.btn-default').forEach(btn => {
+  if (btn.textContent.trim() === '批量添加') {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      // 无交互
+    });
+  }
+});
+
+// ========== 初始化管理权限字段（默认按区域管理） ==========
+function initScopeMode() {
+  // create: 重置回显为「请选择」；edit: 保留历史回显（如"华东区、华南大区"）
+  switchScopeMode('create', 'region', { resetText: true });
+  switchScopeMode('edit',   'region', { resetText: false });
+}
+initScopeMode();
+
+// ========== 是否已建立区域 开关 ==========
+const regionToggle = document.getElementById('region-exists-toggle');
+const regionLabel  = document.getElementById('region-exists-label');
+function applyRegionExists() {
+  const exists = regionToggle.checked;
+  regionLabel.textContent = exists ? '是' : '否';
+  regionLabel.style.color = exists ? 'var(--color-success)' : 'var(--color-error)';
+  // 控制管理方式选择器 + 模式选择下拉 的可见性
+  document.querySelectorAll('#create-mode-picker, #edit-mode-picker, #dropdown-mode-create, #dropdown-mode-edit').forEach(el => {
+    el.style.display = exists ? '' : 'none';
+  });
+  // 未建区域：强制锁定为按店铺管理 + 标记扁平下拉为激活状态
+  if (!exists) {
+    ['create', 'edit'].forEach(scene => {
+      const modeTextEl   = document.getElementById(`${scene}-mode-text`);
+      const tipEl        = document.getElementById(`${scene}-scope-tip`);
+      const rangeTextEl  = document.getElementById(`${scene}-range-text`);
+      const regionDD     = document.getElementById(`dropdown-range-region-${scene}`);
+      const storeDD      = document.getElementById(`dropdown-range-store-${scene}`);
+      const flatDD       = document.getElementById(`dropdown-range-flat-${scene}`);
+
+      // 更新管理方式文本
+      if (modeTextEl) {
+        modeTextEl.textContent = '按店铺管理';
+        const picker = document.getElementById(`${scene}-mode-picker`);
+        if (picker) picker.style.cursor = 'not-allowed';
+      }
+
+      // 更新提示语
+      if (tipEl) tipEl.textContent = SCOPE_TIPS.store;
+
+      // 将所有下拉框标记为inactive并移除show类
+      [regionDD, storeDD, flatDD].forEach(d => {
+        if (!d) return;
+        d.classList.remove('show');
+        d.setAttribute('data-active-mode', 'inactive');
+      });
+
+      // 标记扁平下拉为激活状态
+      if (flatDD) {
+        flatDD.setAttribute('data-active-mode', 'active');
+      }
+
+      // 清空范围回显 + 清空扁平下拉勾选
+      if (rangeTextEl) {
+        rangeTextEl.textContent = '请选择';
+        rangeTextEl.classList.add('placeholder');
+      }
+      if (flatDD) {
+        flatDD.querySelectorAll('.checkbox').forEach(cb => {
+          cb.classList.remove('checked', 'indeterminate');
+          cb.textContent = '';
+        });
+      }
+    });
+  } else {
+    ['create', 'edit'].forEach(scene => {
+      const picker = document.getElementById(`${scene}-mode-picker`);
+      const flatDD = document.getElementById(`dropdown-range-flat-${scene}`);
+      if (picker) picker.style.cursor = '';
+      // 标记扁平下拉为inactive并移除show类
+      if (flatDD) {
+        flatDD.classList.remove('show');
+        flatDD.setAttribute('data-active-mode', 'inactive');
+      }
+    });
+    initScopeMode();
+  }
+}
+regionToggle.addEventListener('change', applyRegionExists);
+</script>
+
+</body>
+</html>
