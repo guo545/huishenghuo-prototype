@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>按区域选择管理范围 - APP端交互原型</title>
+<style>
+/* ========== 全局(遵循C端会生活APP产品设计规范) ========== */
+* {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html { font-size: 16px; }
+:root {
+  --color-primary: #F5C137;
+  --color-primary-light: #FAF2CD;
+  --color-primary-active: #E7B42E;
+  --color-success: #09BB07;
+  --color-warning: #FF6010;
+  --color-link: #ED7F39;
+  --color-error: #FF3B30;
+  --color-text-title: #333333;
+  --color-text-body: #595959;
+  --color-text-secondary: #B2B2B2;
+  --color-text-disable: #C9C9C9;
+  --color-bg-page: #F5F6F7;
+  --color-bg-card: #FFFFFF;
+  --color-border: #E5E5E5;
+  --radius-base: 8px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  background: #ECEFF3;
+  color: var(--color-text-title);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ========== 多机展示容器 ========== */
+.preview-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+}
+
+.preview-label {
+  font-size: 12px;
+  color: #595959;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.scenario-nav {
+  width: 180px;
+  background: #fff;
+  border-radius: var(--radius-base);
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+}
+.scenario-nav .nav-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+.scenario-nav .nav-section {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin: 8px 0 4px;
+}
+.scenario-nav .nav-item {
+  display: block;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text-body);
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
+.scenario-nav .nav-item:hover { background: var(--color-primary-light); }
+.scenario-nav .nav-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary-active);
+  font-weight: 500;
+}
+
+/* ========== 手机外壳(375 x 667) ========== */
+.phone-frame {
+  width: 375px;
+  height: 667px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%;
+  transform: translateX(-50%);
+  width: 100px; height: 18px;
+  background: #000;
+  border-radius: 0 0 12px 12px;
+  z-index: 100;
+}
+
+/* 状态栏 */
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 20px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+.status-bar .right-icons { display: flex; gap: 4px; align-items: center; }
+
+/* 页面主体(扣除状态栏) */
+.page {
+  height: calc(667px - 44px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 顶部导航 48px */
+.nav-bar {
+  height: 48px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.nav-bar .back {
+  position: absolute;
+  left: 16px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: var(--color-text-title);
+  cursor: pointer;
+}
+.nav-bar .title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-title);
+}
+.nav-bar .right {
+  position: absolute;
+  right: 16px;
+  font-size: 14px;
+  color: var(--color-link);
+  cursor: pointer;
+}
+
+/* 主内容区 */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-bg-page);
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* 列表卡片 */
+.card {
+  background: #fff;
+  margin: 12px;
+  border-radius: var(--radius-base);
+  overflow: hidden;
+}
+.card-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--color-text-title);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  min-height: 48px;
+}
+.card-section:last-child { border-bottom: none; }
+.card-section:active { background: #F7F7F7; }
+.card-section .label { color: var(--color-text-body); flex-shrink: 0; }
+.card-section .label.required::before {
+  content: '*';
+  color: var(--color-error);
+  margin-right: 4px;
+}
+.card-section .value {
+  flex: 1;
+  text-align: right;
+  color: var(--color-text-title);
+  margin-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-section .value.placeholder { color: var(--color-text-secondary); }
+.card-section .arrow {
+  margin-left: 6px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* 列表项 */
+.list-item {
+  background: #fff;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item:active { background: #F7F7F7; }
+.list-item .info { flex: 1; min-width: 0; }
+.list-item .name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-title);
+  margin-bottom: 6px;
+}
+.list-item .meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+.list-item .meta .scope {
+  color: var(--color-link);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+  max-width: 100%;
+  cursor: pointer;
+}
+.list-item .meta .scope.disabled { color: var(--color-text-secondary); cursor: default; }
+.list-item .meta .scope.arrow::after { content: ' ▾'; font-size: 10px; }
+.list-item .actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--color-link);
+  margin-left: 8px;
+}
+.list-item .actions .text-link { cursor: pointer; }
+.list-item .actions .text-link.danger { color: var(--color-error); }
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 11px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-active);
+  font-weight: 500;
+}
+.tag-default {
+  background: #FFF1E8;
+  color: var(--color-warning);
+}
+.status-on { color: var(--color-success); font-size: 12px; }
+.status-off { color: var(--color-text-secondary); font-size: 12px; }
+
+/* 底部主按钮 */
+.bottom-btn {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 12px 16px;
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+.btn {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-base);
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: #333;
+}
+.btn-primary:active { background: var(--color-primary-active); }
+.btn-secondary {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  color: #333;
+}
+.btn-secondary:active { background: #F7F7F7; }
+
+/* 搜索栏 */
+.search-bar {
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.search-input {
+  background: var(--color-bg-page);
+  border-radius: var(--radius-base);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* 树形选择 */
+.tree-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+.tree-toolbar .summary {
+  color: var(--color-text-body);
+}
+.tree-toolbar .summary .num { color: var(--color-primary-active); font-weight: 500; }
+.tree-toolbar .expand-link {
+  color: var(--color-link);
+  cursor: pointer;
+}
+
+.tree {
+  background: #fff;
+}
+.tree-node {
+  border-bottom: 1px solid var(--color-border);
+}
+.tree-node:last-child { border-bottom: none; }
+.tree-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 50px;
+}
+.tree-row:active { background: #F7F7F7; }
+.tree-row .caret {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.tree-row .caret.expanded { transform: rotate(90deg); }
+.tree-row .caret.placeholder { visibility: hidden; }
+.tree-row .checkbox {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  margin-right: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.tree-row .checkbox.checked { background: var(--color-primary); border-color: var(--color-primary); }
+.tree-row .checkbox.indeterminate {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.tree-row .label-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-row .label-text .count {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  margin-left: 4px;
+}
+.tree-section-title {
+  padding: 8px 16px;
+  background: #F5F6F7;
+  font-size: 12px;
+  color: var(--color-text-body);
+  font-weight: 500;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.tree-children { background: #FAFAFA; }
+.tree-children .tree-row { padding-left: 36px; }
+.tree-children .tree-children { background: #fff; }
+.tree-children .tree-children .tree-row { padding-left: 56px; }
+
+/* 弹窗 */
+.modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-mask.show { opacity: 1; pointer-events: auto; }
+.modal {
+  width: 300px;
+  background: #fff;
+  border-radius: var(--radius-base);
+  z-index: 9999;
+  overflow: hidden;
+  max-height: 80%;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header .title { flex: 1; text-align: center; }
+.modal-header .close {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  position: absolute;
+  right: 12px;
+}
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--color-text-body);
+  line-height: 1.5;
+}
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+}
+.modal-footer .btn { flex: 1; }
+
+/* 详情块(管理权限详情弹窗内) */
+.detail-block {
+  margin-bottom: 16px;
+}
+.detail-block:last-child { margin-bottom: 0; }
+.detail-block .detail-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-title);
+  margin-bottom: 8px;
+}
+.detail-block .detail-title .badge {
+  background: var(--color-primary-light);
+  color: var(--color-primary-active);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 400;
+}
+.detail-block .detail-items {
+  padding-left: 8px;
+  font-size: 13px;
+  color: var(--color-text-body);
+  line-height: 22px;
+}
+.detail-block .detail-items .item::before {
+  content: '·';
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.role-info {
+  background: #F5F6F7;
+  border-radius: var(--radius-base);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.role-info .label { color: var(--color-text-secondary); }
+
+/* 工具 */
+.flex { display: flex; }
+.between { justify-content: space-between; }
+.center { align-items: center; }
+.gap-8 { gap: 8px; }
+.text-secondary { color: var(--color-text-secondary); }
+.empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+/* 隐藏 */
+.page.hidden, .modal-mask.hidden { display: none !important; }
+
+/* 标注 */
+.annotate {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  font-size: 11px;
+  color: var(--color-link);
+  background: #FFF1E8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.phone-wrap { position: relative; }
+.phone-wrap + .phone-wrap { margin-left: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ========== 场景导航 ========== -->
+<div class="scenario-nav">
+  <div class="nav-title">📱 场景导航</div>
+  <div class="nav-section">商户类型</div>
+  <div class="nav-item active" data-merchant="normal">普通商户/连锁分店</div>
+  <div class="nav-item" data-merchant="chain">连锁总店</div>
+  <div class="nav-section">页面场景</div>
+  <div class="nav-item" data-page="list">员工管理列表</div>
+  <div class="nav-item" data-page="create">创建员工(选择管理权限)</div>
+  <div class="nav-item" data-page="edit">编辑员工(区域回显)</div>
+  <div class="nav-item" data-page="detail">管理权限详情</div>
+</div>
+
+<!-- ============================================== -->
+<!-- 手机1: 员工管理列表页                             -->
+<!-- ============================================== -->
+<div class="phone-wrap">
+  <div class="annotate">员工管理列表</div>
+  <div class="phone-frame" id="phone-list">
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="right-icons">
+        <span>📶</span><span>📡</span><span>🔋</span>
+      </div>
+    </div>
+    <div class="page">
+      <div class="nav-bar">
+        <div class="back">‹</div>
+        <div class="title">员工管理</div>
+        <div class="right" data-action="open-create">+ 新建</div>
+      </div>
+      <div class="scroll">
+        <div class="list-item">
+          <div class="info">
+            <div class="name">王华东 <span class="tag">自定义角色</span></div>
+            <div class="meta">
+              <span>区域经理</span>
+              <span>·</span>
+              <span class="scope arrow" data-action="open-detail" data-scope="multi">华东区、华南大区</span>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="text-link" data-action="open-edit" data-employee="wang">编辑</span>
+            <span class="text-link danger">删除</span>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="info">
+            <div class="name">李大区 <span class="tag">自定义角色</span></div>
+            <div class="meta">
+              <span>大区经理</span>
+              <span>·</span>
+              <span class="scope arrow" data-action="open-detail" data-scope="chain-multi">华东大区、华南大区、华北大区、西南大区、西北大区</span>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="text-link" data-action="open-edit" data-employee="li">编辑</span>
+            <span class="text-link danger">删除</span>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="info">
+            <div class="name">张全选 <span class="tag">自定义角色</span></div>
+            <div class="meta">
+              <span>运营专员</span>
+              <span>·</span>
+              <span class="scope arrow" data-scope="all" data-merchant-only="normal">全部门店</span>
+              <span class="scope arrow" data-scope="all" data-merchant-only="chain" style="display:none;">全部分店</span>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="text-link" data-action="open-edit" data-employee="zhang">编辑</span>
+            <span class="text-link danger">删除</span>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="info">
+            <div class="name">陈小张 <span class="tag">自定义角色</span></div>
+            <div class="meta">
+              <span>区域经理</span>
+              <span>·</span>
+              <span class="scope arrow" data-action="open-detail" data-scope="single-region">华北区</span>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="text-link" data-action="open-edit" data-employee="chen">编辑</span>
+            <span class="text-link danger">删除</span>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="info">
+            <div class="name">刘店长 <span class="tag tag-default">默认角色</span></div>
+            <div class="meta">
+              <span>店长</span>
+              <span>·</span>
+              <span class="scope disabled" data-merchant-only="normal">阳光主门店</span>
+              <span class="scope disabled" data-merchant-only="chain" style="display:none;">上海分店(F001)</span>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="text-link">编辑</span>
+            <span class="text-link danger">删除</span>
+          </div>
+        </div>
+        <div class="empty">共 5 条 · 已到底</div>
+      </div>
+    </div>
+
+    <!-- 管理权限详情弹窗 -->
+    <div class="modal-mask hidden" id="modal-detail">
+      <div class="modal" style="width:330px; max-height:80%;">
+        <div class="modal-header" style="position:relative;">
+          <div class="title">管理权限详情</div>
+          <div class="close" data-action="close-detail">×</div>
+        </div>
+        <div class="modal-body" id="detail-body">
+          <!-- JS 动态填充 -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 手机2: 创建员工(选择管理权限)                     -->
+<!-- ============================================== -->
+<div class="phone-wrap">
+  <div class="annotate">创建员工·选择管理权限</div>
+  <div class="phone-frame" id="phone-create">
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="right-icons">
+        <span>📶</span><span>📡</span><span>🔋</span>
+      </div>
+    </div>
+    <div class="page">
+      <div class="nav-bar">
+        <div class="back" data-action="back-list">‹</div>
+        <div class="title">选择管理权限</div>
+        <div class="right" data-action="save">保存</div>
+      </div>
+      <div class="search-bar">
+        <div class="search-input">🔍 搜索区域/门店/分店名称</div>
+      </div>
+      <div class="tree-toolbar">
+        <div class="summary">已选 <span class="num" id="create-summary">2个区域，总计12个门店</span></div>
+        <div class="expand-link">展开全部</div>
+      </div>
+      <div class="scroll">
+        <div class="tree" id="tree-create">
+          <!-- 树形结构,JS 根据商户类型渲染 -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 手机3: 管理权限详情弹窗(独立)                     -->
+<!-- ============================================== -->
+<div class="phone-wrap">
+  <div class="annotate">管理权限详情(连锁总店)</div>
+  <div class="phone-frame" id="phone-detail">
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="right-icons">
+        <span>📶</span><span>📡</span><span>🔋</span>
+      </div>
+    </div>
+    <div class="page">
+      <div class="nav-bar">
+        <div class="back">‹</div>
+        <div class="title">管理权限详情</div>
+      </div>
+      <div class="scroll">
+        <div style="padding:12px;">
+          <div class="role-info">
+            <span class="label">所属角色：</span>
+            <span>大区经理</span>
+            <span class="tag">自定义角色</span>
+          </div>
+          <div class="card">
+            <div class="detail-block" style="padding: 14px 16px;">
+              <div class="detail-title">
+                华东大区
+                <span class="badge">3个分店</span>
+              </div>
+              <div class="detail-items">
+                <div class="item">上海分店（F001）</div>
+                <div class="item">杭州分店（F002）</div>
+                <div class="item">南京分店（F003）</div>
+              </div>
+            </div>
+            <div class="detail-block" style="padding: 14px 16px; border-top:1px solid var(--color-border);">
+              <div class="detail-title">
+                华南大区
+                <span class="badge">2个分店</span>
+              </div>
+              <div class="detail-items">
+                <div class="item">深圳分店（F004）</div>
+                <div class="item">广州分店（F005）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 商户类型切换 ==========
+let currentMerchant = 'normal'; // normal | chain
+const navItems = document.querySelectorAll('.scenario-nav .nav-item');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const merchant = item.getAttribute('data-merchant');
+    if (merchant) {
+      currentMerchant = merchant;
+      switchMerchant(merchant);
+    }
+  });
+});
+
+function switchMerchant(type) {
+  document.querySelectorAll('[data-merchant-only]').forEach(el => {
+    if (el.getAttribute('data-merchant-only') === type) {
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  renderTree();
+}
+
+// ========== 树形数据(根据商户类型) ==========
+const treeData = {
+  // 普通商户/连锁分店: 区域 → 门店
+  normal: {
+    summaryPlaceholder: '请选择',
+    summaryAll: '全部门店',
+    summaryTemplate: (regions, stores) => {
+      if (stores === 0) return '请选择';
+      if (regions === 1 && stores === 1) return currentSingleStoreName || '门店名称';
+      if (regions === 0) return `总计${stores}个门店`;
+      return `${regions}个区域，总计${stores}个门店`;
+    },
+    sections: [
+      {
+        title: null,
+        nodes: [
+          { name: '全部', count: 15, children: [
+            { name: '华东区', count: 5, children: [
+              { name: '上海徐汇店（001）' },
+              { name: '上海浦东店（002）' },
+              { name: '杭州西湖店（005）' },
+              { name: '南京新街口店（008）' },
+              { name: '苏州工业园店（010）' }
+            ]},
+            { name: '华南大区', count: 7, children: [
+              { name: '广州天河店（020）' },
+              { name: '广州越秀店（021）' },
+              { name: '深圳福田店（025）' },
+              { name: '深圳南山店（026）' },
+              { name: '厦门思明店（030）' },
+              { name: '福州鼓楼店（032）' },
+              { name: '海口店（035）' }
+            ]},
+            { name: '华北区', count: 3, children: [
+              { name: '北京朝阳店（040）' },
+              { name: '天津南开店（041）' },
+              { name: '石家庄店（042）' }
+            ]}
+          ]}
+        ]
+      },
+      {
+        title: '未设置区域的店铺',
+        nodes: [
+          { name: '武汉光谷店' },
+          { name: '长沙岳麓店' }
+        ]
+      }
+    ]
+  },
+  // 连锁总店: 区域 → 分店
+  chain: {
+    summaryPlaceholder: '请选择',
+    summaryAll: '全部分店',
+    summaryTemplate: (regions, stores) => {
+      if (stores === 0) return '请选择';
+      if (regions === 0) return `总计${stores}个分店`;
+      return `${regions}个区域，总计${stores}个分店`;
+    },
+    sections: [
+      {
+        title: null,
+        nodes: [
+          { name: '全部', count: 8, children: [
+            { name: '华东大区', count: 3, children: [
+              { name: '上海分店（F001）', count: 5 },
+              { name: '杭州分店（F002）', count: 3 },
+              { name: '南京分店（F003）', count: 4 }
+            ]},
+            { name: '华南大区', count: 2, children: [
+              { name: '深圳分店（F004）', count: 6 },
+              { name: '广州分店（F005）', count: 4 }
+            ]},
+            { name: '华北大区', count: 3, children: [
+              { name: '北京分店（F006）', count: 8 },
+              { name: '天津分店（F007）', count: 5 },
+              { name: '石家庄分店（F008）', count: 3 }
+            ]}
+          ]}
+        ]
+      },
+      {
+        title: '未设置区域的分店',
+        nodes: [
+          { name: '苏州分店（F009）' }
+        ]
+      }
+    ]
+  }
+};
+
+let currentSingleStoreName = '';
+
+function renderTree() {
+  const data = treeData[currentMerchant];
+  const container = document.getElementById('tree-create');
+  if (!container) return;
+  let html = '';
+  data.sections.forEach((section, sIdx) => {
+    if (section.title) {
+      html += `<div class="tree-section-title">${section.title}</div>`;
+    }
+    section.nodes.forEach(node => {
+      html += renderNode(node, 0, sIdx);
+    });
+  });
+  container.innerHTML = html;
+  bindTreeEvents();
+}
+
+function renderNode(node, depth, sectionIdx) {
+  const hasChildren = node.children && node.children.length > 0;
+  const isRegion = depth === 1; // 区域级
+  const isAll = node.name === '全部';
+  const checkedClass = ''; // 初始未勾选
+  const expandedClass = isAll || (sectionIdx === 0 && depth === 0) ? 'expanded' : '';
+  const count = node.count ? `<span class="count">（${node.count}${currentMerchant === 'normal' ? '个门店' : '个分店'}）</span>` : '';
+  const indent = depth === 0 ? '' : `style="padding-left:${16 + depth * 24}px;"`;
+  let html = `<div class="tree-node">
+    <div class="tree-row" ${indent} data-name="${node.name}">
+      <span class="caret ${hasChildren ? expandedClass : 'placeholder'}">▶</span>
+      <span class="checkbox ${checkedClass}"></span>
+      <span class="label-text">${isRegion ? '<strong>' + node.name + '</strong>' : node.name}${count}</span>
+    </div>`;
+  if (hasChildren) {
+    html += `<div class="tree-children" style="${expandedClass ? '' : 'display:none;'}">`;
+    node.children.forEach(child => {
+      html += renderNode(child, depth + 1, sectionIdx);
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function bindTreeEvents() {
+  document.querySelectorAll('#tree-create .tree-row').forEach(row => {
+    const caret = row.querySelector('.caret');
+    const cb = row.querySelector('.checkbox');
+    if (caret && !caret.classList.contains('placeholder')) {
+      caret.addEventListener('click', e => {
+        e.stopPropagation();
+        const children = row.nextElementSibling;
+        if (children && children.classList.contains('tree-children')) {
+          caret.classList.toggle('expanded');
+          children.style.display = caret.classList.contains('expanded') ? 'block' : 'none';
+        }
+      });
+    }
+    if (cb) {
+      cb.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleCheckbox(cb);
+      });
+    }
+    row.addEventListener('click', e => {
+      if (e.target.classList.contains('checkbox') || e.target.classList.contains('caret')) return;
+      toggleCheckbox(cb);
+    });
+  });
+}
+
+function toggleCheckbox(cb) {
+  if (!cb) return;
+  if (cb.classList.contains('checked')) {
+    cb.classList.remove('checked');
+    cb.textContent = '';
+  } else if (cb.classList.contains('indeterminate')) {
+    cb.classList.remove('indeterminate');
+    cb.classList.add('checked');
+    cb.textContent = '✓';
+  } else {
+    cb.classList.add('checked');
+    cb.textContent = '✓';
+  }
+}
+
+// ========== 详情弹窗(列表页内) ==========
+const detailData = {
+  'multi': {
+    role: '区域经理',
+    regions: [
+      { name: '华东区', count: 5, items: ['上海徐汇店（001）','上海浦东店（002）','杭州西湖店（005）','南京新街口店（008）','苏州工业园店（010）'] },
+      { name: '华南大区', count: 7, items: ['广州天河店（020）','广州越秀店（021）','深圳福田店（025）','深圳南山店（026）','厦门思明店（030）','福州鼓楼店（032）','海口店（035）'] }
+    ]
+  },
+  'chain-multi': {
+    role: '大区经理',
+    regions: [
+      { name: '华东大区', count: 3, items: ['上海分店（F001）','杭州分店（F002）','南京分店（F003）'] },
+      { name: '华南大区', count: 2, items: ['深圳分店（F004）','广州分店（F005）'] },
+      { name: '华北大区', count: 3, items: ['北京分店（F006）','天津分店（F007）','石家庄分店（F008）'] }
+    ]
+  },
+  'single-region': {
+    role: '区域经理',
+    regions: [
+      { name: '华北区', count: 3, items: ['北京朝阳店（040）','天津南开店（041）','石家庄店（042）'] }
+    ]
+  },
+  'all': {
+    role: '运营专员',
+    regions: []
+  }
+};
+
+document.querySelectorAll('[data-action="open-detail"]').forEach(el => {
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    const key = el.getAttribute('data-scope');
+    if (key === 'all') {
+      // 全部门店:弹窗简化为提示
+      const body = document.getElementById('detail-body');
+      body.innerHTML = `
+        <div class="role-info">
+          <span class="label">所属角色：</span>
+          <span>${detailData[key].role}</span>
+          <span class="tag">自定义角色</span>
+        </div>
+        <div class="empty">${currentMerchant === 'chain' ? '全部分店' : '全部门店'}</div>
+      `;
+    } else {
+      const data = detailData[key];
+      const isChain = currentMerchant === 'chain';
+      const unit = isChain ? '个分店' : '个门店';
+      let html = `<div class="role-info">
+        <span class="label">所属角色：</span>
+        <span>${data.role}</span>
+        <span class="tag">自定义角色</span>
+      </div>`;
+      data.regions.forEach(r => {
+        html += `<div class="detail-block" style="margin-bottom:14px;">
+          <div class="detail-title">${r.name}<span class="badge">${r.count}${unit}</span></div>
+          <div class="detail-items">${r.items.map(i => `<div class="item">${i}</div>`).join('')}</div>
+        </div>`;
+      });
+      document.getElementById('detail-body').innerHTML = html;
+    }
+    document.getElementById('modal-detail').classList.add('show');
+  });
+});
+document.querySelectorAll('[data-action="close-detail"]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.getElementById('modal-detail').classList.remove('show');
+  });
+});
+document.getElementById('modal-detail').addEventListener('click', e => {
+  if (e.target.id === 'modal-detail') e.target.classList.remove('show');
+});
+
+// 初始渲染
+renderTree();
+</script>
+</body>
+</html>
