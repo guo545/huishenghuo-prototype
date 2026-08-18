@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会生活兼容多上游 — PC 原型（账户资产 & 申请结算）</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============ 顶部栏 ============ */
+.topbar {
+  height: 56px;
+  background: #1890ff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  color: #fff;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+.topbar .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: auto;
+}
+.topbar .logo .icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.topbar .right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+}
+.topbar .right .icon-btn {
+  cursor: pointer;
+  opacity: .85;
+  font-size: 18px;
+}
+.topbar .right .icon-btn:hover { opacity: 1; }
+.topbar .right .help { cursor: pointer; }
+.topbar .right .help:hover { text-decoration: underline; }
+.topbar .right .user-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.topbar .right .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.topbar .right .role-tag {
+  background: #52c41a;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+.topbar .right .user-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.3;
+}
+.topbar .right .user-name .org { font-size: 13px; }
+.topbar .right .user-name .name { font-size: 12px; opacity: .8; }
+.topbar .right .dropdown-arrow { font-size: 10px; opacity: .7; }
+
+/* ============ 布局 ============ */
+.layout { display: flex; flex: 1; overflow: hidden; }
+
+/* 左侧菜单 */
+.sidebar {
+  width: 200px;
+  background: #fff;
+  border-right: 1px solid #e8e8e8;
+  padding-top: 8px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.sidebar .menu-item {
+  padding: 12px 20px;
+  font-size: 14px;
+  color: #606266;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .15s;
+}
+.sidebar .menu-item:hover { background: #e6f7ff; color: #1890ff; }
+.sidebar .menu-item.active {
+  background: #e6f7ff;
+  color: #1890ff;
+  font-weight: 500;
+  border-right: 3px solid #1890ff;
+}
+.sidebar .menu-item .icon { width: 18px; text-align: center; font-size: 16px; }
+.sidebar .menu-item .arrow { margin-left: auto; font-size: 12px; opacity: .5; }
+
+/* 主内容区 */
+.content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* 标签页 */
+.tab-row {
+  display: flex;
+  gap: 0;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.tab-row .tab {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #606266;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s;
+}
+.tab-row .tab:hover { color: #1890ff; }
+.tab-row .tab.active {
+  color: #1890ff;
+  border-bottom-color: #1890ff;
+  font-weight: 500;
+}
+.tab-row .tab .close {
+  font-size: 14px;
+  color: #bbb;
+  margin-left: 2px;
+  cursor: pointer;
+}
+.tab-row .tab .close:hover { color: #ff4d4f; }
+
+/* 页面 */
+.main {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #f5f5f5;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+/* ============ 收单方选择器（多通道时展示） ============ */
+.acq-selector {
+  background: #fff;
+  border-radius: 4px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid #f0f0f0;
+}
+.acq-selector .label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.acq-selector select {
+  padding: 6px 32px 6px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;
+  cursor: pointer;
+  min-width: 200px;
+}
+.acq-selector select:focus { outline: none; border-color: #1890ff; }
+
+/* ============ 账户资产页布局 ============ */
+.assets-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* 资金明细通栏（row 2，跨越两列） */
+.fund-detail-section {
+  grid-column: 1 / -1;
+}
+
+/* 卡片通用 */
+.card {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid #f0f0f0;
+}
+.card-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header .title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
+}
+.card-header .action {
+  font-size: 13px;
+  color: #1890ff;
+  cursor: pointer;
+}
+.card-header .action:hover { text-decoration: underline; }
+.card-body { padding: 20px; }
+
+/* 账户资产卡片 */
+.asset-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.asset-card .card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  position: relative;
+}
+.asset-card .balance-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.asset-card .balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.asset-card .reserve-link {
+  position: absolute;
+  top: 24px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #606266;
+  cursor: pointer;
+}
+.asset-card .reserve-link .icon { font-size: 14px; }
+.asset-card .reserve-link:hover { color: #1890ff; }
+.asset-card .balance-label {
+  font-size: 14px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+.asset-card .balance-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: #303133;
+  line-height: 1;
+}
+.asset-card .apply-btn {
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.asset-card .apply-btn:hover { background: #40a9ff; }
+
+/* 资金状态条 */
+.fund-status-bar {
+  padding: 12px 20px;
+  background: #f0f8ff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.fund-status-bar .fund-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.fund-status-bar .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.fund-status-bar .dot.blue { background: #1890ff; }
+.fund-status-bar .dot.yellow { background: #faad14; }
+.fund-status-bar .fund-label {
+  color: #606266;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fund-status-bar .info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #c0c4cc;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #c0c4cc;
+  cursor: help;
+}
+.fund-status-bar .fund-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+.fund-status-bar .link {
+  color: #1890ff;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.fund-status-bar .link:hover { text-decoration: underline; }
+
+/* 分割线（资产卡片内） */
+.asset-divider {
+  margin: 16px 20px 0;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 小程序订单待收货资金（资产卡片内下方） */
+.mini-order-section {
+  padding: 16px 20px;
+}
+
+/* 右侧结算信息卡片 — 高度填充 */
+.settle-info-card {
+  height: 100%;
+}
+.settle-info-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 右侧信息卡片 */
+.info-card .card-body { padding: 16px 20px; }
+.info-card .info-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.info-card .info-label .info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #c0c4cc;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #c0c4cc;
+  cursor: help;
+}
+.info-card .info-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #303133;
+}
+.info-card .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+.info-card .info-row + .info-row { border-top: 1px solid #f0f0f0; }
+.info-card .info-row .label { color: #606266; }
+.info-card .info-row .value { color: #303133; font-weight: 500; }
+
+/* 资金明细表格 */
+.fund-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.fund-detail-table th,
+.fund-detail-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.fund-detail-table th {
+  background: #fafafa;
+  color: #606266;
+  font-weight: 500;
+}
+.fund-detail-table td { color: #303133; }
+.fund-detail-table .amount { font-weight: 500; }
+.fund-detail-table .amount.positive { color: #52c41a; }
+.fund-detail-table .amount.zero { color: #909399; }
+.fund-detail-table .toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fund-detail-table .toggle-switch {
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  background: #d9d9d9;
+  position: relative;
+  cursor: pointer;
+  transition: background .2s;
+}
+.fund-detail-table .toggle-switch.on { background: #1890ff; }
+.fund-detail-table .toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform .2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+.fund-detail-table .toggle-switch.on::after { transform: translateX(20px); }
+
+/* ============ 申请结算页 ============ */
+.settle-form-card { max-width: 720px; }
+.settle-form-card .card-body { padding: 24px 32px; }
+.settle-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+.settle-row .label {
+  font-size: 14px;
+  color: #606266;
+  width: 80px;
+  flex-shrink: 0;
+}
+.settle-row .value {
+  font-size: 14px;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settle-row .bank-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c41230;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.settle-amount-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.settle-amount-row .label {
+  font-size: 14px;
+  color: #606266;
+  width: 80px;
+  flex-shrink: 0;
+}
+.settle-amount-row input {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 240px;
+}
+.settle-amount-row input:focus { outline: none; border-color: #1890ff; }
+.settle-amount-row .all-btn {
+  color: #1890ff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.settle-amount-row .all-btn:hover { text-decoration: underline; }
+.settle-amount-hint {
+  margin-left: 92px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.settle-amount-hint .arrow { font-size: 12px; }
+.settle-amount-detail {
+  margin-left: 92px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #909399;
+  line-height: 2;
+}
+.settle-amount-detail .reserve-line { display: none; }
+
+/* 提现产品 */
+.settle-products { margin-bottom: 24px; }
+.settle-products .section-label {
+  font-size: 14px;
+  color: #303133;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.product-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.product-item + .product-item { border-top: 1px solid #f0f0f0; }
+.product-item .radio {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d9d9d9;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+}
+.product-item .radio.checked {
+  border-color: #1890ff;
+}
+.product-item .radio.checked::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1890ff;
+  top: 2px;
+  left: 2px;
+}
+.product-item .info { flex: 1; }
+.product-item .info .name {
+  font-size: 14px;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.product-item .info .name .tag {
+  background: #fa8c16;
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 400;
+}
+.product-item .info .desc {
+  font-size: 13px;
+  color: #909399;
+  margin-top: 4px;
+}
+.product-item .info .desc em {
+  color: #fa8c16;
+  font-style: normal;
+}
+.product-item .info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #c0c4cc;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #c0c4cc;
+  cursor: help;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* 底部按钮 */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.btn {
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  color: #606266;
+}
+.btn:hover { color: #1890ff; border-color: #1890ff; }
+.btn.primary {
+  background: #1890ff;
+  color: #fff;
+  border-color: #1890ff;
+}
+.btn.primary:hover { background: #40a9ff; }
+.btn.disabled {
+  background: #f5f5f5;
+  color: #c0c4cc;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* 页脚文案 */
+.settle-footer {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 12px;
+  color: #c0c4cc;
+}
+.settle-footer .logo-text { color: #52c41a; font-weight: 600; }
+
+/* ============ 模态框 ============ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 4px;
+  width: 480px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; color: #303133; }
+.modal-header .close { font-size: 20px; color: #999; cursor: pointer; }
+.modal-header .close:hover { color: #333; }
+.modal-body { padding: 24px 20px; }
+.modal-body .form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-body .form-row .label {
+  font-size: 14px;
+  color: #606266;
+  width: 60px;
+}
+.modal-body .form-row .label .required { color: #ff4d4f; }
+.modal-body .form-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.modal-body .form-row input:focus { outline: none; border-color: #1890ff; }
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ============ 模拟控制面板 ============ */
+.sim-controls {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  z-index: 200;
+  width: 260px;
+}
+.sim-controls h3 {
+  font-size: 14px;
+  color: #303133;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: move;
+  user-select: none;
+}
+.sim-controls h3::before {
+  content: '⠿';
+  margin-right: 6px;
+  color: #bbb;
+  font-size: 16px;
+}
+.sim-controls .ctrl-group { margin-bottom: 12px; }
+.sim-controls .ctrl-group label {
+  display: block;
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+.sim-controls .ctrl-group select {
+  width: 100%;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 8px center;
+}
+.sim-controls .note {
+  font-size: 11px;
+  color: #909399;
+  line-height: 1.6;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ============ 工具类 ============ */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部栏 ============ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="icon">H</div>
+    <span>会生活</span>
+  </div>
+  <div class="right">
+    <span class="icon-btn" title="下载">⬇</span>
+    <span class="icon-btn" title="手机端">📱</span>
+    <span class="icon-btn" title="消息">🔔</span>
+    <span class="help">帮助中心</span>
+    <div class="user-area">
+      <div class="avatar">👤</div>
+      <div class="user-name">
+        <span class="org">前端门诊部</span>
+        <span class="name">李爽</span>
+      </div>
+      <span class="dropdown-arrow"></span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ============ 左侧菜单 ============ -->
+  <div class="sidebar">
+    <div class="menu-item" onclick="goPage('home')"><span class="icon"></span>首页</div>
+    <div class="menu-item"><span class="icon"></span>商户管理<span class="arrow">▾</span></div>
+    <div class="menu-item"><span class="icon"></span>交易数据<span class="arrow">▾</span></div>
+    <div class="menu-item"><span class="icon">📑</span>分账管理<span class="arrow"></span></div>
+    <div class="menu-item"><span class="icon">💰</span>财务结算<span class="arrow">▾</span></div>
+    <div class="menu-item"><span class="icon">📋</span>对账管理<span class="arrow">▾</span></div>
+    <div class="menu-item active" onclick="goPage('account')"><span class="icon">💳</span>账户资产</div>
+    <div class="menu-item"><span class="icon">🛡</span>风控管理<span class="arrow">▾</span></div>
+    <div class="menu-item"><span class="icon">🔧</span>应用中心</div>
+  </div>
+
+  <!-- ============ 主内容区 ============ -->
+  <div class="content-area">
+    <!-- 标签页 -->
+    <div class="tab-row">
+      <div class="tab" onclick="goPage('home')">首页 <span class="close">×</span></div>
+      <div class="tab" onclick="goPage('account')" id="tab-account">账户资产 <span class="close">×</span></div>
+      <div class="tab" onclick="goPage('settle')" id="tab-settle">申请结算 <span class="close">×</span></div>
+    </div>
+
+    <div class="main">
+
+      <!-- ==================== Page: 账户资产 ==================== -->
+      <div class="page active" id="page-account">
+
+        <!-- 账户资产主布局 -->
+        <!-- 账户资产卡片 -->
+        <div class="card asset-card" style="margin-bottom:16px">
+            <div class="card-body">
+              <!-- 预留金额（右上角） -->
+              <div class="reserve-link" onclick="openReserveModal()">
+                <span class="icon"></span>
+                <span>预留金额 <strong id="account-reserve-value">10.00</strong></span>
+              </div>
+              <div class="balance-area">
+                <div class="balance-label" style="display:flex;align-items:center;gap:8px">
+                  账户资产(元)
+                  <!-- 收单方选择器（多通道时展示，PRD 规则A，紧跟"账户资产"后方，无"收单方"文字） -->
+                  <select id="acq-account" onchange="onAcqChange('account')" style="padding:4px 28px 4px 10px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;appearance:none;background:#fff url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E&quot;) no-repeat right 8px center;cursor:pointer;min-width:160px">
+                    <option value="sxf">随行付（主通道）</option>
+                    <option value="dy">电银</option>
+                    <option value="pa">平安银行</option>
+                  </select>
+                </div>
+                <div class="balance-row">
+                  <span class="balance-value" id="account-balance">24.22</span>
+                  <button class="apply-btn" onclick="goPage('settle')">申请结算</button>
+                </div>
+              </div>
+            </div>
+            <!-- 资金状态条（仅随行付展示，PRD 规则B） -->
+            <div class="fund-status-bar" id="fundStatusBar-account">
+              <div class="fund-item">
+                <span class="dot blue"></span>
+                <span class="fund-label">在途资金 <span class="info-icon">?</span></span>
+                <span class="fund-value" id="fund-intransit">0</span>
+                <span class="link" onclick="alert('查看在途资金明细')">查看</span>
+              </div>
+              <div class="fund-item">
+                <span class="dot yellow"></span>
+                <span class="fund-label">可用资金 <span class="info-icon">?</span></span>
+                <span class="fund-value" id="fund-available">24.22</span>
+              </div>
+            </div>
+
+            <!-- 分割线（仅随行付展示，PRD 规则B） -->
+            <div class="asset-divider" id="assetDivider-account"></div>
+
+            <!-- 结算信息（从右侧移入账户资产模块内，仅随行付展示） -->
+            <div class="card-body" id="settleInfoInline">
+              <div class="info-label" style="font-size:13px;color:#909399;margin-bottom:8px">结算信息</div>
+              <div class="info-row">
+                <span class="label">结算周期：</span>
+                <span class="value" id="settle-cycle">已关闭自动结算</span>
+              </div>
+              <div class="info-row">
+                <span class="label">结算卡：</span>
+                <span class="value" id="settle-card">621785****8104</span>
+              </div>
+            </div>
+
+            <!-- 小程序订单待收货资金（仅随行付展示，PRD 规则B，卡片内下方） -->
+            <div class="mini-order-section" id="miniOrderSection-account">
+              <div class="info-label">小程序订单待收货资金 <span class="info-icon">?</span></div>
+              <div class="info-value">0.00</div>
+            </div>
+          </div>
+
+          <!-- 资金明细（通栏） -->
+          <div class="card fund-detail-section">
+            <div class="card-header">
+              <span class="title">资金明细</span>
+              <span class="action">查看全部</span>
+            </div>
+            <table class="fund-detail-table">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>交易实收 <span class="info-icon">?</span></th>
+                  <th>
+                    <div class="toggle-row">
+                      <span>分账实收 <span class="info-icon">?</span></span>
+                      <span class="toggle-switch" id="fundToggle" onclick="this.classList.toggle('on')"></span>
+                    </div>
+                  </th>
+                  <th>结算服务费</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-08-14</td>
+                  <td class="amount zero">0.00</td>
+                  <td class="amount zero">0.00</td>
+                  <td class="amount zero">0.00</td>
+                </tr>
+                <tr>
+                  <td>2026-08-12</td>
+                  <td class="amount positive">+0.02</td>
+                  <td class="amount zero">0.00</td>
+                  <td class="amount zero">0.00</td>
+                </tr>
+                <tr>
+                  <td>2026-08-11</td>
+                  <td class="amount positive">+0.06</td>
+                  <td class="amount zero">0.00</td>
+                  <td class="amount zero">0.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Page: 申请结算 ==================== -->
+      <div class="page" id="page-settle">
+
+        <!-- 结算表单卡片 -->
+        <div class="card settle-form-card">
+          <div class="card-body">
+            <!-- 结算至银行卡 -->
+            <div class="settle-row">
+              <span class="label">结算至：</span>
+              <span class="value">
+                <span class="bank-icon" id="settle-bank-icon">中</span>
+                <span id="settle-bank-name">中国银行</span>(<span id="settle-bank-last">8104</span>)
+              </span>
+            </div>
+
+            <!-- 结算金额 -->
+            <div class="settle-amount-row">
+              <span class="label">结算金额：</span>
+              <input type="text" id="settle-amount-input" value="14.22" placeholder="可结算0.00" />
+              <span class="all-btn" onclick="document.getElementById('settle-amount-input').value='14.22'">全部</span>
+            </div>
+
+            <!-- 可结算金额提示 -->
+            <div class="settle-amount-hint" id="settle-amount-hint" onclick="document.getElementById('settle-amount-detail').style.display = document.getElementById('settle-amount-detail').style.display === 'none' ? '' : 'none'">
+              可结算金额：¥ <span id="settle-amount-value">14.22</span> <span class="arrow">▾</span>
+            </div>
+
+            <!-- 金额详情（展开） -->
+            <div class="settle-amount-detail" id="settle-amount-detail" style="display:none">
+              <div>收款账户总额：<span id="settle-total">24.22</span></div>
+              <div class="reserve-line" id="settle-reserve-line">预留金额：10.00</div>
+            </div>
+
+            <!-- 提现产品 -->
+            <div class="settle-products">
+              <div class="section-label">提现产品</div>
+              <div class="product-item" onclick="selectProduct(this)">
+                <span class="radio checked"></span>
+                <div class="info">
+                  <div class="name">快速到账 <span class="tag">今日可提</span> <span class="info-icon">?</span></div>
+                  <div class="desc">预计<em>15分钟内</em>到账</div>
+                </div>
+              </div>
+              <div class="product-item" onclick="selectProduct(this)">
+                <span class="radio"></span>
+                <div class="info">
+                  <div class="name">快速到账(不含今日交易额)</div>
+                  <div class="desc">预计<em>15分钟内</em>到账</div>
+                </div>
+              </div>
+              <div class="product-item" onclick="selectProduct(this)">
+                <span class="radio"></span>
+                <div class="info">
+                  <div class="name">普通到账</div>
+                  <div class="desc">预计<em>明天23:59前</em>到账</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部按钮 -->
+            <div class="form-actions">
+              <button class="btn" onclick="goPage('account')">返回</button>
+              <button class="btn primary" id="confirmSettleBtn">确认提现</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 页脚文案（仅随行付展示，PRD 3.2.1.4） -->
+        <div class="settle-footer" id="settle-footer">
+          本页面内所有功能及服务由收单机构 <span class="logo-text">随行付</span> 提供
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ 预留金额模态框 ============ -->
+<div class="modal-overlay" id="reserveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="title">设置预留金额</span>
+      <span class="close" onclick="closeReserveModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <!-- 收单方选择（多通道时展示） -->
+      <div class="form-row" id="reserveAcqRow" style="margin-bottom:16px">
+        <span class="label">收单方：</span>
+        <select id="acq-reserve-modal" onchange="onReserveAcqChange()" style="padding:6px 28px 6px 10px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;appearance:none;background:#fff url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E&quot;) no-repeat right 8px center;cursor:pointer">
+          <option value="sxf">随行付（主通道）</option>
+          <option value="dy">电银</option>
+          <option value="pa">平安银行</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <span class="label"><span class="required">*</span> 金额：</span>
+        <input type="number" id="reserveInput" value="10.00" step="0.01" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeReserveModal()">取消</button>
+      <button class="btn primary" onclick="closeReserveModal()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 模拟控制面板 ============ -->
+<div class="sim-controls">
+  <h3> 原型控制</h3>
+  <div class="ctrl-group">
+    <label>通道场景</label>
+    <select id="simChannelScene" onchange="updateSim()">
+      <option value="multi" selected>多个通道 — 随行付(主) + 电银 + 平安</option>
+      <option value="single-sxf">单个通道 — 随行付</option>
+      <option value="single-other">单个通道 — 电银</option>
+    </select>
+  </div>
+  <div class="note">
+    <b>PRD 规则提示：</b><br>
+    · 多通道时展示收单方选择器<br>
+    · 随行付通道展示资金状态、结算信息、小程序待收货资金<br>
+    · 非随行付通道隐藏上述模块，余额显示 0
+  </div>
+</div>
+
+<script>
+// 收单方数据
+const acqNames = { sxf: '随行付', dy: '电银', pa: '平安银行' };
+const bankInfo = {
+  sxf: { name: '中国银行', icon: '中', last: '8104', total: '24.22', available: '24.22', intransit: '0' },
+  dy:  { name: '工商银行', icon: '工', last: '7297', total: '0', available: '0', intransit: '0' },
+  pa:  { name: '平安银行', icon: '平', last: '3356', total: '0', available: '0', intransit: '0' }
+};
+
+function isSXF(acq) { return acq === 'sxf'; }
+function isMulti() { return document.getElementById('simChannelScene').value === 'multi'; }
+
+// 页面切换
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.tab-row .tab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+  document.querySelectorAll('.sidebar .menu-item').forEach(m => m.classList.remove('active'));
+  updateAll();
+}
+
+// 收单方切换
+function onAcqChange(pageId) {
+  const sel = document.getElementById('acq-' + pageId);
+  if (!sel) return;
+  const acq = sel.value;
+  // 同步
+  ['account'].forEach(id => {
+    if (id !== pageId) {
+      const other = document.getElementById('acq-' + id);
+      if (other) other.value = acq;
+    }
+  });
+  updateAll();
+}
+
+// 更新银行卡显示
+function updateBankDisplay(acq) {
+  const i = bankInfo[acq];
+  // 申请结算页
+  const icon = document.getElementById('settle-bank-icon');
+  const name = document.getElementById('settle-bank-name');
+  const last = document.getElementById('settle-bank-last');
+  if (icon) icon.textContent = i.icon;
+  if (name) name.textContent = i.name;
+  if (last) last.textContent = i.last;
+}
+
+// 提现产品选择
+function selectProduct(el) {
+  el.closest('.settle-products').querySelectorAll('.product-item .radio').forEach(r => r.classList.remove('checked'));
+  el.querySelector('.radio').classList.add('checked');
+}
+
+// 预留金额模态框
+function openReserveModal() {
+  // 打开时同步收单方
+  const mainAcq = document.getElementById('acq-account');
+  const modalAcq = document.getElementById('acq-reserve-modal');
+  if (mainAcq && modalAcq) modalAcq.value = mainAcq.value;
+  document.getElementById('reserveModal').classList.add('show');
+}
+function closeReserveModal() { document.getElementById('reserveModal').classList.remove('show'); }
+
+// 弹窗内收单方切换 — 同步到主页面
+function onReserveAcqChange() {
+  const modalSel = document.getElementById('acq-reserve-modal');
+  if (!modalSel) return;
+  const acq = modalSel.value;
+  ['account'].forEach(id => {
+    const other = document.getElementById('acq-' + id);
+    if (other) other.value = acq;
+  });
+  updateAll();
+}
+
+// 主更新逻辑
+function updateAll() {
+  const multi = isMulti();
+  let currentAcq = 'sxf';
+  const accountSel = document.getElementById('acq-account');
+  if (accountSel) currentAcq = accountSel.value;
+  const sxf = isSXF(currentAcq);
+  const info = bankInfo[currentAcq];
+
+  // 收单方选择器显隐
+  // 账户资产页：选择器在账户资产标签后方
+  const acqAccountSel = document.getElementById('acq-account');
+  if (acqAccountSel) acqAccountSel.style.display = multi ? '' : 'none';
+  // 预留金额弹窗中的收单方
+  const reserveAcqRow = document.getElementById('reserveAcqRow');
+  if (reserveAcqRow) reserveAcqRow.style.display = multi ? '' : 'none';
+  // 同步弹窗中的收单方选择器
+  const reserveModalSel = document.getElementById('acq-reserve-modal');
+  if (reserveModalSel && acqAccountSel) reserveModalSel.value = acqAccountSel.value;
+
+  // === 账户资产页 ===
+  // 余额
+  const balEl = document.getElementById('account-balance');
+  if (balEl) balEl.textContent = sxf ? info.total : '0';
+
+  // 资金状态条（仅随行付展示）
+  const statusBar = document.getElementById('fundStatusBar-account');
+  if (statusBar) statusBar.style.display = sxf ? '' : 'none';
+  const intransitEl = document.getElementById('fund-intransit');
+  if (intransitEl) intransitEl.textContent = sxf ? info.intransit : '0';
+  const availableEl = document.getElementById('fund-available');
+  if (availableEl) availableEl.textContent = sxf ? info.available : '0';
+
+  // 结算信息卡片（仅随行付展示）
+  const settleInfo = document.getElementById('settleInfoInline');
+  if (settleInfo) settleInfo.style.display = sxf ? '' : 'none';
+  const settleCard = document.getElementById('settle-card');
+  if (settleCard) settleCard.textContent = '621785****' + info.last;
+
+  // 小程序待收货资金（仅随行付展示，卡片内下方）
+  const miniOrder = document.getElementById('miniOrderSection-account');
+  if (miniOrder) miniOrder.style.display = sxf ? '' : 'none';
+
+  // 分割线（仅随行付展示）
+  const divider = document.getElementById('assetDivider-account');
+  if (divider) divider.style.display = sxf ? '' : 'none';
+
+  // === 申请结算页 ===
+  // 页脚文案（仅随行付展示）
+  const footer = document.getElementById('settle-footer');
+  if (footer) footer.style.display = sxf ? '' : 'none';
+
+  // 预留金额行（仅随行付展示）
+  const reserveLine = document.getElementById('settle-reserve-line');
+  if (reserveLine) reserveLine.style.display = sxf ? '' : 'none';
+
+  // 金额详情展开项
+  const settleTotal = document.getElementById('settle-total');
+  if (settleTotal) settleTotal.textContent = sxf ? info.total : '0';
+
+  // 结算金额
+  const settleValue = document.getElementById('settle-amount-value');
+  if (settleValue) settleValue.textContent = sxf ? info.available : '0';
+  const settleInput = document.getElementById('settle-amount-input');
+  if (settleInput) settleInput.value = sxf ? info.available : '0';
+  settleInput.placeholder = sxf ? '可结算' + info.available : '可结算0.00';
+
+  // 更新银行卡
+  updateBankDisplay(currentAcq);
+}
+
+// 模拟控制
+function updateSim() {
+  const scene = document.getElementById('simChannelScene').value;
+  // 重置收单方选择器选项（主页面 + 弹窗）
+  const allSelectors = ['account', 'settle', 'reserve-modal'];
+  allSelectors.forEach(id => {
+    const sel = document.getElementById('acq-' + id);
+    if (sel) {
+      if (scene === 'multi') {
+        sel.innerHTML = '<option value="sxf">随行付（主通道）</option><option value="dy">电银</option><option value="pa">平安银行</option>';
+      } else if (scene === 'single-sxf') {
+        sel.innerHTML = '<option value="sxf">随行付</option>';
+      } else {
+        sel.innerHTML = '<option value="dy">电银</option>';
+      }
+    }
+  });
+  updateAll();
+}
+
+// 初始化
+updateAll();
+
+// 控制面板拖拽
+(function() {
+  const panel = document.querySelector('.sim-controls');
+  if (!panel) return;
+  const handle = panel.querySelector('h3');
+  let dragging = false, startX, startY, origLeft, origTop;
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    origLeft = rect.left;
+    origTop = rect.top;
+    panel.style.position = 'fixed';
+    panel.style.left = origLeft + 'px';
+    panel.style.top = origTop + 'px';
+    panel.style.right = 'auto';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+  function onMouseMove(e) {
+    if (!dragging) return;
+    panel.style.left = (origLeft + e.clientX - startX) + 'px';
+    panel.style.top = (origTop + e.clientY - startY) + 'px';
+  }
+  function onMouseUp() {
+    dragging = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+})();
+</script>
+
+</body>
+</html>
