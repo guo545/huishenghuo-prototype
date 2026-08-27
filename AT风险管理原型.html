@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会生活 - AT风险管理原型</title>
+<style>
+/* ============ 全局 ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --color-primary: #0E99FA;
+  --color-primary-hover: #4096FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-1: #333333;
+  --color-text-2: #9A9A9A;
+  --color-text-disable: #C0C4CC;
+  --color-text-white: #FFFFFF;
+  --color-bg-page: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-table-header: #FAFAFA;
+  --color-bg-select-active: #EEF6FF;
+  --border-base: #E5E6EB;
+  --row-hover: #F5F7FA;
+  --row-check: #E6F7FF;
+  --color-gradient-start: #00C2FF;
+  --color-gradient-end: #1890FF;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+}
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--color-bg-page);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-width: 1200px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--color-text-1);
+}
+
+/* ============ 顶部栏 ============ */
+.topbar {
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-20);
+  color: var(--color-text-white);
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+}
+.topbar .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.topbar .logo .icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,.2);
+  border-radius: var(--radius-6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.topbar .right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-20);
+  font-size: 14px;
+}
+.topbar .right .icon-btn { cursor: pointer; font-size: 16px; }
+.topbar .right .help { cursor: pointer; }
+.topbar .right .help:hover { text-decoration: underline; }
+.topbar .user-area {
+  display: flex; align-items: center; gap: var(--spacing-8); cursor: pointer;
+}
+.topbar .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.topbar .user-info { display: flex; flex-direction: column; align-items: flex-end; }
+.topbar .user-info .org { font-size: 13px; }
+.topbar .user-info .name { font-size: 12px; opacity: .8; }
+
+/* ============ 布局 ============ */
+.layout { display: flex; flex: 1; padding-top: 64px; }
+
+/* 左侧菜单 */
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--border-base);
+  flex-shrink: 0;
+  overflow-y: auto;
+  position: fixed;
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  padding: var(--spacing-8) 0;
+}
+.sidebar .menu-group { padding: 8px var(--spacing-20); font-size: 12px; color: var(--color-text-2); margin-top: 4px; }
+.sidebar .menu-item {
+  padding: var(--spacing-12) var(--spacing-20);
+  font-size: 14px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  transition: all .15s;
+  border-left: 3px solid transparent;
+}
+.sidebar .menu-item:hover { background: var(--color-bg-select-active); color: var(--color-primary); }
+.sidebar .menu-item.active {
+  background: var(--color-bg-select-active);
+  color: var(--color-primary);
+  font-weight: 500;
+  border-left-color: var(--color-primary);
+}
+.sidebar .submenu { padding-left: var(--spacing-20); display: none; }
+.sidebar .submenu.open { display: block; }
+.sidebar .submenu .menu-item {
+  padding: var(--spacing-8) var(--spacing-20);
+  font-size: 13px;
+}
+.sidebar .submenu .submenu .menu-item {
+  font-size: 12px;
+}
+.sidebar .menu-item .arrow { margin-left: auto; font-size: 10px; opacity: .5; }
+.sidebar .menu-item.expanded .arrow { transform: rotate(90deg); }
+
+/* 主内容区 */
+.content-area {
+  flex: 1;
+  margin-left: 200px;
+  padding: var(--spacing-20);
+  overflow-y: auto;
+  min-height: calc(100vh - 64px);
+}
+
+/* ============ 面包屑 ============ */
+.breadcrumb { font-size: 13px; color: var(--color-text-2); margin-bottom: var(--spacing-16); }
+.breadcrumb span { color: var(--color-text-1); }
+.breadcrumb .sep { margin: 0 4px; }
+
+/* ============ 页面 ============ */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ============ 卡片 ============ */
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-4);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border: 1px solid #f0f0f0;
+  margin-bottom: var(--spacing-16);
+}
+.card-header {
+  padding: var(--spacing-16) var(--spacing-20);
+  border-bottom: 1px solid var(--border-base);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header .title { font-size: 16px; font-weight: 500; color: var(--color-text-1); }
+.card-header .actions { display: flex; gap: var(--spacing-8); }
+.card-body { padding: var(--spacing-16) var(--spacing-20); }
+
+/* ============ 查询表单 ============ */
+.query-form {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-4);
+  padding: var(--spacing-16) var(--spacing-20);
+  margin-bottom: var(--spacing-16);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-12);
+  align-items: flex-end;
+}
+.query-form .form-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+.query-form .form-item label {
+  font-size: 14px;
+  color: var(--color-text-1);
+  white-space: nowrap;
+  width: 80px;
+  text-align: right;
+}
+.query-form select, .query-form input[type="date"] {
+  padding: var(--spacing-8) var(--spacing-12);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  font-size: 14px;
+  min-width: 160px;
+  height: 32px;
+}
+.query-form select:focus, .query-form input:focus { outline: none; border-color: var(--color-primary); }
+.query-form .btn-group { margin-left: auto; display: flex; gap: var(--spacing-8); }
+
+/* ============ 按钮 ============ */
+.btn {
+  padding: var(--spacing-8) var(--spacing-16);
+  border-radius: var(--radius-4);
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid var(--border-base);
+  background: var(--color-bg-card);
+  color: var(--color-text-1);
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.btn.primary { background: var(--color-primary); color: var(--color-text-white); border-color: var(--color-primary); }
+.btn.primary:hover { background: var(--color-primary-hover); }
+.btn.link { border: none; background: none; padding: 0; color: var(--color-primary); height: auto; }
+.btn.link:hover { text-decoration: underline; }
+.btn.danger { color: var(--color-error); border-color: var(--color-error); }
+.btn.disabled { opacity: .6; cursor: not-allowed; pointer-events: none; }
+
+/* ============ Tab ============ */
+.tab-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--spacing-16);
+}
+.tab-row .tab {
+  padding: var(--spacing-12) var(--spacing-16);
+  font-size: 14px;
+  color: var(--color-text-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex; align-items: center; gap: 4px;
+  transition: all .15s;
+}
+.tab-row .tab:hover { color: var(--color-primary); }
+.tab-row .tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 500;
+}
+.tab-row .tab .count {
+  background: #f0f0f0;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+.tab-row .tab.active .count {
+  background: #e6f7ff;
+  color: var(--color-primary);
+}
+
+/* ============ 表格 ============ */
+.table-wrap { overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th, .table td {
+  padding: var(--spacing-12) var(--spacing-16);
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-base);
+}
+.table th {
+  background: var(--color-bg-table-header);
+  color: var(--color-text-1);
+  font-weight: 500;
+  font-size: 16px;
+}
+.table tbody tr:hover { background: var(--row-hover); }
+.table td a { color: var(--color-primary); cursor: pointer; text-decoration: none; }
+.table td a:hover { text-decoration: underline; }
+
+/* ============ 分页 ============ */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+  padding: var(--spacing-16) var(--spacing-20);
+  font-size: 14px;
+  color: var(--color-text-2);
+}
+.pagination .page-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  cursor: pointer;
+  background: var(--color-bg-card);
+  font-size: 13px;
+}
+.pagination .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.pagination .page-btn.active { background: var(--color-primary); color: var(--color-text-white); border-color: var(--color-primary); }
+
+/* ============ 详情区块 ============ */
+.detail-section { margin-bottom: var(--spacing-16); }
+.detail-section .section-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-1);
+  padding: var(--spacing-16) var(--spacing-20);
+  border-bottom: 1px solid var(--border-base);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.detail-section .section-body { padding: var(--spacing-16) var(--spacing-20); }
+
+/* 表单行（详情只读） */
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+}
+.detail-item {
+  display: flex;
+  gap: var(--spacing-8);
+  min-width: 280px;
+  margin-bottom: var(--spacing-12);
+}
+.detail-item .label {
+  color: var(--color-text-2);
+  white-space: nowrap;
+  min-width: 100px;
+  text-align: right;
+}
+.detail-item .value { color: var(--color-text-1); }
+
+/* 操作按钮区 */
+.action-bar {
+  display: flex;
+  gap: var(--spacing-12);
+  padding: var(--spacing-16) var(--spacing-20);
+  border-top: 1px solid var(--border-base);
+}
+.action-bar .btn { height: 40px; padding: var(--spacing-8) var(--spacing-20); }
+
+/* ============ Modal ============ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.3);
+  z-index: 500;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-4);
+  width: 520px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.modal-header {
+  padding: var(--spacing-16) var(--spacing-20);
+  border-bottom: 1px solid var(--border-base);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header .title { font-size: 16px; font-weight: 500; color: var(--color-text-1); }
+.modal-header .close { font-size: 20px; color: var(--color-text-2); cursor: pointer; }
+.modal-header .close:hover { color: var(--color-text-1); }
+.modal-body { padding: var(--spacing-16) var(--spacing-20); }
+.modal-footer {
+  padding: var(--spacing-12) var(--spacing-20);
+  border-top: 1px solid var(--border-base);
+  display: flex; justify-content: flex-end; gap: var(--spacing-8);
+}
+
+/* 表单 */
+.form-group { margin-bottom: var(--spacing-16); }
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: var(--color-text-1);
+  margin-bottom: var(--spacing-8);
+}
+.form-group label .req { color: var(--color-error); margin-right: 2px; }
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: var(--spacing-8) var(--spacing-12);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  font-size: 14px;
+  font-family: inherit;
+}
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--color-primary); }
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group .error-hint { color: var(--color-error); font-size: 12px; margin-top: 4px; display: none; }
+.form-group.has-error input,
+.form-group.has-error textarea { border-color: var(--color-error); }
+.form-group.has-error .error-hint { display: block; }
+
+/* 图片上传占位 */
+.image-upload-area {
+  display: flex; gap: var(--spacing-8); flex-wrap: wrap;
+}
+.image-upload-btn {
+  width: 80px; height: 80px;
+  border: 1px dashed var(--border-base);
+  border-radius: var(--radius-4);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-2);
+  font-size: 12px;
+  gap: 4px;
+}
+.image-upload-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.image-thumb {
+  width: 80px; height: 80px;
+  border-radius: var(--radius-4);
+  background: var(--color-bg-table-header);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  color: var(--color-text-2);
+  font-size: 12px;
+}
+.image-thumb .del {
+  position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  background: rgba(0,0,0,.5);
+  color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 10px;
+}
+
+/* 单选按钮组 */
+.radio-group { display: flex; flex-direction: column; gap: var(--spacing-8); }
+.radio-group .radio-item {
+  display: flex; align-items: center; gap: var(--spacing-8); cursor: pointer;
+}
+.radio-group .radio-dot {
+  width: 16px; height: 16px; border: 2px solid var(--border-base);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.radio-group .radio-item.checked .radio-dot { border-color: var(--color-primary); }
+.radio-group .radio-item.checked .radio-dot::after {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary);
+}
+.radio-group .radio-item .text { font-size: 14px; }
+
+/* 提示信息 */
+.hint-text { font-size: 13px; color: var(--color-text-2); margin-top: var(--spacing-8); }
+.hint-text.warning { color: var(--color-warning); }
+.hint-text.error { color: var(--color-error); }
+
+/* 协商历史 */
+.negotiation-item {
+  display: flex;
+  gap: var(--spacing-16);
+  padding: var(--spacing-12) 0;
+  border-bottom: 1px solid var(--border-base);
+}
+.negotiation-item:last-child { border-bottom: none; }
+.negotiation-item .time { color: var(--color-text-2); min-width: 140px; font-size: 13px; }
+.negotiation-item .role {
+  min-width: 60px;
+  font-size: 13px;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+.negotiation-item .content { flex: 1; font-size: 14px; }
+.negotiation-item .images { display: flex; gap: var(--spacing-8); }
+.negotiation-item .img-btn {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-4);
+  background: var(--color-bg-table-header);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--color-text-2);
+  cursor: pointer;
+}
+
+/* 申诉历史 */
+.appeal-history-item {
+  display: flex;
+  gap: var(--spacing-16);
+  padding: var(--spacing-12) 0;
+  border-bottom: 1px solid var(--border-base);
+}
+.appeal-history-item:last-child { border-bottom: none; }
+.appeal-history-item .time { color: var(--color-text-2); min-width: 140px; font-size: 13px; }
+.appeal-history-item .operator { min-width: 80px; font-size: 13px; }
+.appeal-history-item .type { min-width: 80px; font-size: 13px; color: var(--color-primary); }
+.appeal-history-item .status { min-width: 80px; font-size: 13px; }
+.appeal-history-item .remark { flex: 1; font-size: 13px; color: var(--color-text-2); }
+
+/* 空位占位 */
+.placeholder-area {
+  border: 1px dashed var(--border-base);
+  border-radius: var(--radius-4);
+  padding: var(--spacing-20);
+  text-align: center;
+  color: var(--color-text-2);
+  font-size: 13px;
+  margin-top: var(--spacing-12);
+}
+
+/* 链接 */
+.link-text { color: var(--color-primary); cursor: pointer; text-decoration: none; font-size: 14px; }
+.link-text:hover { text-decoration: underline; }
+
+/* 子商户号提示标签 */
+.hint-tag {
+  font-size: 12px;
+  color: var(--color-warning);
+  margin-left: 4px;
+}
+
+/* 状态切换控制（原型用） */
+.sim-controls {
+  position: fixed;
+  top: 80px;
+  right: var(--spacing-20);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-8);
+  padding: var(--spacing-16);
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  z-index: 300;
+  width: 240px;
+}
+.sim-controls h3 { cursor: move; }
+.sim-controls h3 {
+  font-size: 14px;
+  color: var(--color-text-1);
+  margin-bottom: var(--spacing-12);
+  padding-bottom: var(--spacing-8);
+  border-bottom: 1px solid var(--border-base);
+  cursor: move;
+}
+.sim-controls .ctrl-group { margin-bottom: var(--spacing-12); }
+.sim-controls .ctrl-group label { display: block; font-size: 12px; color: var(--color-text-2); margin-bottom: 4px; }
+.sim-controls .ctrl-group select {
+  width: 100%;
+  padding: 6px var(--spacing-12);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  font-size: 13px;
+}
+.sim-controls .note {
+  font-size: 11px;
+  color: var(--color-text-2);
+  line-height: 1.6;
+  padding-top: var(--spacing-8);
+  border-top: 1px solid var(--border-base);
+}
+
+/* 订单号合并单元格浮窗 */
+.order-no-cell { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.order-arrow {
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+}
+.order-arrow:hover { text-decoration: underline; }
+.order-pop {
+  display: none;
+  position: fixed;
+  z-index: 600;
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  padding: var(--spacing-12) var(--spacing-16);
+  min-width: 260px;
+}
+.order-pop.show { display: block; }
+.order-pop-row {
+  display: flex;
+  gap: var(--spacing-8);
+  padding: 4px 0;
+  font-size: 13px;
+}
+.order-pop-row .k { color: var(--color-text-2); white-space: nowrap; }
+.order-pop-row .v { color: var(--color-text-1); word-break: break-all; }
+
+/* 图形验证码 */
+.captcha-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 32px;
+  background: linear-gradient(120deg, #f0f2f5, #e8f4ff);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  font-size: 16px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 4px;
+  color: var(--color-text-1);
+  cursor: pointer;
+  user-select: none;
+  text-decoration: line-through;
+  text-decoration-color: rgba(14,153,250,.35);
+}
+.captcha-code:hover { border-color: var(--color-primary); }
+.captcha-input {
+  flex: 1;
+  padding: var(--spacing-8) var(--spacing-12);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-4);
+  font-size: 14px;
+  height: 32px;
+}
+.captcha-input:focus { outline: none; border-color: var(--color-primary); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部栏 ============ -->
+<div class="topbar">
+  <div class="logo"><div class="icon">H</div><span>会生活</span></div>
+  <div class="right">
+    <span class="icon-btn" title="下载">&#8681;</span>
+    <span class="icon-btn" title="手机端">&#128241;</span>
+    <span class="icon-btn" title="消息">&#128276;</span>
+    <span class="help">帮助中心</span>
+    <div class="user-area">
+      <div class="avatar">&#128100;</div>
+      <div class="user-info">
+        <span class="org">前端门诊部</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ============ 左侧菜单 ============ -->
+  <div class="sidebar">
+    <div class="menu-item active" id="menu-home" data-page="home"><span></span>首页</div>
+    <div class="menu-item"><span></span>商户管理<span class="arrow">&#9654;</span></div>
+    <div class="menu-item"><span></span>交易数据<span class="arrow">&#9654;</span></div>
+    <div class="menu-item"><span></span>财务结算<span class="arrow">&#9654;</span></div>
+    <div class="menu-item"><span></span>对账管理<span class="arrow">&#9654;</span></div>
+    <div class="menu-item"><span></span>账户资产<span class="arrow">&#9654;</span></div>
+    <div class="menu-item" id="menu-risk"><span></span>风控管理<span class="arrow">&#9654;</span></div>
+    <div class="submenu" id="submenu-risk">
+      <div class="menu-item">协查工单</div>
+      <div class="menu-item">风险通知</div>
+      <div class="menu-item" id="menu-atrisk">微信/支付宝风险管理<span class="arrow">&#9654;</span></div>
+      <div class="submenu" id="submenu-atrisk">
+        <div class="menu-item" id="menu-complaint" data-page="complaint-list">交易投诉信息</div>
+        <div class="menu-item" id="menu-violation" data-page="violation-list">商户违规信息</div>
+      </div>
+    </div>
+    <div class="menu-item"><span></span>应用中心</div>
+  </div>
+
+  <!-- ============ 主内容区 ============ -->
+  <div class="content-area">
+
+    <!-- ==================== Page: 首页 ==================== -->
+    <div class="page" id="page-home">
+      <div class="breadcrumb">首页</div>
+
+      <!-- 第一行：今日交易 + 账户资产 -->
+      <div style="display:flex;gap:var(--spacing-12);margin-bottom:0">
+        <!-- 今日交易 -->
+        <div class="card" style="flex:1">
+          <div class="card-header"><span class="title">今日交易</span></div>
+          <div class="card-body" style="padding:var(--spacing-20) var(--spacing-20) var(--spacing-20)">
+            <div style="display:flex;gap:var(--spacing-16)">
+              <div style="flex:1">
+                <div style="font-size:48px;font-weight:700;line-height:1.2;color:var(--color-text-1)">0.00</div>
+                <div style="font-size:14px;color:var(--color-text-2);margin-top:12px">交易金额(元)</div>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:48px;font-weight:700;line-height:1.2;color:var(--color-text-1)">0</div>
+                <div style="font-size:14px;color:var(--color-text-2);margin-top:12px">交易笔数(笔)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 账户资产 -->
+        <div class="card" style="flex:1;max-width:400px">
+          <div class="card-header"><span class="title">账户资产(元)</span></div>
+          <div class="card-body" style="padding:var(--spacing-20) var(--spacing-20) var(--spacing-20)">
+            <div style="font-size:48px;font-weight:700;line-height:1.2;color:var(--color-text-1)">24.22</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二行：近期走势 + 通知消息 -->
+      <div style="display:flex;gap:var(--spacing-12)">
+        <!-- 近期走势 -->
+        <div class="card" style="flex:1">
+          <div class="card-header">
+            <span class="title">近期走势</span>
+            <div class="actions">
+              <button class="btn" style="padding:4px 12px;font-size:13px;background:var(--color-primary);color:#fff;border-color:var(--color-primary)">近7日</button>
+              <button class="btn" style="padding:4px 12px;font-size:13px">近30日</button>
+              <span style="font-size:13px;color:var(--color-text-2);line-height:32px">数据统计截止昨日 &#x2192;</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="background:var(--color-bg-page);border-radius:var(--radius-4);padding:var(--spacing-16);text-align:center;color:var(--color-text-2);height:200px;display:flex;align-items:center;justify-content:center">
+              &#x2191; 走势图区域（原型占位）
+            </div>
+          </div>
+        </div>
+
+        <!-- 通知消息 -->
+        <div class="card" style="flex:1;max-width:400px">
+          <div class="card-header"><span class="title">通知消息</span><span style="margin-left:auto;color:var(--color-text-2);cursor:pointer">&#x2192;</span></div>
+          <div class="card-body">
+            <!-- 风控待处理统计（线框子模块） -->
+            <div style="border:1px solid var(--border-base);border-radius:var(--radius-6);padding:var(--spacing-12);margin-bottom:var(--spacing-12)">
+              <div style="display:flex;gap:var(--spacing-16)">
+                <a onclick="goPage('complaint-list')" style="color:var(--color-primary);cursor:pointer;text-decoration:none;font-size:14px;flex:1">
+                  待处理投诉 <span style="font-size:28px;font-weight:700;color:var(--color-error);margin-left:8px">2</span>
+                </a>
+                <a onclick="goPage('violation-list')" style="color:var(--color-primary);cursor:pointer;text-decoration:none;font-size:14px;flex:1">
+                  待处理高风险违规 <span style="font-size:28px;font-weight:700;color:var(--color-error);margin-left:8px">3</span>
+                </a>
+              </div>
+            </div>
+            <!-- 通知消息列表 -->
+            <div style="display:flex;justify-content:space-between;padding:var(--spacing-8) 0;border-bottom:1px solid var(--border-base)">
+              <span>智慧营销开通通知</span><span style="color:var(--color-text-2)">08-06</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:var(--spacing-8) 0;border-bottom:1px solid var(--border-base)">
+              <span>智慧营销关闭通知</span><span style="color:var(--color-text-2)">07-30</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:var(--spacing-8) 0;border-bottom:1px solid var(--border-base)">
+              <span>智慧营销开通通知</span><span style="color:var(--color-text-2)">07-30</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:var(--spacing-8) 0;border-bottom:1px solid var(--border-base)">
+              <span>智慧营销开通通知</span><span style="color:var(--color-text-2)">07-30</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:var(--spacing-8) 0">
+              <span>智慧营销关闭通知</span><span style="color:var(--color-text-2)">07-29</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Page: 交易投诉列表 ==================== -->
+    <div class="page" id="page-complaint-list">
+      <div class="breadcrumb">风控管理 <span class="sep">/</span> 微信/支付宝风险管理 <span class="sep">/</span> <span>交易投诉信息</span></div>
+
+      <!-- 查询条件 -->
+      <div class="query-form">
+        <div class="form-item">
+          <label>投诉日期</label>
+          <input type="date" value="2026-07-21"> <span style="color:var(--color-text-2);margin:0 4px">至</span> <input type="date" value="2026-08-20">
+        </div>
+        <div class="form-item">
+          <label>风险来源</label>
+          <select><option value="">全部</option><option>微信</option><option>支付宝</option></select>
+        </div>
+        <div class="form-item">
+          <label>投诉单状态</label>
+          <select><option value="">全部</option><option>待处理</option><option>处理中</option><option>已完成</option><option>已超时</option></select>
+        </div>
+        <div class="btn-group">
+          <button class="btn primary">查询</button>
+          <button class="btn">重置</button>
+        </div>
+      </div>
+
+      <!-- 卡片列表 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">投诉列表</span>
+          <div class="actions">
+            <button class="btn" onclick="alert('打开微信/支付宝官方平台处理指引')">官方平台自助处理指引</button>
+            <button class="btn">导出</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>投诉日期</th>
+                <th>投诉单号</th>
+                <th>风险来源</th>
+                <th>投诉内容</th>
+                <th>投诉交易商户订单号</th>
+                <th>投诉单状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-18 14:32:10</td>
+                <td>WX202608180001</td>
+                <td>微信</td>
+                <td>用户投诉商品质量问题，要求退款</td>
+                <td>ORD202608180012</td>
+                <td>待处理</td>
+                <td><a onclick="goDetail('complaint-detail-wx')">详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-15 09:15:22</td>
+                <td>ALI202608150003</td>
+                <td>支付宝</td>
+                <td>消费者投诉未收到商品，申请退款</td>
+                <td>ORD202608150008</td>
+                <td>处理中</td>
+                <td><a onclick="goDetail('complaint-detail-ali')">详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-10 16:45:00</td>
+                <td>WX202608100005</td>
+                <td>微信</td>
+                <td>服务态度差，要求赔偿</td>
+                <td>ORD202608100003</td>
+                <td>已完成</td>
+                <td><a>详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-05 11:20:35</td>
+                <td>ALI202608050002</td>
+                <td>支付宝</td>
+                <td>商品价格与实际不符</td>
+                <td>ORD202608050001</td>
+                <td>已超时</td>
+                <td><a>详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-01 08:00:12</td>
+                <td>WX202608010007</td>
+                <td>微信</td>
+                <td>商户拒绝提供发票</td>
+                <td>ORD202608010005</td>
+                <td>处理中</td>
+                <td><a>详情</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span>共 5 条</span>
+          <span class="page-btn active">1</span>
+          <span class="page-btn">2</span>
+          <span class="page-btn">3</span>
+          <select style="height:24px;padding:0 4px;font-size:12px;border:1px solid var(--border-base);border-radius:var(--radius-4)">
+            <option>20条/页</option><option>50条/页</option><option>100条/页</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Page: 投诉详情（微信） ==================== -->
+    <div class="page" id="page-complaint-detail-wx">
+      <div class="breadcrumb">风控管理 <span class="sep">/</span> 微信/支付宝风险管理 <span class="sep">/</span> 交易投诉信息 <span class="sep">/</span> <span>投诉详情</span></div>
+
+      <!-- 商户信息 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">商户信息</span>
+          <button class="btn link" onclick="goPage('complaint-list')">&#x2190; 返回</button>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <div class="detail-item"><span class="label">商户编号：</span><span class="value">M20260818001</span></div>
+            <div class="detail-item"><span class="label">商户名称：</span><span class="value">测试商户示例</span></div>
+            <div class="detail-item">
+              <span class="label">子商户号：</span><span class="value">1900000001</span>
+              <span class="hint-tag">分店上报子商户号</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 投诉基本信息 -->
+      <div class="card">
+        <div class="card-header"><span class="title">投诉基本信息</span></div>
+        <div class="card-body">
+          <div class="detail-row">
+            <div class="detail-item"><span class="label">投诉单号：</span><span class="value">WX202608180001</span></div>
+            <div class="detail-item"><span class="label">风险来源：</span><span class="value">微信</span></div>
+            <div class="detail-item"><span class="label">投诉人联系方式：</span><span class="value" id="contact-phone-wx">138****8888</span><button class="btn link" style="margin-left:8px" onclick="openContactModal('contact-phone-wx', '13812348888')">查看</button></div>
+            <div class="detail-item"><span class="label">投诉时间：</span><span class="value">2026-08-18 14:32:10</span></div>
+            <div class="detail-item"><span class="label">投诉单状态：</span><span class="value">待处理</span></div>
+            <div class="detail-item"><span class="label">投诉内容：</span><span class="value">用户投诉商品质量问题，要求退款。用户表示收到的商品与描述严重不符，存在明显瑕疵，已拍照留存证据。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 投诉关联交易 -->
+      <div class="card">
+        <div class="card-header"><span class="title">投诉关联交易</span></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>交易时间</th><th>交易类型</th><th>支付渠道</th><th>交易金额</th><th>卡类型</th><th>消费者openID</th><th>订单号</th><th>交易状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-18 10:00:00</td><td>扫码支付</td><td>微信</td><td>¥128.00</td><td>零钱</td><td>oXxxx12345</td>
+                <td>
+                  <div class="order-no-cell">
+                    <span>ORD202608180012</span>
+                    <span class="order-arrow" onclick="toggleOrderPop(this, event)">&#9662;</span>
+                    <div class="order-pop">
+                      <div class="order-pop-row"><span class="k">支付渠道单号：</span><span class="v">WX_PAY_001</span></div>
+                      <div class="order-pop-row"><span class="k">商户订单号：</span><span class="v">ORD202608180012</span></div>
+                      <div class="order-pop-row"><span class="k">天阙平台订单单号：</span><span class="v">TQ20260818001</span></div>
+                      <div class="order-pop-row"><span class="k">上游订单号：</span><span class="v">UP20260818001</span></div>
+                    </div>
+                  </div>
+                </td>
+                <td>支付成功</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 协商历史 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">协商历史 <button class="btn link" style="margin-left:8px" onclick="alert('刷新协商历史')">&#x21bb; 刷新</button></span>
+          <div style="display:flex;gap:var(--spacing-8)">
+            <button class="btn primary" onclick="openModal('replyModal')">回复用户</button>
+            <button class="btn primary disabled" title="需先回复一条后才能处理">投诉处理</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>时间</th><th>角色</th><th>操作类型</th><th>内容</th><th>资料凭证</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-18 14:32:10</td><td>投诉人</td><td>用户提交投诉</td><td>商品质量问题，要求退款。</td><td><a>图片资料1</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-18 14:35:00</td><td>系统</td><td>系统通知</td><td>投诉单已创建，等待商户处理。</td><td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Page: 投诉详情（支付宝） ==================== -->
+    <div class="page" id="page-complaint-detail-ali">
+      <div class="breadcrumb">风控管理 <span class="sep">/</span> 微信/支付宝风险管理 <span class="sep">/</span> 交易投诉信息 <span class="sep">/</span> <span>投诉详情</span></div>
+
+      <!-- 商户信息 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">商户信息</span>
+          <button class="btn link" onclick="goPage('complaint-list')">&#x2190; 返回</button>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <div class="detail-item"><span class="label">商户编号：</span><span class="value">M20260815003</span></div>
+            <div class="detail-item"><span class="label">商户名称：</span><span class="value">支付宝测试商户</span></div>
+            <div class="detail-item"><span class="label">子商户号：</span><span class="value">2900000001</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 投诉基本信息 -->
+      <div class="card">
+        <div class="card-header"><span class="title">投诉基本信息</span></div>
+        <div class="card-body">
+          <div class="detail-row">
+            <div class="detail-item"><span class="label">投诉单号：</span><span class="value">ALI202608150003</span></div>
+            <div class="detail-item"><span class="label">风险来源：</span><span class="value">支付宝</span></div>
+            <div class="detail-item"><span class="label">投诉人联系方式：</span><span class="value" id="contact-phone-ali">139****6666</span><button class="btn link" style="margin-left:8px" onclick="openContactModal('contact-phone-ali', '13912346666')">查看</button></div>
+            <div class="detail-item"><span class="label">投诉时间：</span><span class="value">2026-08-15 09:15:22</span></div>
+            <div class="detail-item"><span class="label">投诉单状态：</span><span class="value">处理中</span></div>
+            <div class="detail-item"><span class="label">投诉内容：</span><span class="value">消费者投诉未收到商品，申请退款。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 投诉关联交易 -->
+      <div class="card">
+        <div class="card-header"><span class="title">投诉关联交易</span></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>交易时间</th><th>交易类型</th><th>支付渠道</th><th>交易金额</th><th>卡类型</th><th>消费者openID</th><th>订单号</th><th>交易状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-15 08:00:00</td><td>扫码支付</td><td>支付宝</td><td>¥256.00</td><td>花呗</td><td>2088xxx</td>
+                <td>
+                  <div class="order-no-cell">
+                    <span>ORD202608150008</span>
+                    <span class="order-arrow" onclick="toggleOrderPop(this, event)">&#9662;</span>
+                    <div class="order-pop">
+                      <div class="order-pop-row"><span class="k">支付渠道单号：</span><span class="v">ALI_PAY_003</span></div>
+                      <div class="order-pop-row"><span class="k">商户订单号：</span><span class="v">ORD202608150008</span></div>
+                      <div class="order-pop-row"><span class="k">天阙平台订单单号：</span><span class="v">TQ20260815003</span></div>
+                      <div class="order-pop-row"><span class="k">上游订单号：</span><span class="v">UP20260815003</span></div>
+                    </div>
+                  </div>
+                </td>
+                <td>支付成功</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 协商历史 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">协商历史 <button class="btn link" style="margin-left:8px" onclick="alert('刷新协商历史')">&#x21bb; 刷新</button></span>
+          <div style="display:flex;gap:var(--spacing-8)">
+            <button class="btn primary" onclick="openModal('complaintHandleModal')">投诉处理</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>时间</th><th>角色</th><th>操作类型</th><th>内容</th><th>资料凭证</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-15 09:15:22</td><td>投诉人</td><td>用户提交投诉</td><td>未收到商品，申请退款。</td><td><a>图片资料1</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-15 09:20:00</td><td>系统</td><td>系统通知</td><td>投诉单已创建，等待商户处理。</td><td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Page: 商户违规列表 ==================== -->
+    <div class="page" id="page-violation-list">
+      <div class="breadcrumb">风控管理 <span class="sep">/</span> 微信/支付宝风险管理 <span class="sep">/</span> <span>商户违规信息</span></div>
+
+      <!-- 查询条件 -->
+      <div class="query-form">
+        <div class="tab-row" style="width:100%;margin-bottom:var(--spacing-12)">
+          <div class="tab active" onclick="switchTab(this)">高风险需处理 <span class="count">3</span></div>
+          <div class="tab" onclick="switchTab(this)">风险需关注 <span class="count">1</span></div>
+        </div>
+        <div class="form-item">
+          <label>违规通知日期</label>
+          <input type="date"> <span style="color:var(--color-text-2);margin:0 4px">至</span> <input type="date">
+        </div>
+        <div class="form-item">
+          <label>风险来源</label>
+          <select><option value="">全部</option><option>微信</option><option>支付宝</option></select>
+        </div>
+        <div class="form-item">
+          <label>风险状态</label>
+          <select><option value="">全部</option><option>待处理</option><option>已提交</option><option>已过期</option><option>审核中</option><option>已解除</option><option>审核驳回</option></select>
+        </div>
+        <div class="form-item">
+          <label>申诉状态</label>
+          <select><option value="">全部</option><option>待处理</option><option>申诉中</option><option>申诉成功</option><option>申诉失败</option><option>待补充资料</option><option>申诉关闭</option><option>不支持申诉</option></select>
+        </div>
+        <div class="form-item">
+          <label>风险类型</label>
+          <input type="text" placeholder="模糊查询" style="padding:var(--spacing-8) var(--spacing-12);border:1px solid var(--border-base);border-radius:var(--radius-4);font-size:14px;height:32px;min-width:160px">
+        </div>
+        <div class="form-item">
+          <label>限制类型</label>
+          <input type="text" placeholder="模糊查询" style="padding:var(--spacing-8) var(--spacing-12);border:1px solid var(--border-base);border-radius:var(--radius-4);font-size:14px;height:32px;min-width:160px">
+        </div>
+        <div class="btn-group">
+          <button class="btn primary">查询</button>
+          <button class="btn">重置</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="title">违规列表</span>
+          <div class="actions">
+            <button class="btn">导出</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>违规通知日期</th>
+                <th>风险来源</th>
+                <th>风险类型</th>
+                <th>限制类型</th>
+                <th>风险状态</th>
+                <th>申诉状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-08-18</td>
+                <td>微信</td>
+                <td>虚假宣传</td>
+                <td>限制收款</td>
+                <td>待处理</td>
+                <td>待处理</td>
+                <td><a onclick="goDetail('violation-detail')">详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-15</td>
+                <td>微信</td>
+                <td>交易异常</td>
+                <td>限制提现</td>
+                <td>审核驳回</td>
+                <td>待补充资料</td>
+                <td><a onclick="goDetail('violation-detail')">详情</a> <a onclick="goDetail('violation-detail')">补充资料</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-10</td>
+                <td>支付宝</td>
+                <td>投诉过多</td>
+                <td>警告</td>
+                <td>待处理</td>
+                <td>待处理</td>
+                <td><a onclick="goDetail('violation-detail')">详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-05</td>
+                <td>微信</td>
+                <td>涉嫌欺诈</td>
+                <td>限制收款</td>
+                <td>审核中</td>
+                <td>申诉中</td>
+                <td><a onclick="goDetail('violation-detail')">详情</a></td>
+              </tr>
+              <tr>
+                <td>2026-08-01</td>
+                <td>支付宝</td>
+                <td>违规营销</td>
+                <td>警告</td>
+                <td>已解除</td>
+                <td>申诉成功</td>
+                <td><a onclick="goDetail('violation-detail')">详情</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span>共 5 条</span>
+          <span class="page-btn active">1</span>
+          <span class="page-btn">2</span>
+          <select style="height:24px;padding:0 4px;font-size:12px;border:1px solid var(--border-base);border-radius:var(--radius-4)">
+            <option>20条/页</option><option>50条/页</option><option>100条/页</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Page: 违规详情 ==================== -->
+    <div class="page" id="page-violation-detail">
+      <div class="breadcrumb">风控管理 <span class="sep">/</span> 微信/支付宝风险管理 <span class="sep">/</span> 商户违规信息 <span class="sep">/</span> <span>违规详情</span></div>
+
+      <!-- 商户信息 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="title">商户信息</span>
+          <button class="btn link" onclick="goPage('violation-list')">&#x2190; 返回</button>
+        </div>
+        <div class="card-body">
+          <div class="detail-row">
+            <div class="detail-item"><span class="label">商户编号：</span><span class="value">M20260818001</span></div>
+            <div class="detail-item"><span class="label">商户名称：</span><span class="value">测试商户示例</span></div>
+            <div class="detail-item">
+              <span class="label">子商户号：</span><span class="value">1900000001</span>
+              <span class="hint-tag">指定交易子商户号</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <!-- 违规信息 -->
+        <div class="detail-section" style="margin-bottom:0">
+          <div class="section-title">
+            违规信息
+            <span class="link-text" style="margin-left:16px" onclick="alert('跳转风险协查工单页面')">关联风险协查工单 2 个，点击查看 &#x2192;</span>
+          </div>
+          <div class="section-body">
+            <div class="detail-row">
+              <div class="detail-item"><span class="label">风险来源：</span><span class="value">微信</span></div>
+              <div class="detail-item"><span class="label">违规通知日期：</span><span class="value">2026-08-18</span></div>
+              <div class="detail-item"><span class="label">风险类型：</span><span class="value">虚假宣传</span></div>
+              <div class="detail-item"><span class="label">限制类型：</span><span class="value">限制收款</span></div>
+              <div class="detail-item"><span class="label">限制原因：</span><span class="value">因用户投诉过多，系统自动限制</span></div>
+              <div class="detail-item"><span class="label">违规类型：</span><span class="value">交易类违规</span></div>
+              <div class="detail-item"><span class="label">处罚开始时间：</span><span class="value">2026-08-18 14:00:00</span></div>
+              <div class="detail-item"><span class="label">风险状态：</span><span class="value">待处理</span></div>
+              <div class="detail-item"><span class="label">申诉状态：</span><span class="value" id="violation-appeal-status">待处理</span></div>
+              <div class="detail-item hidden" id="violation-deadline"><span class="label">申诉截止时间：</span><span class="value">2026-08-25 23:59:59</span></div>
+              <div class="detail-item hidden" id="violation-recover-time"><span class="label">解除管控时间：</span><span class="value">2026-08-20 10:00:00</span></div>
+              <div class="detail-item hidden" id="violation-no-appeal-reason"><span class="label">不可申诉原因：</span><span class="value">超过申诉期限</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 状态：待处理 ===== -->
+        <div id="violation-state-pending">
+          <!-- 申诉区（预留空位） -->
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">
+              申诉
+              <span style="margin-left:auto">
+                <span class="link-text" onclick="alert('打开自助申诉指引')">自助申诉指引 &#x2192;</span>
+              </span>
+            </div>
+            <div class="section-body">
+              <div class="placeholder-area">
+                申诉表单内容待补充，此处预留展示位置
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 状态：需自行申诉 ===== -->
+        <div id="violation-state-self-appeal" class="hidden">
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">申诉指引</div>
+            <div class="section-body">
+              <p class="hint-text">该违规记录需自行前往官方平台申诉。</p>
+              <p class="hint-text" style="margin-top:8px">微信官方平台：<a href="https://pay.weixin.qq.com/partner/public/home" target="_blank" class="link-text">https://pay.weixin.qq.com/partner/public/home</a></p>
+              <p class="hint-text" style="margin-top:8px">支付宝官方平台：<a href="https://p.alipay.com" target="_blank" class="link-text">https://p.alipay.com</a></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 状态：待补充资料 ===== -->
+        <div id="violation-state-supplement" class="hidden">
+          <!-- 申诉详情 -->
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">
+              申诉详情
+              <span style="margin-left:auto">
+                <span class="link-text" onclick="alert('打开自助申诉指引')">自助申诉指引 &#x2192;</span>
+              </span>
+            </div>
+            <div class="section-body">
+              <div class="detail-row">
+                <div class="detail-item"><span class="label">申诉说明：</span><span class="value">已提交整改证明，等待审核。</span></div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-item"><span class="label">上传图片：</span><span class="value" style="display:flex;gap:var(--spacing-8)">
+                  <span class="image-thumb">图片1<span class="del">&#215;</span></span>
+                  <span class="image-thumb">图片2<span class="del">&#215;</span></span>
+                  <span class="image-upload-btn" onclick="simulateImageUpload(this.parentElement, this)"><span>&#43;</span><span>上传</span></span>
+                </span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 申诉历史 -->
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">违规申诉历史</div>
+            <div class="section-body">
+              <div class="appeal-history-item">
+                <span class="type">提交申诉</span>
+                <span class="time">2026-08-16 10:00:00</span>
+                <span class="operator">商户账号</span>
+                <span class="status">待补充资料</span>
+                <span class="remark">审核备注：请补充更多证明材料</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 状态：申诉中/成功/失败/关闭 ===== -->
+        <div id="violation-state-done" class="hidden">
+          <!-- 申诉详情 -->
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">
+              申诉详情
+              <span style="margin-left:auto">
+                <span class="link-text" onclick="alert('打开自助申诉指引')">自助申诉指引 &#x2192;</span>
+              </span>
+            </div>
+            <div class="section-body">
+              <div class="detail-row">
+                <div class="detail-item"><span class="label">申诉说明：</span><span class="value">已提交整改证明及相关材料。</span></div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-item"><span class="label">上传图片：</span><span class="value" style="display:flex;gap:var(--spacing-8)">
+                  <span class="image-thumb">图片1</span>
+                  <span class="image-thumb">图片2</span>
+                </span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 申诉历史 -->
+          <div class="detail-section" style="margin-bottom:0;border-top:1px solid var(--border-base)">
+            <div class="section-title">违规申诉历史</div>
+            <div class="section-body">
+              <div class="appeal-history-item">
+                <span class="type">提交申诉</span>
+                <span class="time">2026-08-16 10:00:00</span>
+                <span class="operator">商户账号</span>
+                <span class="status">申诉中</span>
+                <span class="remark"></span>
+              </div>
+              <div class="appeal-history-item">
+                <span class="type">审核</span>
+                <span class="time">2026-08-17 14:00:00</span>
+                <span class="operator">系统</span>
+                <span class="status">申诉成功</span>
+                <span class="remark">审核通过，已解除限制</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- content-area end -->
+</div><!-- layout end -->
+
+<!-- ============ 查看联系方式弹窗 ============ -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <span class="title">查看联系方式</span>
+      <span class="close" onclick="closeModal('contactModal')">&#215;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="contactCodeGroup">
+        <label><span class="req">*</span> 验证码</label>
+        <div style="display:flex;gap:var(--spacing-8);align-items:center">
+          <span class="captcha-code" id="captchaCode" onclick="refreshCaptcha()" title="点击刷新验证码">8K3P</span>
+          <input type="text" class="captcha-input" id="contactCodeInput" placeholder="请输入验证码" maxlength="4">
+        </div>
+        <div class="error-hint">验证码不正确</div>
+        <div class="hint-text">为保护投诉人隐私，请输入验证码后查看联系方式明文</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('contactModal')">取消</button>
+      <button class="btn primary" onclick="submitContactQuery()">查询</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 回复用户弹窗 ============ -->
+<div class="modal-overlay" id="replyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="title">回复用户</span>
+      <span class="close" onclick="closeModal('replyModal')">&#215;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="replyContentGroup">
+        <label><span class="req">*</span> 回复内容</label>
+        <textarea placeholder="请输入回复内容（10~200字）" oninput="updateCharCount(this, 'replyCharCount', 200)"></textarea>
+        <div class="error-hint">回复内容限制10~200字</div>
+        <div style="text-align:right;font-size:12px;color:var(--color-text-2);margin-top:4px"><span id="replyCharCount">0</span>/200</div>
+      </div>
+      <div class="form-group">
+        <label>留言图片（非必填，最多4张）</label>
+        <div class="image-upload-area">
+          <div class="image-upload-btn" onclick="simulateImageUpload('replyImages', this)">
+            <span>&#43;</span>
+            <span>上传图片</span>
+          </div>
+        </div>
+        <div class="hint-text" style="margin-top:var(--spacing-8)">支持 jpg/bmp/png 格式，每张不超过2M</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('replyModal')">取消</button>
+      <button class="btn primary" onclick="submitReply()">确认回复</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 投诉处理弹窗（微信二次确认） ============ -->
+<div class="modal-overlay" id="complaintConfirmModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <span class="title">确认投诉处理</span>
+      <span class="close" onclick="closeModal('complaintConfirmModal')">&#215;</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--color-text-1)">确认对该投诉单进行处理？</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('complaintConfirmModal')">取消</button>
+      <button class="btn primary" onclick="closeModal('complaintConfirmModal');alert('投诉处理已提交')">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 投诉处理弹窗（支付宝） ============ -->
+<div class="modal-overlay" id="complaintHandleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="title">投诉处理</span>
+      <span class="close" onclick="closeModal('complaintHandleModal')">&#215;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="processCodeGroup">
+        <label><span class="req">*</span> 处理完结</label>
+        <div class="radio-group" id="processCodeRadio">
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">已退款，用户无异议</span></div>
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">已通过其他渠道退款</span></div>
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">不涉及退款，已针对投诉内容进行整改</span></div>
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">已联系到用户，协商一致，无异议</span></div>
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">不认可举报的证明材料</span></div>
+          <div class="radio-item" onclick="selectRadio(this)"><span class="radio-dot"></span><span class="text">其他</span></div>
+        </div>
+        <div class="error-hint">处理完结必选</div>
+      </div>
+      <div class="form-group">
+        <label>处理备注（非必填）</label>
+        <textarea placeholder="最多200个汉字" oninput="updateCharCount(this, 'processCharCount', 200)"></textarea>
+        <div style="text-align:right;font-size:12px;color:var(--color-text-2);margin-top:4px"><span id="processCharCount">0</span>/200</div>
+      </div>
+      <div class="form-group">
+        <label>备注图片（非必填，最多4张）</label>
+        <div class="image-upload-area">
+          <div class="image-upload-btn" onclick="simulateImageUpload('handleImages', this)">
+            <span>&#43;</span>
+            <span>上传图片</span>
+          </div>
+        </div>
+        <div class="hint-text" style="margin-top:var(--spacing-8)">支持 jpg/png 格式，每张不超过2M</div>
+      </div>
+      <p class="hint-text warning">支付宝投诉单据状态每小时同步更新，提交处理后，建议1小时后再查询最新进度。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('complaintHandleModal')">取消</button>
+      <button class="btn primary" onclick="submitComplaintHandle()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 原型控制面板 ============ -->
+<div class="sim-controls">
+  <h3>原型控制</h3>
+  <div class="ctrl-group">
+    <label>违规详情 - 申诉状态模拟</label>
+    <select id="simAppealState" onchange="switchViolationState()">
+      <option value="pending">待处理</option>
+      <option value="self-appeal">需自行申诉</option>
+      <option value="supplement">待补充资料</option>
+      <option value="done">申诉中/成功/失败/关闭</option>
+    </select>
+  </div>
+  <div class="note">
+    <b>提示：</b>此控制面板用于切换违规详情页的不同申诉状态展示，方便查看各状态下的页面结构。
+  </div>
+</div>
+
+<script>
+// ============ 页面切换 ============
+function activateMenu(menu) {
+  document.querySelectorAll('.sidebar .menu-item').forEach(m => m.classList.remove('active'));
+  if (!menu) return;
+  menu.classList.add('active');
+  // 展开所有上级子菜单
+  let parent = menu.parentElement;
+  while (parent && parent.classList && parent.classList.contains('submenu')) {
+    parent.classList.add('open');
+    const prev = parent.previousElementSibling;
+    if (prev && prev.classList.contains('menu-item')) prev.classList.add('expanded');
+    parent = parent.parentElement;
+  }
+}
+
+function goPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  // 更新菜单高亮并展开上级菜单
+  activateMenu(document.querySelector('[data-page="' + pageId + '"]'));
+}
+
+function goDetail(detailId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + detailId);
+  if (page) page.classList.add('active');
+  // 更新菜单高亮并展开上级菜单
+  if (detailId.startsWith('complaint')) {
+    activateMenu(document.getElementById('menu-complaint'));
+  } else {
+    activateMenu(document.getElementById('menu-violation'));
+  }
+}
+
+// ============ 订单号浮窗 ============
+function toggleOrderPop(arrow, ev) {
+  if (ev) ev.stopPropagation();
+  const pop = arrow.parentElement.querySelector('.order-pop');
+  const isOpen = pop.classList.contains('show');
+  document.querySelectorAll('.order-pop.show').forEach(p => p.classList.remove('show'));
+  if (!isOpen) {
+    const rect = arrow.getBoundingClientRect();
+    pop.style.left = rect.left + 'px';
+    pop.style.top = (rect.bottom + 6) + 'px';
+    pop.classList.add('show');
+  }
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.order-no-cell')) {
+    document.querySelectorAll('.order-pop.show').forEach(p => p.classList.remove('show'));
+  }
+});
+
+// ============ Tab 切换 ============
+function switchTab(el) {
+  el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ============ Modal ============
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ============ 字数统计 ============
+function updateCharCount(textarea, countId, maxLen) {
+  const len = textarea.value.length;
+  const counter = document.getElementById(countId);
+  if (counter) counter.textContent = len;
+}
+
+// ============ 单选 ============
+function selectRadio(el) {
+  const group = el.closest('.radio-group');
+  group.querySelectorAll('.radio-item').forEach(r => r.classList.remove('checked'));
+  el.classList.add('checked');
+}
+
+// ============ 模拟图片上传 ============
+let imageCounts = {};
+function simulateImageUpload(areaId, btn) {
+  const area = btn.parentElement;
+  const currentCount = area.querySelectorAll('.image-thumb').length;
+  if (currentCount >= 4) return;
+  const count = currentCount + 1;
+  const thumb = document.createElement('div');
+  thumb.className = 'image-thumb';
+  thumb.innerHTML = '图片' + count + '<span class="del" onclick="this.parentElement.remove()">&#215;</span>';
+  area.insertBefore(thumb, btn.parentElement.querySelector('.image-upload-btn') || btn);
+}
+
+// ============ 查看联系方式 ============
+let contactTarget = null; // { valueElId, realPhone }
+function openContactModal(valueElId, realPhone) {
+  contactTarget = { valueElId: valueElId, realPhone: realPhone };
+  document.getElementById('contactCodeInput').value = '';
+  document.getElementById('contactCodeGroup').classList.remove('has-error');
+  refreshCaptcha();
+  openModal('contactModal');
+}
+function refreshCaptcha() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  document.getElementById('captchaCode').textContent = code;
+}
+function submitContactQuery() {
+  const input = document.getElementById('contactCodeInput').value.trim().toUpperCase();
+  const code = document.getElementById('captchaCode').textContent;
+  const group = document.getElementById('contactCodeGroup');
+  if (!input || input !== code) {
+    group.classList.add('has-error');
+    refreshCaptcha();
+    return;
+  }
+  group.classList.remove('has-error');
+  if (contactTarget) {
+    const el = document.getElementById(contactTarget.valueElId);
+    if (el) el.textContent = contactTarget.realPhone;
+  }
+  closeModal('contactModal');
+  alert('查询成功');
+}
+
+// ============ 回复提交 ============
+function submitReply() {
+  const textarea = document.querySelector('#replyContentGroup textarea');
+  const group = document.getElementById('replyContentGroup');
+  const len = textarea ? textarea.value.length : 0;
+  if (len < 10 || len > 200) {
+    group.classList.add('has-error');
+    return;
+  }
+  group.classList.remove('has-error');
+  closeModal('replyModal');
+  alert('操作成功');
+}
+
+// ============ 投诉处理提交 ============
+function submitComplaintHandle() {
+  const selected = document.querySelector('#processCodeRadio .radio-item.checked');
+  const group = document.getElementById('processCodeGroup');
+  if (!selected) {
+    group.classList.add('has-error');
+    return;
+  }
+  group.classList.remove('has-error');
+  closeModal('complaintHandleModal');
+  alert('操作成功');
+}
+
+// ============ 违规详情状态切换 ============
+function switchViolationState() {
+  const state = document.getElementById('simAppealState').value;
+  // 隐藏所有状态区
+  document.getElementById('violation-state-pending').classList.add('hidden');
+  document.getElementById('violation-state-self-appeal').classList.add('hidden');
+  document.getElementById('violation-state-supplement').classList.add('hidden');
+  document.getElementById('violation-state-done').classList.add('hidden');
+  // 隐藏条件字段
+  document.getElementById('violation-deadline').classList.add('hidden');
+  document.getElementById('violation-recover-time').classList.add('hidden');
+  document.getElementById('violation-no-appeal-reason').classList.add('hidden');
+
+  const statusEl = document.getElementById('violation-appeal-status');
+
+  if (state === 'pending') {
+    document.getElementById('violation-state-pending').classList.remove('hidden');
+    statusEl.textContent = '待处理';
+  } else if (state === 'self-appeal') {
+    document.getElementById('violation-state-self-appeal').classList.remove('hidden');
+    statusEl.textContent = '需自行申诉';
+  } else if (state === 'supplement') {
+    document.getElementById('violation-state-supplement').classList.remove('hidden');
+    statusEl.textContent = '待补充资料';
+    document.getElementById('violation-deadline').classList.remove('hidden');
+  } else if (state === 'done') {
+    document.getElementById('violation-state-done').classList.remove('hidden');
+    statusEl.textContent = '申诉成功';
+    document.getElementById('violation-recover-time').classList.remove('hidden');
+  }
+}
+
+// 控制面板拖拽
+(function() {
+  const panel = document.querySelector('.sim-controls');
+  const handle = panel.querySelector('h3');
+  if (!panel || !handle) return;
+  let dragging = false, startX, startY, origLeft, origTop;
+  handle.addEventListener('mousedown', function(e) {
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    origLeft = rect.left;
+    origTop = rect.top;
+    panel.style.right = 'auto';
+    panel.style.left = origLeft + 'px';
+    panel.style.top = origTop + 'px';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    panel.style.left = (origLeft + e.clientX - startX) + 'px';
+    panel.style.top = (origTop + e.clientY - startY) + 'px';
+  });
+  document.addEventListener('mouseup', function() { dragging = false; });
+})();
+
+// 侧边栏展开折叠
+document.querySelectorAll('.sidebar .menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const arrow = this.querySelector('.arrow');
+    const hasArrow = arrow && arrow.textContent.trim() !== '';
+    if (hasArrow) {
+      const submenu = this.nextElementSibling;
+      if (submenu && submenu.classList.contains('submenu')) {
+        this.classList.toggle('expanded');
+        submenu.classList.toggle('open');
+      }
+    }
+    const pageId = this.getAttribute('data-page');
+    if (pageId) goPage(pageId);
+  });
+});
+</script>
+</body>
+</html>
