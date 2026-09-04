@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>活动费率 — PC原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:56px;background:#409eff;display:flex;align-items:center;padding:0 20px;color:#fff}
+.topbar .logo{font-size:20px;font-weight:700;margin-right:40px;display:flex;align-items:center;gap:8px}
+.topbar .logo .icon{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.topbar .right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:14px}
+.topbar .right .avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:12px}
+.topbar .right .tag{background:#67c23a;padding:2px 10px;border-radius:10px;font-size:12px}
+.layout{display:flex;flex:1}
+.sidebar{width:200px;background:#fff;min-height:calc(100vh - 56px);border-right:1px solid #e8e8e8;padding-top:8px}
+.sidebar .menu-item{padding:12px 20px;font-size:14px;color:#606266;cursor:pointer;display:flex;align-items:center;gap:8px}
+.sidebar .menu-item:hover{background:#ecf5ff;color:#409eff}
+.sidebar .menu-item.active{background:#ecf5ff;color:#409eff;font-weight:500;border-right:3px solid #409eff}
+.sidebar .menu-item .arrow{margin-left:auto;font-size:12px}
+.sidebar .submenu{padding-left:20px}
+.sidebar .submenu .menu-item{padding:8px 20px;font-size:13px}
+.main{flex:1;padding:16px;overflow-y:auto}
+.breadcrumb{font-size:13px;color:#909399;margin-bottom:16px}
+.breadcrumb span{color:#303133}
+.breadcrumb .sep{margin:0 4px}
+.page{display:none}
+.page.active{display:block}
+.section{background:#fff;border-radius:4px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.section-title{font-size:16px;font-weight:500;color:#303133;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0}
+.section-title-row{display:flex;align-items:center;padding:16px 20px 12px;cursor:pointer;user-select:none;border-bottom:1px solid #f0f0f0}
+.section-title-row .title{font-size:16px;font-weight:500;color:#303133}
+.section-title-row .toggle-text{margin-left:auto;font-size:14px;color:#409eff;cursor:pointer}
+.section-title-row .toggle-text:hover{color:#337ecc}
+.section-body{display:none;padding:16px 20px}
+.section-body.show{display:block}
+.section-inner{padding:16px 20px}
+.form-row{display:flex;align-items:center;margin-bottom:16px;gap:16px}
+.form-row .form-label{width:100px;text-align:right;font-size:14px;color:#606266;flex-shrink:0}
+.form-row .form-value{flex:1;font-size:14px;color:#303133}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:12px 20px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:14px}
+.table th{background:#fafafa;color:#606266;font-weight:500}
+.table td{color:#303133}
+.table td:last-child{text-align:right}
+.table .link{color:#409eff;cursor:pointer}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px}
+.tag.green{background:#e8f8ef;color:#07c160}
+.hidden{display:none!important}
+
+/* 标准费率子模块 */
+.rate-item{border:1px solid #ebeef5;border-radius:4px;margin-bottom:12px;overflow:hidden}
+.rate-item:last-child{margin-bottom:0}
+.rate-item-header{display:flex;align-items:center;padding:14px 20px;cursor:pointer;background:#fff;user-select:none}
+.rate-item-header:hover{background:#fafafa}
+.rate-item-header .rate-item-name{font-size:15px;color:#303133}
+.rate-item-header .rate-item-toggle{margin-left:auto;font-size:13px;color:#409eff;cursor:pointer}
+.rate-item-header .rate-item-toggle:hover{color:#337ecc}
+.rate-item-body{display:none;background:#fafafa}
+.rate-item-body.show{display:block}
+.rate-item-body .rate-table{width:100%;border-collapse:collapse;border:1px solid #ebeef5;border-radius:4px;overflow:hidden}
+.rate-item-body .rate-table th,.rate-item-body .rate-table td{padding:10px 16px;text-align:left;border-bottom:1px solid #ebeef5;font-size:14px}
+.rate-item-body .rate-table th{background:#f5f7fa;color:#909399;font-weight:400}
+.rate-item-body .rate-table td{color:#303133}
+.rate-item-body .rate-table .ch-cell{display:flex;align-items:center;gap:8px}
+.rate-item-body .rate-table .ch-icon{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.rate-item-body .rate-val{font-weight:600;color:#67c23a}
+.rate-detail-inner .rate-table th,.rate-detail-inner .rate-table td{padding:10px 16px;text-align:left;border-bottom:1px solid #ebeef5;font-size:14px}
+.rate-detail-inner .rate-table th{background:#f5f7fa;color:#909399;font-weight:400}
+.rate-detail-inner .rate-table td{color:#303133}
+.rate-detail-inner .rate-table .ch-cell{display:flex;align-items:center;gap:8px}
+.rate-detail-inner .rate-table .ch-icon{width:22px;height:22px;border-radius:4px;background:#07c160;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.rate-detail-inner .rate-table .ch-name{font-weight:500}
+.rate-val{font-weight:600;color:#67c23a}
+
+/* 活动费率板块 */
+.activity-section .activity-header{display:flex;align-items:center;padding:16px 20px;cursor:pointer;border-bottom:1px solid #f0f0f0;user-select:none}
+.activity-section .activity-header .title{font-size:16px;font-weight:500;color:#303133}
+.activity-section .activity-header .toggle-text{margin-left:auto;font-size:14px;color:#409eff;cursor:pointer}
+.activity-section .activity-header .toggle-text:hover{color:#337ecc}
+.activity-section .activity-body{display:none;padding:16px 20px}
+.activity-section .activity-body.show{display:block}
+
+/* 活动模块 */
+.activity-item{border:1px solid #ebeef5;border-radius:4px;margin-bottom:12px;overflow:hidden}
+.activity-item:last-child{margin-bottom:0}
+.activity-item-header{display:flex;align-items:center;padding:14px 20px;cursor:pointer;background:#fff;border-bottom:1px solid #ebeef5;user-select:none}
+.activity-item-header:hover{background:#fafafa}
+.activity-item-header .status{padding:2px 10px;border-radius:10px;font-size:12px;font-weight:500;background:#e8f8ef;color:#07c160;flex-shrink:0}
+.activity-item-header .name{font-size:15px;font-weight:500;color:#303133;margin-left:12px;flex-shrink:0}
+.activity-item-header .time{font-size:13px;color:#909399;margin-left:16px;flex-shrink:0}
+.activity-item-header .toggle-text{margin-left:auto;font-size:13px;color:#409eff}
+.activity-item-header .toggle-text:hover{color:#337ecc}
+.activity-item-body{display:none;background:#fafafa}
+.activity-item-body.show{display:block}
+.activity-item-body .rate-table{width:100%;border-collapse:collapse}
+.activity-item-body .rate-table th,.activity-item-body .rate-table td{padding:10px 16px;text-align:left;border-bottom:1px solid #ebeef5;font-size:14px}
+.activity-item-body .rate-table th{background:#f5f7fa;color:#909399;font-weight:400}
+.activity-item-body .rate-table td{color:#303133}
+.activity-item-body .rate-table .ch-cell{display:flex;align-items:center;gap:8px}
+.activity-item-body .rate-table .ch-icon{width:22px;height:22px;border-radius:4px;background:#07c160;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.activity-item-body .rate-val{font-weight:600;color:#67c23a}
+
+/* 说明条 */
+.notice-bar{font-size:13px;color:#ad8b00;line-height:1.6;padding:0 0 12px}
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="logo"><div class="icon">H</div>会生活</div>
+  <div class="right">
+    <span>⬇</span>
+    <span>📱</span>
+    <span>🔔</span>
+    <span>帮助中心</span>
+    <div class="avatar">👤</div>
+    <span class="tag">老板</span>
+    <span>前端门诊部 ▾</span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="menu-item active">💰 账户资产</div>
+    <div class="submenu">
+      <div class="menu-item">申请结算</div>
+      <div class="menu-item">结算银行卡</div>
+      <div class="menu-item">结算产品</div>
+      <div class="menu-item">预留金额</div>
+      <div class="menu-item" style="background:#ecf5ff;color:#409eff;font-weight:500;border-right:3px solid #409eff">签约信息</div>
+      <div class="menu-item">实名认证</div>
+    </div>
+    <div class="menu-item">📊 交易数据 <span class="arrow">▾</span></div>
+    <div class="menu-item">🧾 对账管理 <span class="arrow">▾</span></div>
+    <div class="menu-item"> 系统设置 <span class="arrow"></span></div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main">
+    <div class="breadcrumb">首页 <span class="sep">/</span> 账户资产 <span class="sep">/</span> <span>签约信息</span></div>
+
+    <!-- 我的服务商 -->
+    <div class="section">
+      <div class="section-title">我的服务商</div>
+      <div class="section-inner">
+        <div class="form-row">
+          <span class="form-label">服务商信息</span>
+          <span class="form-value" style="color:#909399">暂无服务商信息</span>
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <span class="form-label">客服电话</span>
+          <span class="form-value">400-855-1010</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 标准费率 -->
+    <div class="section">
+      <div class="section-title-row" onclick="toggleSection('standard-section-body','standard-section-toggle')">
+        <span class="title">标准费率</span>
+        <span class="toggle-text" id="standard-section-toggle">展开 ▾</span>
+      </div>
+      <div class="section-body" id="standard-section-body">
+        <!-- 扫码收款手续费 -->
+        <div class="rate-item" id="rate-item-1">
+          <div class="rate-item-header" onclick="toggleRateItem('rate-item-1')">
+            <span class="rate-item-name">扫码收款手续费</span>
+            <span class="rate-item-toggle" id="rate-item-1-toggle">展开 ▾</span>
+          </div>
+          <div class="rate-item-body" id="rate-item-1-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#1677ff">支</span><span class="ch-name">支付宝</span></div></td>
+                  <td class="rate-val">0.38%</td>
+                  <td class="rate-val">0.38%</td>
+                </tr>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#07c160">微</span><span class="ch-name">微信</span></div></td>
+                  <td class="rate-val">0.38%</td>
+                  <td class="rate-val">0.38%</td>
+                </tr>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#e8872a">云</span><span class="ch-name">云闪付</span></div></td>
+                  <td class="rate-val">0.38%</td>
+                  <td class="rate-val">0.38%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 银行卡收款手续费 -->
+        <div class="rate-item" id="rate-item-2">
+          <div class="rate-item-header" onclick="toggleRateItem('rate-item-2')">
+            <span class="rate-item-name">银行卡收款手续费</span>
+            <span class="rate-item-toggle" id="rate-item-2-toggle">展开 ▾</span>
+          </div>
+          <div class="rate-item-body" id="rate-item-2-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#1677ff">银</span><span class="ch-name">银联</span></div></td>
+                  <td class="rate-val">0.50%</td>
+                  <td class="rate-val">0.50%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 境外卡收款手续费 -->
+        <div class="rate-item" id="rate-item-3">
+          <div class="rate-item-header" onclick="toggleRateItem('rate-item-3')">
+            <span class="rate-item-name">境外卡收款手续费</span>
+            <span class="rate-item-toggle" id="rate-item-3-toggle">展开 ▾</span>
+          </div>
+          <div class="rate-item-body" id="rate-item-3-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#c41230">Vis</span><span class="ch-name">Visa / Mastercard</span></div></td>
+                  <td class="rate-val">2.60%</td>
+                  <td class="rate-val">2.60%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 分账手续费 -->
+        <div class="rate-item" id="rate-item-4">
+          <div class="rate-item-header" onclick="toggleRateItem('rate-item-4')">
+            <span class="rate-item-name">分账手续费</span>
+            <span class="rate-item-toggle" id="rate-item-4-toggle">展开 ▾</span>
+          </div>
+          <div class="rate-item-body" id="rate-item-4-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon" style="background:#909399">分</span><span class="ch-name">分账</span></div></td>
+                  <td class="rate-val">0.30%</td>
+                  <td class="rate-val">0.30%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 活动费率 -->
+    <div class="section activity-section">
+      <div class="activity-header" onclick="toggleActivitySection()">
+        <span class="title">活动费率</span>
+        <span class="toggle-text" id="activity-section-toggle">展开 ▾</span>
+      </div>
+      <div class="activity-body" id="activity-section-body">
+        <!-- 说明条 -->
+        <div class="notice-bar">
+          💡 活动费率为官方优惠费率，商户报名成功后自动生效。活动期间内享受优惠费率，具体以活动规则为准，活动到期后自动恢复标准费率。
+        </div>
+
+        <!-- 活动1：高校食堂 -->
+        <div class="activity-item" id="activity-item-1">
+          <div class="activity-item-header" onclick="toggleActivityItem('activity-item-1')">
+            <span class="status">进行中</span>
+            <span class="name">高校食堂（非学校主体）</span>
+            <span class="time">生效时间：2025-07-23 ~ 2026-07-22</span>
+            <span class="toggle-text" id="activity-item-1-toggle">展开 ▾</span>
+          </div>
+          <div class="activity-item-body" id="activity-item-1-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon">微</span><span class="ch-name">微信</span></div></td>
+                  <td class="rate-val">0.25%</td>
+                  <td class="rate-val">0.25%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 活动2：餐饮行业专项补贴 -->
+        <div class="activity-item" id="activity-item-2">
+          <div class="activity-item-header" onclick="toggleActivityItem('activity-item-2')">
+            <span class="status">进行中</span>
+            <span class="name">餐饮行业专项补贴</span>
+            <span class="time">生效时间：2025-08-01 ~ 2026-07-31</span>
+            <span class="toggle-text" id="activity-item-2-toggle">展开 ▾</span>
+          </div>
+          <div class="activity-item-body" id="activity-item-2-body">
+            <table class="rate-table">
+              <thead><tr><th>支付方式</th><th>借记卡费率</th><th>贷记卡费率</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="ch-cell"><span class="ch-icon">微</span><span class="ch-name">微信</span></div></td>
+                  <td class="rate-val">0.20%</td>
+                  <td class="rate-val">0.20%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 服务协议 -->
+    <div class="section">
+      <div class="section-title-row" onclick="toggleSection('agreement-section-body','agreement-section-toggle')">
+        <span class="title">服务协议</span>
+        <span class="toggle-text" id="agreement-section-toggle">展开 ▾</span>
+      </div>
+      <div class="section-body" id="agreement-section-body">
+        <table class="table">
+          <tbody>
+            <tr><td>天阙客户服务协议</td><td><span class="link">查看 ›</span></td></tr>
+            <tr><td>特约商户协议</td><td><span class="link">查看 ›</span></td></tr>
+            <tr><td>京东白条特约商户补充协议</td><td><span class="link">查看 ›</span></td></tr>
+            <tr><td>外卡收单特约商户补充协议</td><td><span class="link">查看 ›</span></td></tr>
+            <tr><td>分账服务协议</td><td><span class="link">查看 ›</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 板块级展开/收起（标准费率、服务协议）
+function toggleSection(bodyId, toggleId) {
+  var body = document.getElementById(bodyId);
+  var toggle = document.getElementById(toggleId);
+  var isExpanded = body.classList.contains('show');
+  if (isExpanded) {
+    body.classList.remove('show');
+    toggle.textContent = '展开 ▾';
+  } else {
+    body.classList.add('show');
+    toggle.textContent = '收起 ▴';
+  }
+}
+
+// 标准费率子模块展开/收起
+function toggleRateItem(itemId) {
+  var body = document.getElementById(itemId + '-body');
+  var toggle = document.getElementById(itemId + '-toggle');
+  var isExpanded = body.classList.contains('show');
+  if (isExpanded) {
+    body.classList.remove('show');
+    toggle.textContent = '展开 ▾';
+  } else {
+    body.classList.add('show');
+    toggle.textContent = '收起 ▴';
+  }
+}
+
+// 活动费率板块展开/收起
+var activitySectionExpanded = false;
+function toggleActivitySection() {
+  activitySectionExpanded = !activitySectionExpanded;
+  var body = document.getElementById('activity-section-body');
+  var toggle = document.getElementById('activity-section-toggle');
+  if (activitySectionExpanded) {
+    body.classList.add('show');
+    toggle.textContent = '收起 ▴';
+  } else {
+    body.classList.remove('show');
+    toggle.textContent = '展开 ▾';
+    // 收起所有活动
+    document.querySelectorAll('.activity-item-body.show').forEach(function(b) {
+      b.classList.remove('show');
+    });
+    document.querySelectorAll('.activity-item-header .toggle-text').forEach(function(t) {
+      t.textContent = '展开 ▾';
+    });
+  }
+}
+
+// 单个活动展开/收起
+function toggleActivityItem(itemId) {
+  var body = document.getElementById(itemId + '-body');
+  var toggle = document.getElementById(itemId + '-toggle');
+  var isExpanded = body.classList.contains('show');
+  if (isExpanded) {
+    body.classList.remove('show');
+    toggle.textContent = '展开 ▾';
+  } else {
+    body.classList.add('show');
+    toggle.textContent = '收起 ▴';
+  }
+}
+</script>
+</body>
+</html>
