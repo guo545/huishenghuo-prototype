@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>会生活收银台 · 抖音前置优惠（原型）</title>
+<style>
+/* ================= 会生活APP规范 · 设计变量（规范六.1） =================
+   设计基准 750px 画布，1rem = 50 设计px（根字号随屏宽 = 屏宽/15） */
+:root {
+  --color-primary: #F5C137;
+  --color-primary-light: #FAF2CD;
+  --color-success: #09BB07;
+  --color-warning: #FF6010;
+  --color-error: #FF3B30;
+  --color-link: #ED7F39;
+  --color-text-title: #333333;
+  --color-text-body: #595959;
+  --color-text-secondary: #B2B2B2;
+  --color-text-disable: #C9C9C9;
+  --color-bg-page: #F5F6F7;
+  --color-bg-card: #FFFFFF;
+  --color-border: #E5E5E5;
+  --radius-base: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: #E9EBEE; display: flex; justify-content: center; align-items: stretch;
+}
+button { font-family: inherit; }
+
+/* 手机壳：桌面端居中带边框，移动端全屏 */
+.phone {
+  width: 100%; height: 100vh; background: var(--color-bg-page);
+  display: flex; flex-direction: column; overflow: hidden; position: relative;
+}
+@media (min-width: 500px) {
+  .phone { width: 375px; max-width: 375px; max-height: 812px; margin: 24px 0; border-radius: 40px; box-shadow: 0 18px 50px rgba(0,0,0,.25); height: calc(100vh - 48px); }
+}
+
+/* ===== 模拟状态栏（截图还原：白底 14:31 黑色图标） ===== */
+.statusbar {
+  height: 1.76rem; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 0.6rem 0 0.72rem; background: #FFFFFF;
+}
+.statusbar .time { font-size: 0.6rem; font-weight: 600; color: #111; }
+.statusbar .icons { display: flex; gap: 0.12rem; align-items: center; }
+.statusbar svg { display: block; }
+
+/* ===== 导航栏（规范三.2 + 截图还原：白底、底边框、居中「付款」） ===== */
+.navbar {
+  height: 1.76rem; flex-shrink: 0; background: #FFFFFF; border-bottom: 1px solid var(--color-border);
+  display: flex; align-items: center; padding: 0 0.4rem 0 0.32rem; position: relative;
+}
+.nav-back { width: 1rem; height: 1.76rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.nav-title {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 0.72rem; font-weight: 600; color: var(--color-text-title); line-height: 1.76rem;
+}
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 0.56rem; color: var(--color-text-title); }
+.nav-right span { width: 1rem; height: 1.76rem; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; }
+
+/* ===== 商户行（截图还原：深灰圆形头像+白色房子图标+商户名+橙色「备注」） ===== */
+.merchant {
+  flex-shrink: 0; display: flex; align-items: center; gap: 0.32rem; padding: 0.48rem 0.72rem; background: #FFFFFF;
+}
+.merchant-logo {
+  width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #4A4A4A; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.merchant-name { font-size: 0.64rem; font-weight: 600; color: var(--color-text-title); flex: 1; }
+.merchant-link { font-size: 0.56rem; color: #FF9D00; cursor: pointer; }
+
+/* ===== 主体滚动区 ===== */
+.main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--color-bg-page); }
+
+/* 金额区（截图还原：白色圆角卡片 ¥ + 光标 + 「消费金额」占位） */
+.amount-card {
+  background: #FFFFFF; border-radius: 0.48rem; margin: 0.48rem 0.48rem 0; padding: 0.72rem 0.6rem;
+  display: flex; align-items: center; min-height: 2.8rem;
+}
+.yen { font-size: 1.2rem; font-weight: 600; color: var(--color-text-title); margin-right: 0.16rem; }
+.amount-text { font-size: 1.44rem; font-weight: 600; color: var(--color-text-title); letter-spacing: 0.04rem; word-break: break-all; }
+.amount-text.placeholder { font-size: 0.96rem; font-weight: 400; color: var(--color-text-secondary); }
+.cursor {
+  width: 0.08rem; height: 1.28rem; background: var(--color-text-title); display: inline-block;
+  margin-left: 0.12rem; align-self: center; animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ===== 支付方式区（本需求新增，按规范组件样式） ===== */
+.pay-area { margin: 0.48rem 0.48rem 0; }
+.query-status { font-size: 0.48rem; color: var(--color-text-secondary); padding: 0.08rem 0.16rem 0.24rem; }
+.skeleton { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 0.16rem; padding: 0.6rem; }
+.skeleton .line { height: 0.56rem; border-radius: 0.16rem; background: #E5E5E5; margin-bottom: 0.4rem; animation: breath 1.2s ease-in-out infinite; }
+.skeleton .line:last-child { margin-bottom: 0; width: 60%; }
+@keyframes breath { 0%,100% { opacity: .6; } 50% { opacity: 1; } } /* 规范六.7 骨架屏呼吸 */
+
+.pay-group { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 0.16rem; overflow: hidden; margin-bottom: 0.48rem; }
+.pay-group:last-child { margin-bottom: 0; }
+.pay-row {
+  display: flex; align-items: center; padding: 0.56rem 0.48rem; background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background .15s;
+}
+.pay-row:active { background: #F7F7F7; }           /* 规范四.1 点击active */
+.pay-row:last-child { border-bottom: none; }
+.radio {
+  width: 0.88rem; height: 0.88rem; border-radius: 50%; border: 2px solid var(--color-border);
+  margin-left: 0.32rem; flex-shrink: 0; position: relative; transition: all .15s;   /* 选中按钮位于行右侧 */
+}
+.pay-row.selected .radio { border-color: var(--color-primary); }
+.pay-row.selected .radio::after {
+  content: ''; position: absolute; inset: 0.14rem; border-radius: 50%; background: var(--color-primary);
+}
+.pm-icon {
+  width: 1.12rem; height: 1.12rem; border-radius: 0.16rem; margin-right: 0.32rem; flex-shrink: 0;   /* 规范二.3 收款方式图标 56×56 */
+  display: flex; align-items: center; justify-content: center; font-size: 0.56rem; font-weight: 600;
+}
+.pm-icon.fq { background: var(--color-primary); color: var(--color-text-title); }   /* 月付分期 */
+.pm-icon.yf { background: var(--color-link); color: #FFFFFF; }                       /* 抖音月付·不分期 */
+.pm-icon.dy { background: #1F1F39; color: #25F4EE; }                                  /* 抖音支付（品牌色） */
+.pm-name { font-size: 0.6rem; color: var(--color-text-title); font-weight: 400; flex: 1; }
+
+.tags { display: flex; flex-direction: column; align-items: flex-end; gap: 0.12rem; margin-left: 0.24rem; }
+.tag {
+  font-size: 0.44rem; line-height: 1; padding: 0.14rem 0.3rem; border-radius: 999rem; white-space: nowrap;  /* 胶囊标签（规范一.3） */
+  background: var(--color-primary-light); color: var(--color-link); font-weight: 500;
+}
+.tag.plain { background: var(--color-bg-page); color: var(--color-text-body); }
+
+/* 期次卡片（月付分期默认展开） */
+.period-wrap { max-height: 0; overflow: hidden; transition: max-height .3s ease; background: var(--color-bg-page); }
+.period-wrap.open { max-height: 12rem; }
+.period-list { display: flex; gap: 0.32rem; padding: 0.44rem 0.36rem; }
+.period-card {
+  position: relative;
+  flex: 1; border: 2px solid var(--color-border); background: var(--color-bg-card); border-radius: 0.16rem;
+  padding: 0.52rem 0.16rem 0.44rem; text-align: center; cursor: pointer; transition: all .15s;
+}
+.period-card:active { background: #F7F7F7; }
+.period-card.selected { border-color: var(--color-primary); background: var(--color-primary-light); }
+.p-per { font-size: 0.6rem; font-weight: 600; color: var(--color-text-title); }
+.p-num { font-size: 0.48rem; color: var(--color-text-body); margin-top: 0.08rem; }
+.p-fee { font-size: 0.4rem; color: var(--color-text-body); margin-top: 0.16rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.02rem; }
+.p-fee.free { color: var(--color-success); }
+/* 期次优惠标签：骑在卡片左上角边框上的小胶囊（原行级汇总标签移入各期次卡片）；
+   line-height:0 + inline-block 消除行内基线下沉，避免胶囊压住每期金额 */
+.p-tag { position: absolute; top: -0.32rem; left: 0.08rem; line-height: 0; }
+.p-tag .tag { display: inline-block; font-size: 0.36rem; padding: 0.08rem 0.2rem; }
+
+/* 不分期并入分期场景（scene=merge）：四宫格 2×2 —— 12期 / 3期 / 6期 / 不分期 */
+.period-list.grid2 { flex-wrap: wrap; }
+.period-list.grid2 .period-card { flex: 0 0 calc(50% - 0.16rem); }
+/* ≤3个期次一行横排：不 wrap，卡片宽度与四宫格单格一致（不拉长） */
+.period-list:not(.grid2) { flex-wrap: nowrap; justify-content: flex-start; gap: 0.32rem; }
+.period-list:not(.grid2) .period-card { flex: 0 0 calc(50% - 0.16rem); }
+
+/* 仅不分期场景提示：优惠标签展示在支付方式行（通过 payRow 标签逻辑处理，无需额外样式） */
+
+/* 品牌服务行（截图还原：键盘上方居中） */
+.brand-line {
+  display: flex; align-items: center; justify-content: center; gap: 0.16rem;
+  font-size: 0.42rem; color: var(--color-text-secondary); padding: 0.6rem 0 0.72rem;
+}
+.brand-line .logo { width: 0.48rem; height: 0.48rem; border-radius: 0.08rem; background: var(--color-primary); }
+
+/* ===== 数字键盘（截图还原：白键细缝、右侧⌫+浅青色「确认支付」跨3行、0占两列） ===== */
+.keypad {
+  flex-shrink: 0; background: var(--color-bg-page); border-top: 1px solid var(--color-border);
+  padding: 0.04rem 0.12rem calc(0.12rem + env(safe-area-inset-bottom));
+}
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 2.56rem; gap: 2px; background: #E5E5E5; }
+.key {
+  border: none; background: #FFFFFF; font-size: 1.04rem; font-weight: 400; color: var(--color-text-title);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; border-radius: 2px;
+}
+.key:active { background: var(--color-bg-page); }
+.key.del { color: var(--color-text-body); font-size: 0.88rem; grid-column: 4; grid-row: 1; }
+.key.zero { grid-column: 1 / span 2; grid-row: 4; }
+.key.dot { grid-column: 3; grid-row: 4; font-weight: 600; }
+.key.confirm {                                    /* 确认支付（截图还原：浅青色） */
+  grid-column: 4; grid-row: 2 / span 3;
+  background: #D8EDE9; color: var(--color-text-disable); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.06rem; line-height: 1.4; padding: 0 0.12rem; transition: background .2s;
+}
+.key.confirm.ready { background: #BFEBE6; color: var(--color-text-title); cursor: pointer; }
+.key.confirm.ready:active { background: #A8E0D8; }
+.key.confirm.loading { background: #D5EDE8; color: var(--color-text-body); }
+
+/* ===== Toast ===== */
+#toast {
+  position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); background: rgba(20,20,20,.82);
+  color: #fff; font-size: 0.56rem; padding: 0.44rem 0.76rem; border-radius: 0.32rem; opacity: 0;
+  pointer-events: none; transition: opacity .2s; z-index: 9997; max-width: 80%; text-align: center;
+}
+#toast.show { opacity: 1; }
+
+/* ===== 演示场景（评审用，非需求UI）：规范二.5 居中弹窗 ===== */
+.fab {
+  position: absolute; right: 0.24rem; top: 3.8rem; z-index: 500; background: rgba(26,26,26,.72); color: #fff;
+  font-size: 0.44rem; padding: 0.26rem 0.4rem; border-radius: 999rem; cursor: pointer; backdrop-filter: blur(4px);
+}
+.scene-mask { position: absolute; inset: 0; background: rgba(0,0,0,.3); z-index: 9998; display: none; }   /* 规范六.2 */
+.scene-mask.show { display: block; }
+.scene-panel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 11.2rem;
+  max-height: 14rem; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: #FFFFFF; border-radius: 0.16rem; z-index: 9999; display: none; padding: 0.8rem 0.64rem 0.64rem;
+}
+.scene-panel.show { display: block; }
+.scene-title { font-size: 0.72rem; color: var(--color-text-title); text-align: center; }
+.scene-sub { font-size: 0.56rem; color: var(--color-text-body); text-align: center; margin-top: 0.4rem; }
+.scene-item {
+  display: flex; align-items: center; padding: 0.48rem 0.08rem; border-bottom: 1px solid var(--color-border);
+  cursor: pointer; font-size: 0.56rem; color: var(--color-text-title);
+}
+.scene-item:last-of-type { border-bottom: none; }
+.scene-item .radio { margin-right: 0.32rem; width: 0.8rem; height: 0.8rem; }
+.scene-item.selected .radio { border-color: var(--color-primary); }
+.scene-item.selected .radio::after { content: ''; position: absolute; inset: 0.13rem; border-radius: 50%; background: var(--color-primary); }
+.scene-item small { color: var(--color-text-secondary); font-size: 0.44rem; margin-left: auto; padding-left: 0.24rem; text-align: right; }
+.scene-btn {
+  margin-top: 0.48rem; width: 100%; height: 1.88rem; border: none; border-radius: 0.16rem;
+  background: var(--color-primary); color: var(--color-text-title); font-size: 0.72rem; cursor: pointer;
+}
+.scene-btn:active { background: #E7B42E; }         /* 规范二.1 active主色加深 */
+
+/* ===== 支付成功页（规范样式） ===== */
+.success {
+  position: absolute; inset: 0; background: var(--color-bg-page); z-index: 800; display: none; flex-direction: column;
+  align-items: center; justify-content: center; padding: 1.6rem 1.2rem; text-align: center;
+}
+.success.show { display: flex; }
+.ok-icon {
+  width: 1.84rem; height: 1.84rem; border-radius: 50%; background: var(--color-success); color: #fff;
+  font-size: 0.96rem; display: flex; align-items: center; justify-content: center; margin-bottom: 0.64rem;
+}
+.s-amount { font-size: 1.44rem; font-weight: 600; color: var(--color-text-title); }
+.s-method { margin-top: 0.32rem; font-size: 0.56rem; color: var(--color-text-body); }
+.s-detail {
+  margin-top: 0.88rem; background: var(--color-bg-card); border: 1px solid var(--color-border);
+  border-radius: 0.16rem; width: 100%; padding: 0.16rem 0.64rem; font-size: 0.48rem; color: var(--color-text-body);
+}
+.s-detail .row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--color-border); }
+.s-detail .row:last-child { border-bottom: none; }
+.s-detail .v { color: var(--color-text-title); }
+.s-btn {
+  margin-top: 1.04rem; width: 100%; height: 1.88rem; border: none; border-radius: 0.16rem;
+  background: var(--color-primary); color: var(--color-text-title); font-size: 0.72rem; font-weight: 400; cursor: pointer;
+}
+.s-btn:active { background: #E7B42E; }
+.s-prototype-note { margin-top: 0.56rem; font-size: 0.44rem; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- 模拟状态栏（截图还原） -->
+  <div class="statusbar">
+    <span class="time">14:31</span>
+    <span class="icons">
+      <svg width="34" height="22" viewBox="0 0 34 22" fill="#111"><rect x="0" y="12" width="5" height="10" rx="1"/><rect x="9" y="8" width="5" height="14" rx="1"/><rect x="18" y="4" width="5" height="18" rx="1"/><rect x="27" y="0" width="5" height="22" rx="1" opacity=".3"/></svg>
+      <svg width="26" height="20" viewBox="0 0 26 20" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"><path d="M2 7 Q13 -2 24 7"/><path d="M6 11 Q13 6 20 11"/><path d="M10 15 Q13 12.5 16 15"/><circle cx="13" cy="17.6" r="1.4" fill="#111" stroke="none"/></svg>
+      <svg width="40" height="20" viewBox="0 0 40 20"><rect x="1" y="1.5" width="33" height="17" rx="4" fill="none" stroke="#111" stroke-width="1.6" opacity=".4"/><rect x="4" y="4.5" width="22" height="11" rx="2" fill="#111"/><rect x="36" y="6.5" width="3" height="7" rx="1.5" fill="#111" opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <!-- 导航栏（截图还原：‹ 付款 搜索/更多） -->
+  <div class="navbar">
+    <div class="nav-back" id="navBack"><svg width="24" height="44" viewBox="0 0 24 44" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10 L6 22 L15 34"/></svg></div>
+    <div class="nav-title">付款</div>
+    <div class="nav-right">
+      <span><svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round"><circle cx="14" cy="14" r="9"/><path d="M21 21 L30 30"/></svg></span>
+      <span>⋯</span>
+    </div>
+  </div>
+
+  <!-- 商户行（截图还原） -->
+  <div class="merchant">
+    <div class="merchant-logo">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"><path d="M8 20 L22 8 L36 20 V36 H27 V27 H17 V36 H8 Z"/></svg>
+    </div>
+    <div class="merchant-name">有限1公司</div>
+    <div class="merchant-link" id="remarkLink">备注</div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="main">
+    <!-- 金额区：默认进入不输入金额（截图还原：¥ + 光标 + 消费金额占位） -->
+    <div class="amount-card" id="amountCard">
+      <span class="yen">¥</span>
+      <span class="amount-text placeholder" id="amountText">消费金额</span>
+      <span class="cursor" id="cursor"></span>
+    </div>
+
+    <!-- 支付方式区（本需求新增：输入金额后动态渲染） -->
+    <div class="pay-area" id="payArea" style="display:none">
+      <div class="query-status" id="queryStatus"></div>
+      <div id="payList"></div>
+    </div>
+
+    <!-- 品牌服务行（截图还原：键盘上方） -->
+    <div class="brand-line"><span class="logo"></span>天阙会生活 提供技术服务</div>
+  </div>
+
+  <!-- 数字键盘（截图还原：右侧⌫ + 浅青色「确认支付」跨3行，0占两列） -->
+  <div class="keypad">
+    <div class="keys">
+      <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+      <button class="key del" data-k="del"><svg width="52" height="38" viewBox="0 0 52 38" fill="none" stroke="#595959" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4 H48 V34 H16 L4 19 Z" fill="#FFFFFF"/><path d="M23 12 L35 26 M35 12 L23 26"/></svg></button>
+      <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+      <button class="key confirm" id="payBtn">确认支付</button>
+      <button class="key zero" data-k="0">0</button>
+      <button class="key dot" data-k=".">.</button>
+    </div>
+  </div>
+
+  <!-- 演示场景（评审用） -->
+  <div class="fab" id="fab">演示场景</div>
+  <div class="scene-mask" id="sceneMask"></div>
+  <div class="scene-panel" id="scenePanel">
+    <div class="scene-title">模拟抖音返回场景</div>
+    <div class="scene-sub">切换后按当前金额重新发起前置查询</div>
+    <div class="scene-item selected" data-scene="default"><div class="radio"></div>常规营销<small>区间+固定混合</small></div>
+    <div class="scene-item" data-scene="fixed"><div class="radio"></div>全部固定立减<small>min=max「立减X元」</small></div>
+    <div class="scene-item" data-scene="nomkt"><div class="radio"></div>无营销<small>渠道可用、无优惠标签</small></div>
+    <div class="scene-item" data-scene="fail"><div class="radio"></div>查询失败降级<small>不展示支付方式、默认抖音支付</small></div>
+    <div style="border-top:1px solid #E5E5E5;margin-top:0.4rem;padding-top:0.4rem;font-size:0.56rem;color:#999;text-align:center">期次返回兜底场景</div>
+    <div class="scene-item" data-scene="inst4"><div class="radio"></div>4个期次<small>标准四宫格：12/3/6期+不分期</small></div>
+    <div class="scene-item" data-scene="inst3"><div class="radio"></div>3个期次<small>一行横排展示</small></div>
+    <div class="scene-item" data-scene="inst2"><div class="radio"></div>2个期次<small>一行横排展示</small></div>
+    <div class="scene-item" data-scene="inst1"><div class="radio"></div>1个期次<small>一行展示</small></div>
+    <div class="scene-item" data-scene="inst0"><div class="radio"></div>仅不分期<small>不展示期次卡片，优惠标签在支付方式行</small></div>
+    <div style="border-top:1px solid #E5E5E5;margin-top:0.4rem;padding-top:0.4rem;font-size:0.56rem;color:#999;text-align:center">金额变更流程</div>
+    <div class="scene-item" data-scene="amt_keep"><div class="radio"></div>已选期次保持<small>原选6期，新返回仍有6期 → 保持选中</small></div>
+    <div class="scene-item" data-scene="amt_miss"><div class="radio"></div>已选期次缺失<small>原选6期，新返回无6期 → 清除期次选中</small></div>
+    <div class="scene-item" data-scene="amt_disable"><div class="radio"></div>渠道不可用<small>新返回月付渠道失效 → 取消选中+toast</small></div>
+    <div class="scene-item" data-scene="amt_below"><div class="radio"></div>金额低于门槛<small>新金额＜100元 → 隐藏支付方式区</small></div>
+    <div class="scene-item" data-scene="amt_fail"><div class="radio"></div>变更后查询失败<small>新金额查询失败 → 不展示支付方式</small></div>
+    <button class="scene-btn" id="sceneOk">完成</button>
+  </div>
+
+  <!-- 支付成功页（模拟，规范样式） -->
+  <div class="success" id="successPage">
+    <div class="ok-icon">✓</div>
+    <div class="s-amount" id="sAmount">¥0.00</div>
+    <div class="s-method">支付成功（模拟）</div>
+    <div class="s-detail">
+      <div class="row"><span>支付方式</span><span class="v" id="sPayType">—</span></div>
+      <div class="row"><span>是否月付支付 isYfPay</span><span class="v" id="sIsYf">false</span></div>
+      <div class="row"><span>月付分期期数 yfPeriods</span><span class="v" id="sPeriods">—</span></div>
+      <div class="row"><span>前置优惠（抖音核定）</span><span class="v" id="sDiscount">—</span></div>
+    </div>
+    <button class="s-btn" id="sDone">完成</button>
+    <div class="s-prototype-note">原型演示页面，支付结果与优惠为模拟数据</div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+/* ================= 规范适配：750设计稿，1rem = 50设计px ================= */
+function fit() {
+  var p = document.querySelector('.phone');
+  document.documentElement.style.fontSize = ((p.clientWidth || 375) / 15) + 'px';
+}
+window.addEventListener('resize', fit);
+fit();
+
+/* ================= 状态 ================= */
+var PERIOD_ORDER = [12, 3, 6];  // 期次卡片展示顺序（产品定义，与天阙返回顺序无关）
+var MIN_AMOUNT = 100;  // 前置查询与支付方式展示门槛（我方配置，元）：≥100才查询并展示三方式，
+                       // ＜100不查询不展示任何支付方式，确认支付默认抖音支付
+var state = {
+  amountStr: '',        // 原始输入串
+  selected: null,       // 'fq' | 'yf' | 'dy'
+  selectedPeriod: null, // 1=不分期（merge场景四宫格内） | 3 | 6 | 12
+  scene: 'default',
+  consult: null,        // 模拟前置查询返回
+  queryToken: 0,
+  querying: false,      // 前置查询进行中
+  methodsShown: false   // 支付方式区是否展示中（≥100且查询成功）
+};
+
+/* ================= 工具 ================= */
+function $(id) { return document.getElementById(id); }
+function yuan() { return parseFloat(state.amountStr) || 0; }
+function fmt2(n) { return (Math.round(n * 100) / 100).toFixed(2); }
+function showToast(msg) {
+  var t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+}
+
+/* ================= 优惠标签规则（PRD 3.2.3） =================
+   tip 优先；min=max → 立减X元；区间 → 最高减X元；无 → 不展示 */
+function buildTag(mkt) {
+  if (!mkt) return '';
+  if (mkt.tip) return mkt.tip;
+  if (mkt.min !== undefined && mkt.min !== null && mkt.max !== undefined && mkt.max !== null) {
+    if (Number(mkt.min) === Number(mkt.max)) {
+      var v = (mkt.amount !== undefined && mkt.amount !== null) ? mkt.amount : mkt.min;
+      return '立减' + v + '元';
+    }
+    return '最高减' + mkt.max + '元';
+  }
+  return '';
+}
+
+/* ================= 模拟天阙前置查询 /query/consult/info 返回 =================
+   结构对应天阙 respData.channelInfoList：10001抖音支付 operationInfo.viewData；
+   10003抖音月付 subAssetInfoList（extInfo.installment 1/3/6/12）；10002先享后付本期忽略 */
+function mockConsult(amount, scene) {
+  if (scene === 'fail') {
+    return { degraded: true, dypay: { enable: true, mkt: null }, yuefu: null, installments: null };
+  }
+  var dypayMkt = null, yfMkt = null;
+  if (scene === 'nomkt') { dypayMkt = null; yfMkt = null; }
+  else if (scene === 'fixed') { dypayMkt = { tip: '立减10元', amount: 10, min: 10, max: 10 }; yfMkt = { amount: 2, min: 2, max: 2 }; }
+  else { dypayMkt = { tip: '立减10元', amount: 10, min: 10, max: 10 }; yfMkt = { min: 0.01, max: 2 }; }
+
+  /* 期次兜底场景：控制返回的期次数量 */
+  var instScene = null; // null=常规，'inst4'/'inst3'/'inst2'/'inst1'/'inst0'
+  if (scene === 'inst4' || scene === 'inst3' || scene === 'inst2' || scene === 'inst1' || scene === 'inst0') {
+    instScene = scene;
+  }
+
+  // 分期方案：模拟抖音算好的每期金额（我方不重算，原样展示；查询仅在≥100元发起）
+  var allInst = (function () {
+    var mk = function (def, fixed) {
+      if (instScene || scene === 'nomkt') return null;
+      if (scene === 'fixed') return { amount: fixed, min: fixed, max: fixed };
+      return def;
+    };
+    return [
+      { n: 3,  per: fmt2(amount / 3), serviceAmt: 0, mkt: mk({ min: 0.01, max: 18.88 }, 6.66) },
+      { n: 6,  per: fmt2(amount / 6), serviceAmt: 0, mkt: mk({ amount: 18.88, min: 18.88, max: 18.88 }, 18.88) },
+      { n: 12, per: fmt2(amount / 12 + amount * 0.096 / 12), serviceAmt: fmt2(amount * 0.096 / 12), mkt: scene === 'default' ? null : mk(null, 8.88) }
+    ];
+  })();
+
+  /* 按兜底场景裁剪期次 */
+  var installments = null;
+  if (instScene === 'inst4') {
+    installments = allInst; // 3期+6期+12期 + 不分期 = 4个期次卡片 → 四宫格
+  } else if (instScene === 'inst3') {
+    installments = allInst; // 3期+6期+12期 = 3个期次卡片 → 一行横排（不展示不分期）
+  } else if (instScene === 'inst2') {
+    installments = [allInst[1]]; // 6期 + 不分期 = 2个期次卡片 → 一行横排
+  } else if (instScene === 'inst1') {
+    installments = [allInst[2]]; // 12期 = 1个分期 + 不分期 = 2个期次卡片
+  } else if (instScene === 'inst0') {
+    installments = []; // 仅不分期，无分期期次
+  } else {
+    installments = allInst;
+  }
+
+  return {
+    degraded: false,
+    dypay: { enable: true, mkt: dypayMkt },
+    yuefu: { enable: true, sub: '免手续费', mkt: yfMkt },
+    installments: installments,
+    hideNonInstallment: instScene === 'inst1' || instScene === 'inst3', // inst1/inst3 场景不展示不分期卡片
+    hideAllPayMethods: instScene === 'inst0' // inst0 仅不分期场景隐藏所有支付方式
+  };
+}
+
+/* ================= 金额输入 ================= */
+document.querySelectorAll('.key[data-k]').forEach(function (k) {
+  if (k.id === 'payBtn') return;
+  k.addEventListener('click', function () {
+    var v = k.dataset.k, s = state.amountStr;
+    if (v === 'del') { s = s.slice(0, -1); }
+    else if (v === '.') { if (s.indexOf('.') >= 0) return; if (s === '') s = '0'; s += '.'; }
+    else {
+      if (s.indexOf('.') >= 0) { if (s.split('.')[1].length >= 2) return; }
+      else {
+        if (s.replace('.', '').length >= 6 && s.indexOf('.') < 0) return;
+        if (s === '0') s = '';
+      }
+      s += v;
+    }
+    setAmount(s);
+  });
+});
+
+function setAmount(s) {
+  var prev = state.amountStr;
+  state.amountStr = s;
+  var el = $('amountText');
+  if (s === '') { el.textContent = '消费金额'; el.classList.add('placeholder'); }
+  else { el.textContent = s; el.classList.remove('placeholder'); }
+  onAmountMaybeChanged(prev, s);
+}
+
+/* 金额变更：≥100元防抖重查并保留选中；＜100元/清空不查询、隐藏支付方式区、
+   清除选中（静默），确认支付默认抖音支付（PRD 3.1.1/3.1.2） */
+var debounceTimer = null;
+function onAmountMaybeChanged(prev, curr) {
+  var amt = yuan();
+  if (amt < MIN_AMOUNT) {
+    clearTimeout(debounceTimer);
+    state.querying = false;
+    state.consult = null;
+    state.selected = null; state.selectedPeriod = null;
+    state.methodsShown = false;
+    $('payArea').style.display = 'none';
+    refreshPayBtn();
+    return;
+  }
+  refreshPayBtn();
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(doQuery, 600);
+}
+
+/* 确认支付按钮就绪态：
+   查询中→未就绪；未展示支付方式（＜100/降级）→有金额即就绪（默认抖音支付）；
+   展示中→需已选方式（分期还需期次） */
+function refreshPayBtn() {
+  var amt = yuan(), ok;
+  if (state.querying) ok = false;
+  else if (!state.methodsShown) ok = amt > 0;
+  else ok = !!(state.selected && (state.selected !== 'fq' || state.selectedPeriod));
+  $('payBtn').classList.toggle('ready', !!ok);
+}
+
+/* ================= 前置查询（模拟） ================= */
+function doQuery() {
+  var token = ++state.queryToken;
+  var amt = yuan();
+  state.querying = true;
+  state.methodsShown = false;
+  refreshPayBtn();
+  $('payArea').style.display = 'block';
+  $('queryStatus').style.display = 'block';
+  $('queryStatus').textContent = '优惠查询中…';
+  $('payList').innerHTML =
+    '<div class="skeleton"><div class="line"></div><div class="line"></div><div class="line"></div></div>';
+  setTimeout(function () {
+    if (token !== state.queryToken) return; // 金额已变，丢弃过期结果
+    state.querying = false;
+    state.consult = mockConsult(amt, state.scene);
+    renderPayArea();
+  }, 450);
+}
+
+/* ================= 渲染支付方式区 ================= */
+function renderPayArea() {
+  var c = state.consult, amt = yuan(), html = '';
+  $('queryStatus').style.display = 'none';
+
+  if (!c || amt < MIN_AMOUNT) { $('payArea').style.display = 'none'; state.methodsShown = false; refreshPayBtn(); return; }
+  if (c.degraded) {
+    /* 查询失败：不展示任何支付方式，确认支付默认抖音支付（PRD 3.5） */
+    state.methodsShown = false;
+    state.selected = null; state.selectedPeriod = null;
+    $('payList').innerHTML = '';
+    refreshPayBtn();
+    return;
+  }
+  state.methodsShown = true;
+
+  /* 不分期并入分期模块（默认布局，PRD 3.3）：不单独展示「抖音月付·不分期」行，
+     不分期作为期次卡片进入宫格/横排；
+     inst1 场景（hideNonInstallment）不展示不分期卡片 */
+  var merged = !!(c.yuefu && c.yuefu.enable) && !c.hideNonInstallment;
+  if (merged && state.selected === 'yf') { state.selected = 'fq'; state.selectedPeriod = 1; }
+
+  /* 金额变更：已选期次在最新返回中缺失 → 清除缺失期次选中，恢复默认（支付方式行不选中）；
+     已选渠道不可用 → 取消选中 + toast */
+  if (state.selected === 'fq' && c.installments &&
+      !c.installments.some(function (p) { return p.n === state.selectedPeriod; }) &&
+      !(merged && state.selectedPeriod === 1)) {
+    state.selectedPeriod = null;
+    state.selected = null; // 支付方式行也取消选中
+  }
+  // 渠道不可用检测（演示用：仅提示）
+  if (state.selected === 'fq' && !c.installments && !merged) {
+    state.selected = null; state.selectedPeriod = null;
+    showToast('抖音月付·分期不可用，请重新选择');
+  }
+
+  /* 计算有效期次数量（分期期次 + 不分期） */
+  var instCount = c.installments ? c.installments.length : 0;
+  var totalCount = instCount + (merged ? 1 : 0); // 分期数 + 不分期(若有)
+
+  /* 判断布局模式：
+     >3个(4个) → 四宫格；≤3个 → 一行横排；仅不分期(inst0) → 不展示期次卡片 */
+  var isGrid = totalCount > 3;       // 四宫格
+  var isRow = totalCount > 0 && totalCount <= 3; // 一行横排
+  var isNoInst = (instCount === 0 && merged);    // 仅不分期
+
+  /* 排序：月付分期 → 抖音支付（PRD 3.3.2）；查询仅在≥100元发起 */
+  var showFq = (c.installments && c.installments.length > 0) || (isNoInst && !c.hideAllPayMethods); // 有分期期次 或 仅不分期时也展示月付行
+  if (showFq) {
+    var expanded = state.selected === 'fq' ? 'open' : '';
+
+    /* 仅不分期场景：不展示期次卡片，优惠标签展示在支付方式行上 */
+    if (isNoInst && !c.hideAllPayMethods) {
+      var yfTagOnly = buildTag(c.yuefu.mkt);
+      var yfTagsOnly = yfTagOnly ? [{ cls: 'tag', txt: yfTagOnly }] : null;
+      html += '<div class="pay-group">' +
+        payRow('fq', '抖音月付·分期', 'fq', yfTagsOnly, state.selected === 'fq') +
+        '</div>';
+    } else if (isNoInst && c.hideAllPayMethods) {
+      // 仅不分期且隐藏所有支付方式：不渲染任何支付方式
+    } else {
+      /* 有期次卡片：按顺序排列（12 → 3 → 6 → 不分期） */
+      var insts = c.installments.slice().sort(function (a, b) {
+        return PERIOD_ORDER.indexOf(a.n) - PERIOD_ORDER.indexOf(b.n);
+      });
+      var periods = insts.map(function (p) {
+        var tag = buildTag(p.mkt);
+        var feeTxt = Number(p.serviceAmt) === 0
+          ? '<div class="p-fee free">免手续费</div>'
+          : '<div class="p-fee">含手续费¥' + p.serviceAmt + '/期</div>';
+        return '<div class="period-card' + (state.selectedPeriod === p.n ? ' selected' : '') + '" data-n="' + p.n + '">' +
+          '<div class="p-tag">' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '</div>' +
+          '<div class="p-per">¥' + p.per + '</div><div class="p-num">× ' + p.n + '期</div>' + feeTxt + '</div>';
+      }).join('');
+      if (merged) {
+        /* 不分期卡片：每期应付=全额，期数1 */
+        var yfTag = buildTag(c.yuefu.mkt);
+        periods += '<div class="period-card' + (state.selectedPeriod === 1 ? ' selected' : '') + '" data-n="1">' +
+          '<div class="p-tag">' + (yfTag ? '<span class="tag">' + yfTag + '</span>' : '') + '</div>' +
+          '<div class="p-per">¥' + fmt2(amt) + '</div><div class="p-num">不分期</div>' +
+          '<div class="p-fee free">' + (c.yuefu.sub || '免手续费') + '</div></div>';
+      }
+      var layoutClass = isGrid ? ' grid2' : ''; // 四宫格 or 一行横排
+      html += '<div class="pay-group">' +
+        payRow('fq', '抖音月付·分期', 'fq', null, state.selected === 'fq') +
+        '<div class="period-wrap ' + expanded + '" id="periodWrap"><div class="period-list' + layoutClass + '">' + periods + '</div></div></div>';
+    }
+  }
+  if (c.yuefu && c.yuefu.enable && !merged && !isNoInst && !c.hideNonInstallment) {
+    var yfTags = [{ cls: 'tag plain', txt: c.yuefu.sub || '免手续费' }];
+    var yfTag = buildTag(c.yuefu.mkt);
+    if (yfTag) yfTags.push({ cls: 'tag', txt: yfTag });
+    html += '<div class="pay-group">' + payRow('yf', '抖音月付 · 不分期', 'yf', yfTags, state.selected === 'yf') + '</div>';
+  }
+  if (c.dypay && c.dypay.enable && !c.hideAllPayMethods) {
+    var dyTag = buildTag(c.dypay.mkt);
+    html += '<div class="pay-group">' + payRow('dy', '抖音支付', 'dy', dyTag ? [{ cls: 'tag', txt: dyTag }] : null, state.selected === 'dy') + '</div>';
+  }
+  $('payList').innerHTML = html;
+  bindRows();
+  refreshPayBtn();
+}
+
+function payRow(id, name, icon, tags, selected) {
+  var tagHtml = tags ? '<div class="tags">' + tags.map(function (t) {
+    return '<span class="' + t.cls + '">' + t.txt + '</span>'; }).join('') + '</div>' : '';
+  return '<div class="pay-row' + (selected ? ' selected' : '') + '" data-pm="' + id + '">' +
+    '<div class="pm-icon ' + icon + '">' + name.charAt(0) + '</div>' +
+    '<div class="pm-name">' + name + '</div>' + tagHtml +
+    '<div class="radio"></div></div>';   /* 选中按钮位于行最右侧 */
+}
+
+function bindRows() {
+  document.querySelectorAll('.pay-row').forEach(function (r) {
+    r.addEventListener('click', function () {
+      var pm = r.dataset.pm;
+      state.selected = pm;
+      if (pm !== 'fq') state.selectedPeriod = null; // 切走分期时清期次
+      renderPayArea();
+    });
+  });
+  document.querySelectorAll('.period-card').forEach(function (p) {
+    p.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.selected = 'fq';
+      state.selectedPeriod = Number(p.dataset.n);
+      renderPayArea();
+    });
+  });
+  /* 默认展开逻辑：未选任何方式时，月付分期展示态展开（≠选中） */
+  if (!state.selected) {
+    var w = $('periodWrap'); if (w) w.classList.add('open');
+  }
+}
+
+/* ================= 付款（键盘右下角「确认支付」，截图还原位置） ================= */
+$('payBtn').addEventListener('click', function () {
+  var amt = yuan();
+  if (amt <= 0) { showToast('请输入付款金额'); return; }
+  if (state.querying) { showToast('优惠查询中，请稍候'); return; }
+  if (!state.methodsShown) { doPay(true); return; }   // ＜100元/降级：默认抖音支付（PRD 3.3.2）
+  if (!state.selected) { showToast('请选择支付方式'); return; }
+  if (state.selected === 'fq' && !state.selectedPeriod) { showToast('请选择分期期次'); return; }
+  doPay(false);
+});
+
+function doPay(defaultUsed) {
+  var amt = yuan();
+  var btn = $('payBtn');
+  btn.classList.add('loading'); btn.textContent = '支付中…';
+  setTimeout(function () {
+    btn.classList.remove('loading'); btn.textContent = '确认支付'; refreshPayBtn();
+    /* 模拟支付结果回显（isYfPay / yfPeriods，PRD 3.4） */
+    var c = state.consult || {};
+    var payType = '抖音支付', isYf = false, periods = '—（未使用月付）', discount = '—';
+    if (defaultUsed) {
+      payType = '抖音支付（默认，未展示支付方式）';
+    } else if (state.selected === 'yf') {
+      payType = '抖音月付（不分期）'; isYf = true; periods = '1';
+      if (c.yuefu && c.yuefu.mkt) discount = buildTag(c.yuefu.mkt) + '（以账单为准）';
+    } else if (state.selected === 'fq' && state.selectedPeriod === 1) {
+      /* 四宫格「不分期」卡片，下单参数同月付不分期（priorityAssign=1，无 yfFqInfo） */
+      payType = '抖音月付（不分期）'; isYf = true; periods = '1';
+      if (c.yuefu && c.yuefu.mkt) discount = buildTag(c.yuefu.mkt) + '（以账单为准）';
+    } else if (state.selected === 'fq') {
+      payType = '月付分期 · ' + state.selectedPeriod + '期'; isYf = true; periods = String(state.selectedPeriod);
+      var p = c.installments && c.installments.filter(function (x) { return x.n === state.selectedPeriod; })[0];
+      if (p && p.mkt) discount = buildTag(p.mkt) + '（以账单为准）';
+    } else if (state.selected === 'dy' && c.dypay && c.dypay.mkt) {
+      discount = buildTag(c.dypay.mkt) + '（以账单为准）';
+    }
+    $('sAmount').textContent = '¥' + fmt2(amt);
+    $('sPayType').textContent = payType;
+    $('sIsYf').textContent = String(isYf);
+    $('sPeriods').textContent = periods;
+    $('sDiscount').textContent = discount;
+    $('successPage').classList.add('show');
+  }, 900);
+}
+
+$('sDone').addEventListener('click', function () {
+  $('successPage').classList.remove('show');
+  state.selected = null; state.selectedPeriod = null;
+  setAmount('');
+});
+
+/* ================= 非本需求范围的页面元素（演示提示） ================= */
+$('remarkLink').addEventListener('click', function () { showToast('备注功能不在本需求范围（演示）'); });
+$('navBack').addEventListener('click', function () { showToast('返回上一页（演示）'); });
+
+/* ================= 演示场景切换 ================= */
+$('fab').addEventListener('click', function () { $('sceneMask').classList.add('show'); $('scenePanel').classList.add('show'); });
+function closeScene() { $('sceneMask').classList.remove('show'); $('scenePanel').classList.remove('show'); }
+$('sceneMask').addEventListener('click', closeScene);
+$('sceneOk').addEventListener('click', closeScene);
+document.querySelectorAll('.scene-item').forEach(function (it) {
+  it.addEventListener('click', function () {
+    document.querySelectorAll('.scene-item').forEach(function (x) { x.classList.remove('selected'); });
+    it.classList.add('selected');
+    var sc = it.dataset.scene;
+    closeScene();
+
+    /* 金额变更流程场景：先设置初始状态（有金额+已选期次），再模拟金额变更 */
+    if (sc === 'amt_keep' || sc === 'amt_miss' || sc === 'amt_disable' || sc === 'amt_below' || sc === 'amt_fail') {
+      handleAmountChangeScene(sc);
+      return;
+    }
+
+    state.scene = sc;
+    if (yuan() > 0) { clearTimeout(debounceTimer); doQuery(); } else { showToast('已切换场景，请输入金额查询'); }
+  });
+});
+
+/* ================= 金额变更流程场景演示 =================
+   步骤1：先以 5000 元发起查询，默认返回4个期次，自动选中「月付分期·6期」
+   步骤2：1.2秒后模拟金额变更，按场景返回不同结果，展示状态变化 */
+function handleAmountChangeScene(sc) {
+  // 重置状态
+  state.selected = null; state.selectedPeriod = null;
+  state.scene = 'default';
+
+  // 步骤1：设置初始金额（5000元），展示4个期次
+  setAmount('5000');
+  setTimeout(function () {
+    var t = setInterval(function () {
+      if (state.consult && !state.querying) {
+        clearInterval(t);
+        // 自动选中「月付分期·6期」
+        state.selected = 'fq';
+        state.selectedPeriod = 6;
+        renderPayArea();
+
+        // 步骤2：1.5秒后模拟金额变更（给用户看清初始状态的时间）
+        setTimeout(function () {
+          simulateAmountChange(sc);
+        }, 1500);
+      }
+    }, 100);
+  }, 100);
+}
+
+function simulateAmountChange(sc) {
+  var prevAmount = state.amountStr;
+
+  if (sc === 'amt_keep') {
+    // 金额变更，新返回仍有6期 → 保持选中
+    state.scene = 'default';
+    showToast('金额变更：5000 → 3000，6期方案仍在 → 保持选中');
+    simulateNewAmount('3000', function () {
+      // 默认返回仍含6期，已在 renderPayArea 中保留选中
+    });
+  } else if (sc === 'amt_miss') {
+    // 新返回无6期 → 清除期次选中
+    state.scene = 'inst3'; // inst3 返回3期+12期+不分期，无6期
+    showToast('金额变更：5000 → 2000，新返回无6期 → 清除期次选中');
+    simulateNewAmount('2000', function () {
+      // inst3 场景无6期，renderPayArea 会清除 selectedPeriod
+    });
+  } else if (sc === 'amt_disable') {
+    // 渠道不可用：用 fail 模拟（查询失败 → 所有支付方式不展示）
+    state.scene = 'fail';
+    showToast('金额变更：5000 → 1000，查询失败 → 不展示支付方式，清除选中');
+    simulateNewAmount('1000');
+  } else if (sc === 'amt_below') {
+    // 金额低于门槛
+    state.scene = 'default';
+    showToast('金额变更：5000 → 99，低于100元 → 隐藏支付方式区');
+    simulateNewAmount('99', null);
+  } else if (sc === 'amt_fail') {
+    // 查询失败
+    state.scene = 'fail';
+    showToast('金额变更：5000 → 2500，查询失败 → 不展示支付方式');
+    simulateNewAmount('2500', null);
+  }
+}
+
+/* 模拟新金额查询：跳过防抖直接查询 */
+function simulateNewAmount(newAmt) {
+  // 直接设置金额并立即触发查询（不走防抖）
+  var prev = state.amountStr;
+  state.amountStr = newAmt;
+  $('amountText').textContent = newAmt;
+  $('amountText').classList.remove('placeholder');
+
+  var amt = yuan();
+  if (amt < MIN_AMOUNT) {
+    // ＜100元：隐藏支付方式区
+    clearTimeout(debounceTimer);
+    state.querying = false;
+    state.consult = null;
+    state.selected = null; state.selectedPeriod = null;
+    state.methodsShown = false;
+    $('payArea').style.display = 'none';
+    refreshPayBtn();
+  } else {
+    // ≥100元：立即查询
+    clearTimeout(debounceTimer);
+    doQuery();
+  }
+}
+
+/* ================= URL参数预置（评审演示直链） =================
+   用法：dyqzyh.html#a=5300&p=6 —— a=金额；scene=default|fixed|nomkt|fail|inst4|inst3|inst2|inst1|inst0；p=3|6|12|1|yf|dy（预选） */
+(function initFromHash() {
+  var h = location.hash.slice(1); if (!h) return;
+  var q = {};
+  h.split('&').forEach(function (kv) { var pp = kv.split('='); q[pp[0]] = decodeURIComponent(pp[1] || ''); });
+  if (q.scene === 'merge') q.scene = 'default'; // 旧直链兼容
+  if (q.scene) {
+    var it = document.querySelector('.scene-item[data-scene="' + q.scene + '"]');
+    if (it) {
+      document.querySelectorAll('.scene-item').forEach(function (x) { x.classList.remove('selected'); });
+      it.classList.add('selected'); state.scene = q.scene;
+    }
+  }
+  if (q.a) setAmount(q.a);
+  if (q.p) {
+    var t = setInterval(function () {
+      if (state.consult) {
+        clearInterval(t);
+        if (q.p === 'yf') { state.selected = 'fq'; state.selectedPeriod = 1; }
+        else if (q.p === 'yf' || q.p === 'dy') state.selected = q.p;
+        else { state.selected = 'fq'; state.selectedPeriod = Number(q.p); }
+        renderPayArea();
+      }
+    }, 100);
+  }
+})();
+</script>
+</body>
+</html>
